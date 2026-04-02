@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BLOG_POSTS } from "@/components/data/blogs";
+import { BLOG_POSTS } from "@/data/blogs";
 import BlogCard from "@/components/ui/BlogCard";
 import { SITE } from "@/lib/constants";
 

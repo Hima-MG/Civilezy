@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { BlogPost } from "@/components/data/blogs";
+import type { BlogPost } from "@/data/blogs";
 
 export default function BlogCard({ post }: { post: BlogPost }) {
   return (
