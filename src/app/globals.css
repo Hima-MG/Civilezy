@@ -2,32 +2,117 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Brand CSS variables ─────────────────────────────────────────────── */
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --navy:        #0B1E3D;
+  --navy2:       #0F2750;
+  --navy3:       #162E5C;
+  --orange:      #FF6200;
+  --orange2:     #FF8534;
+  --orange3:     #FFB347;
+  --gold:        #FFB800;
+  --text-light:  rgba(255, 255, 255, 0.85);
+  --text-muted:  rgba(255, 255, 255, 0.55);
+  --card-bg:     rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.10);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+/* ─── Base ─────────────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  font-family: var(--font-nunito), "Nunito", sans-serif;
+  background: var(--navy);
+  color: #fff;
+  overflow-x: hidden;
+  line-height: 1.6;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-rajdhani), "Rajdhani", sans-serif;
+}
+
+/* ─── Custom scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; }
+::-webkit-scrollbar-track { background: var(--navy); }
+::-webkit-scrollbar-thumb { background: rgba(255,98,0,0.4); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--orange); }
+
+/* ─── Hero keyframes ────────────────────────────────────────────────────── */
+@keyframes heroFadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.8); }
+}
+
+@keyframes xpPopUp {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  80%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -80%) scale(0.9); }
+}
+
+/* ─── Pain card scroll animation ───────────────────────────────────────── */
+.pain-card-animate {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.pain-card-animate.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── Level card scroll animation ──────────────────────────────────────── */
+.level-card-animate {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.level-card-animate.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── Levels grid responsive ────────────────────────────────────────────── */
+.levels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ─── Arena grid mobile override ───────────────────────────────────────── */
+@media (max-width: 900px) {
+  #arena-grid {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+  }
+}
+
+/* ─── Hero responsive grid ──────────────────────────────────────────────── */
+.hero-content-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 900px) {
+  .hero-content-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .hero-floating-badge {
+    display: none !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero-stats-row {
+    gap: 20px !important;
   }
 }
