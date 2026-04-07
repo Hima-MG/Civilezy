@@ -1,1098 +1,576 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import type { Domain, Difficulty, Question } from "@/data/quesions";
+import { SUBJECTS_BY_DOMAIN, DIFFICULTY_COUNTS, getQuestions } from "@/data/quesions";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ──────────────────────────────────────────────────────────────────
+type Screen = "setup-domain" | "setup-subject" | "setup-difficulty" | "playing" | "result";
 
-type Domain = "ITI" | "Diploma" | "BTech";
-type Difficulty = "Easy" | "Medium" | "Hard";
-
-interface DomainOption {
-  id: Domain;
-  label: string;
-  icon: string;
-  desc: string;
+// ─── LOGIC: motivational messages (unchanged) ────────────────────────────────
+function getMotivation(pct: number): { emoji: string; title: string; msg: string; color: string } {
+  if (pct >= 90) return { emoji: "🏆", color: "#FFB800", title: "Exceptional! Rank Holder Material.", msg: "You are in the top percentile. This score in the real exam puts you in the first 10 ranks. Keep this consistency and the government job is yours." };
+  if (pct >= 75) return { emoji: "🔥", color: "#FF8534", title: "Strong Performance! Almost There.", msg: "You are performing well above average. A focused 30-day revision plan will push you into the top rank bracket. You are very close." };
+  if (pct >= 55) return { emoji: "⚡", color: "#64C8FF", title: "Good Start — Structured Practice Needed.", msg: "Your foundation is solid. The gap to a rank is just consistency. Daily 25-question practice sessions for 6 weeks will transform your score." };
+  if (pct >= 35) return { emoji: "📘", color: "#A78BFA", title: "Keep Going — You Can Do This.", msg: "Every rank holder started somewhere. Your weak areas are now visible — that is the most valuable thing. Use Civilezy's smart lessons to fill those gaps." };
+  return { emoji: "🌱", color: "#32C864", title: "Your Journey Starts Now.", msg: "Do not be discouraged — this score shows exactly where to focus. Start with the Smart Lessons on Civilezy and attempt this again in 2 weeks. The improvement will surprise you." };
 }
 
-interface SubjectOption {
-  id: string;
-  label: string;
-  icon: string;
+// ─── LOGIC: timer hook (unchanged) ──────────────────────────────────────────
+function useTimer(initialSecs: number, running: boolean) {
+  const [secs, setSecs] = useState(initialSecs);
+  useEffect(() => {
+    if (!running) return;
+    if (secs <= 0) return;
+    const id = setInterval(() => setSecs(s => s - 1), 1000);
+    return () => clearInterval(id);
+  }, [running, secs]);
+  return secs;
 }
 
-interface DifficultyOption {
-  id: Difficulty;
-  label: string;
-  questions: string;
-  desc: string;
-  icon: string;
-  color: string;
+// ─── Sound helper ────────────────────────────────────────────────────────────
+function playSound(type: "correct" | "wrong") {
+  try {
+    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    if (type === "correct") {
+      osc.frequency.setValueAtTime(520, ctx.currentTime);
+      osc.frequency.setValueAtTime(660, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.start(); osc.stop(ctx.currentTime + 0.4);
+    } else {
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(200, ctx.currentTime);
+      osc.frequency.setValueAtTime(140, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc.start(); osc.stop(ctx.currentTime + 0.35);
+    }
+  } catch { /* audio not supported */ }
 }
 
-interface Question {
-  id: number;
-  subject: string;
-  question: string;
-  options: string[];
-  answer: string;
-  explanation: string;
+// ─── Main page ───────────────────────────────────────────────────────────────
+export default function GameArenaPage() {
+  // ── All state (logic unchanged) ─────────────────────────────────
+  const [screen,     setScreen]     = useState<Screen>("setup-domain");
+  const [domain,     setDomain]     = useState<Domain>("diploma");
+  const [subjects,   setSubjects]   = useState<string[]>([]);
+  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+  const [questions,    setQuestions]    = useState<Question[]>([]);
+  const [qIndex,       setQIndex]       = useState(0);
+  const [selected,     setSelected]     = useState<number | null>(null);
+  const [answered,     setAnswered]     = useState(false);
+  const [score,        setScore]        = useState(0);
+  const [xp,           setXp]           = useState(0);
+  const [streak,       setStreak]       = useState(0);
+  const [bestStreak,   setBestStreak]   = useState(0);
+  const [showXpPop,    setShowXpPop]    = useState<string | null>(null);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [timeUsed,     setTimeUsed]     = useState(0);
+  const [fadeIn,       setFadeIn]       = useState(true);
+  const startTimeRef = useRef<number>(0);
+
+  const TOTAL_SECS = 90;
+  const secsLeft   = useTimer(TOTAL_SECS, timerRunning && !answered);
+  const currentQ   = questions[qIndex];
+  const totalQ     = questions.length;
+
+  // Time up auto-submit (logic unchanged)
+  useEffect(() => {
+    if (timerRunning && secsLeft === 0 && !answered) handleAnswer(-1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secsLeft, timerRunning, answered]);
+
+  // ── Start game (logic unchanged) ────────────────────────────────
+  function startGame() {
+    const qs = getQuestions(domain, subjects, difficulty, DIFFICULTY_COUNTS[difficulty]);
+    setQuestions(qs);
+    setQIndex(0); setScore(0); setXp(0); setStreak(0); setBestStreak(0);
+    setSelected(null); setAnswered(false);
+    startTimeRef.current = Date.now();
+    setTimerRunning(true);
+    setFadeIn(true);
+    setScreen("playing");
+  }
+
+  // ── Handle answer (logic unchanged + sound added) ────────────────
+  function handleAnswer(optionIndex: number) {
+    if (answered) return;
+    setAnswered(true);
+    setTimerRunning(false);
+    setSelected(optionIndex);
+
+    const isCorrect = optionIndex === currentQ?.correct;
+    if (isCorrect) {
+      playSound("correct");
+      const earnedXp = (currentQ.xp ?? 10) * (streak >= 3 ? 2 : 1);
+      setScore(s => s + 1);
+      setXp(x => x + earnedXp);
+      setStreak(s => { const next = s + 1; setBestStreak(b => Math.max(b, next)); return next; });
+      setShowXpPop(`+${earnedXp} XP${streak >= 2 ? " 🔥" : " ✓"}`);
+    } else {
+      playSound("wrong");
+      setStreak(0);
+      setShowXpPop(optionIndex === -1 ? "⏰ Time Up!" : "✗ Wrong");
+    }
+    setTimeout(() => setShowXpPop(null), 1800);
+  }
+
+  // ── Next question (logic unchanged + fade) ───────────────────────
+  function nextQuestion() {
+    const elapsed = Math.round((Date.now() - startTimeRef.current) / 1000);
+    setTimeUsed(elapsed);
+    if (qIndex + 1 >= totalQ) {
+      setTimerRunning(false);
+      setScreen("result");
+    } else {
+      setFadeIn(false);
+      setTimeout(() => {
+        setQIndex(i => i + 1);
+        setSelected(null);
+        setAnswered(false);
+        setTimerRunning(true);
+        setFadeIn(true);
+      }, 200);
+    }
+  }
+
+  // ── Toggle subject (logic unchanged) ────────────────────────────
+  const toggleSubject = useCallback((s: string) => {
+    setSubjects(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+  }, []);
+
+  // ════════════════════════════════════════════════════════════════
+  // SCREEN: SETUP DOMAIN
+  // ════════════════════════════════════════════════════════════════
+  if (screen === "setup-domain") return (
+    <GameShell>
+      <SetupCard step={1} title="Select Your Domain" sub="Choose the exam pool that matches your qualification">
+        <div className="flex flex-col gap-3">
+          {(["iti","diploma","btech"] as Domain[]).map(d => {
+            const meta = {
+              iti:     { emoji:"🔧", label:"ITI Civil",    desc:"KWA Helper · PWD Mazdoor · LSGD posts",        color:"rgba(255,98,0,0.15)",   border:"rgba(255,98,0,0.5)"    },
+              diploma: { emoji:"📐", label:"Diploma Civil", desc:"Overseer · Technical Assistant · Site Supervisor", color:"rgba(255,184,0,0.12)", border:"rgba(255,184,0,0.5)"  },
+              btech:   { emoji:"🏗️", label:"BTech / AE",   desc:"Assistant Engineer · KWA AE · PWD AE",         color:"rgba(100,200,255,0.1)", border:"rgba(100,200,255,0.5)" },
+            }[d];
+            const active = domain === d;
+            return (
+              <button key={d}
+                onClick={() => { setDomain(d); setSubjects([]); setScreen("setup-subject"); }}
+                className="flex items-center gap-4 rounded-2xl p-5 text-left transition-all duration-200 hover:scale-[1.01]"
+                style={{ background: active ? meta.color : "rgba(255,255,255,0.04)", border:`2px solid ${active ? meta.border : "rgba(255,255,255,0.08)"}`, boxShadow: active ? `0 0 20px ${meta.color}` : "none" }}
+              >
+                <span className="text-3xl">{meta.emoji}</span>
+                <div>
+                  <div style={{ fontFamily:"Rajdhani, sans-serif" }} className="text-xl font-bold text-white">{meta.label}</div>
+                  <div className="text-sm text-white/50 mt-0.5">{meta.desc}</div>
+                </div>
+                {active && <span className="ml-auto text-orange-400 text-lg">✓</span>}
+              </button>
+            );
+          })}
+        </div>
+      </SetupCard>
+    </GameShell>
+  );
+
+  // ════════════════════════════════════════════════════════════════
+  // SCREEN: SETUP SUBJECT
+  // ════════════════════════════════════════════════════════════════
+  if (screen === "setup-subject") {
+    const subs = SUBJECTS_BY_DOMAIN[domain];
+    return (
+      <GameShell>
+        <SetupCard step={2} title="Select Subjects" sub="Choose topics (leave empty for all)" onBack={() => setScreen("setup-domain")}>
+          <div className="flex flex-wrap gap-2 mb-6">
+            {subs.map(s => {
+              const on = subjects.includes(s);
+              return (
+                <button key={s} onClick={() => toggleSubject(s)}
+                  className="px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 hover:scale-105"
+                  style={{ background: on ? "rgba(255,98,0,0.2)" : "rgba(255,255,255,0.06)", border:`1px solid ${on ? "#FF6200" : "rgba(255,255,255,0.12)"}`, color: on ? "#FF8534" : "rgba(255,255,255,0.75)", boxShadow: on ? "0 0 12px rgba(255,98,0,0.2)" : "none" }}>
+                  {s}
+                </button>
+              );
+            })}
+          </div>
+          <GlowBtn onClick={() => setScreen("setup-difficulty")}>
+            {subjects.length === 0 ? "All Subjects →" : `${subjects.length} Selected →`}
+          </GlowBtn>
+        </SetupCard>
+      </GameShell>
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // SCREEN: SETUP DIFFICULTY
+  // ════════════════════════════════════════════════════════════════
+  if (screen === "setup-difficulty") return (
+    <GameShell>
+      <SetupCard step={3} title="Select Difficulty" sub="Choose your challenge level" onBack={() => setScreen("setup-subject")}>
+        <div className="flex flex-col gap-3 mb-6">
+          {([
+            { key:"easy",   emoji:"🌱", label:"Easy",   desc:`${DIFFICULTY_COUNTS.easy} questions · Basics`,        color:"rgba(50,200,100,0.15)",  border:"rgba(50,200,100,0.5)"  },
+            { key:"medium", emoji:"⚡", label:"Medium", desc:`${DIFFICULTY_COUNTS.medium} questions · Core topics`,  color:"rgba(255,184,0,0.12)",   border:"rgba(255,184,0,0.5)"  },
+            { key:"hard",   emoji:"🔥", label:"Hard",   desc:`${DIFFICULTY_COUNTS.hard} questions · PSC-level`,      color:"rgba(255,98,0,0.15)",    border:"rgba(255,98,0,0.5)"   },
+          ] as const).map(d => {
+            const active = difficulty === d.key;
+            return (
+              <button key={d.key} onClick={() => setDifficulty(d.key as Difficulty)}
+                className="flex items-center gap-4 rounded-2xl p-5 text-left transition-all duration-200 hover:scale-[1.01]"
+                style={{ background: active ? d.color : "rgba(255,255,255,0.04)", border:`2px solid ${active ? d.border : "rgba(255,255,255,0.08)"}`, boxShadow: active ? `0 0 20px ${d.color}` : "none" }}>
+                <span className="text-3xl">{d.emoji}</span>
+                <div>
+                  <div style={{ fontFamily:"Rajdhani, sans-serif" }} className="text-xl font-bold text-white">{d.label}</div>
+                  <div className="text-sm text-white/50 mt-0.5">{d.desc}</div>
+                </div>
+                {active && <span className="ml-auto text-orange-400 text-lg">✓</span>}
+              </button>
+            );
+          })}
+        </div>
+        <GlowBtn onClick={startGame}>🎮 Start Game →</GlowBtn>
+      </SetupCard>
+    </GameShell>
+  );
+
+  // ════════════════════════════════════════════════════════════════
+  // SCREEN: PLAYING
+  // ════════════════════════════════════════════════════════════════
+  if (screen === "playing" && currentQ) {
+    const progressPct = totalQ > 0 ? ((qIndex + 1) / totalQ) * 100 : 0;
+    const timerPct    = (secsLeft / TOTAL_SECS) * 100;
+    const timerColor  = secsLeft > 30 ? "#22c55e" : secsLeft > 10 ? "#eab308" : "#ef4444";
+    const timerGlow   = secsLeft > 30 ? "rgba(34,197,94,0.4)" : secsLeft > 10 ? "rgba(234,179,8,0.4)" : "rgba(239,68,68,0.4)";
+
+    return (
+      <GameShell>
+        {/* ── XP Float pop ──── */}
+        {showXpPop && (
+          <div className="fixed top-1/2 left-1/2 z-50 pointer-events-none"
+            style={{ transform:"translate(-50%,-50%)", animation:"xpFloat 1.8s ease forwards" }}>
+            <div className="px-6 py-3 rounded-full text-white font-bold text-2xl whitespace-nowrap"
+              style={{ fontFamily:"Rajdhani, sans-serif", background:"linear-gradient(135deg,#FF6200,#FF8534)", boxShadow:"0 0 30px rgba(255,98,0,0.6)" }}>
+              {showXpPop}
+            </div>
+          </div>
+        )}
+
+        <div style={{ opacity: fadeIn ? 1 : 0, transition:"opacity 0.2s ease" }}>
+
+          {/* ── Top HUD ──────── */}
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+            {/* Left: Q counter + XP */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold px-3 py-1 rounded-lg text-orange-400"
+                style={{ background:"rgba(255,98,0,0.15)", border:"1px solid rgba(255,98,0,0.3)" }}>
+                Q {qIndex + 1}/{totalQ}
+              </span>
+              <span className="text-sm font-semibold text-white/60">
+                ⚡ <span className="text-orange-400 font-bold">{xp}</span> XP
+              </span>
+              {streak >= 2 && (
+                <span className="text-xs font-bold px-3 py-1 rounded-lg animate-pulse"
+                  style={{ background:"rgba(255,98,0,0.15)", border:"1px solid rgba(255,98,0,0.3)", color:"#FF8534" }}>
+                  🔥 {streak}x
+                </span>
+              )}
+            </div>
+
+            {/* Right: Circular timer */}
+            <div className="relative w-12 h-12">
+              <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
+                <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
+                <circle cx="24" cy="24" r="20" fill="none"
+                  stroke={timerColor} strokeWidth="4" strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 20}`}
+                  strokeDashoffset={`${2 * Math.PI * 20 * (1 - timerPct / 100)}`}
+                  style={{ transition:"stroke-dashoffset 1s linear, stroke 0.5s", filter:`drop-shadow(0 0 6px ${timerGlow})` }}
+                />
+              </svg>
+              <span className="absolute inset-0 flex items-center justify-center text-sm font-bold"
+                style={{ color:timerColor, fontFamily:"Rajdhani, sans-serif" }}>
+                {secsLeft}
+              </span>
+            </div>
+          </div>
+
+          {/* ── Progress bar ─── */}
+          <div className="h-1 rounded-full mb-6 overflow-hidden" style={{ background:"rgba(255,255,255,0.07)" }}>
+            <div className="h-full rounded-full transition-all duration-500"
+              style={{ width:`${progressPct}%`, background:"linear-gradient(90deg,#FF6200,#FF8534)", boxShadow:"0 0 8px rgba(255,98,0,0.5)" }} />
+          </div>
+
+          {/* ── Question card ─── */}
+          <div className="rounded-2xl p-4 sm:p-6 mb-5"
+            style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", backdropFilter:"blur(12px)", boxShadow:"0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.04)" }}>
+            <div className="text-xs font-bold tracking-widest text-orange-400 mb-3 uppercase">
+              {currentQ.subject}
+            </div>
+            <p className="text-base font-semibold text-white leading-relaxed">
+              {currentQ.question}
+            </p>
+          </div>
+
+          {/* ── Options ─────────── */}
+          <div className="flex flex-col gap-3 w-full mb-5">
+            {currentQ.options.map((opt, i) => {
+              const isSelected  = selected === i;
+              const isCorrect   = i === currentQ.correct;
+              const showCorrect = answered && isCorrect;
+              const showWrong   = answered && isSelected && !isCorrect;
+
+              let bg     = "rgba(255,255,255,0.05)";
+              let border = "rgba(255,255,255,0.09)";
+              let color  = "rgba(255,255,255,0.88)";
+              let shadow = "none";
+              let label  = String.fromCharCode(65 + i);
+              let labelBg = "rgba(255,255,255,0.08)";
+              let labelColor = "rgba(255,255,255,0.6)";
+
+              if (showCorrect) {
+                bg = "rgba(34,197,94,0.15)"; border = "#22c55e"; color = "#4ade80";
+                shadow = "0 0 20px rgba(34,197,94,0.15)"; label = "✓";
+                labelBg = "rgba(34,197,94,0.2)"; labelColor = "#4ade80";
+              } else if (showWrong) {
+                bg = "rgba(239,68,68,0.15)"; border = "#ef4444"; color = "#f87171";
+                shadow = "0 0 20px rgba(239,68,68,0.1)"; label = "✗";
+                labelBg = "rgba(239,68,68,0.2)"; labelColor = "#f87171";
+              } else if (isSelected) {
+                bg = "rgba(255,98,0,0.12)"; border = "#FF6200";
+                labelBg = "rgba(255,98,0,0.25)"; labelColor = "#FF8534";
+              }
+
+              return (
+                <button key={i} onClick={() => handleAnswer(i)} disabled={answered}
+                  className="w-full flex items-center gap-3 rounded-xl p-3 sm:p-4 text-left transition-all duration-200"
+                  style={{ background:bg, border:`1px solid ${border}`, color, boxShadow:shadow,
+                    cursor:answered?"default":"pointer",
+                  }}
+                  onMouseEnter={e => { if (!answered) { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.09)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.2)"; } }}
+                  onMouseLeave={e => { if (!answered) { (e.currentTarget as HTMLElement).style.background = bg; (e.currentTarget as HTMLElement).style.borderColor = border; } }}
+                >
+                  <span className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+                    style={{ background:labelBg, color:labelColor }}>
+                    {label}
+                  </span>
+                  <span className="text-sm leading-snug font-medium">{opt}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ── Explanation + Next ─── */}
+          {answered && (
+            <div style={{ animation:"heroFadeUp 0.35s ease forwards" }}>
+              {currentQ.explanation && (
+                <div className="rounded-xl px-4 py-3 mb-4 text-sm leading-relaxed"
+                  style={{ background:"rgba(255,184,0,0.08)", border:"1px solid rgba(255,184,0,0.2)", color:"rgba(255,255,255,0.8)" }}>
+                  💡 {currentQ.explanation}
+                </div>
+              )}
+              <GlowBtn onClick={nextQuestion}>
+                {qIndex + 1 >= totalQ ? "🏁 See Results" : "Next →"}
+              </GlowBtn>
+            </div>
+          )}
+        </div>
+      </GameShell>
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // SCREEN: RESULT
+  // ════════════════════════════════════════════════════════════════
+  if (screen === "result") {
+    const pct        = totalQ > 0 ? Math.round((score / totalQ) * 100) : 0;
+    const motivation = getMotivation(pct);
+    const mins       = Math.floor(timeUsed / 60);
+    const secs2      = timeUsed % 60;
+
+    return (
+      <GameShell>
+        <div className="text-center" style={{ animation:"heroFadeUp 0.6s ease forwards" }}>
+
+          {/* ── Score ring ─────── */}
+          <div className="relative mx-auto mb-6" style={{ width:150, height:150 }}>
+            <svg width="150" height="150" style={{ transform:"rotate(-90deg)" }}>
+              <circle cx="75" cy="75" r="64" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="10" />
+              <circle cx="75" cy="75" r="64" fill="none"
+                stroke={pct >= 75 ? "#FF6200" : pct >= 55 ? "#FFB800" : "#64C8FF"}
+                strokeWidth="10" strokeLinecap="round"
+                strokeDasharray={`${2 * Math.PI * 64}`}
+                strokeDashoffset={`${2 * Math.PI * 64 * (1 - pct / 100)}`}
+                style={{ transition:"stroke-dashoffset 1.2s ease", filter:`drop-shadow(0 0 10px ${pct >= 75 ? "rgba(255,98,0,0.6)" : "rgba(255,184,0,0.5)"})` }}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span style={{ background:`linear-gradient(135deg,${motivation.color},#FFB800)`, WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", fontFamily:"Rajdhani, sans-serif", fontSize:"38px", fontWeight:700, lineHeight:"1" }}>
+                {pct}%
+              </span>
+              <span className="text-xs text-white/40 mt-1">accuracy</span>
+            </div>
+          </div>
+
+          {/* ── Score headline ── */}
+          <h1 style={{ fontFamily:"Rajdhani, sans-serif" }} className="text-4xl font-bold text-white mb-1">
+            {score} / {totalQ} Correct
+          </h1>
+          <p className="text-sm text-white/40 mb-7">
+            {mins}m {secs2}s &nbsp;·&nbsp; ⚡ {xp} XP &nbsp;·&nbsp; 🔥 {bestStreak} best streak
+          </p>
+
+          {/* ── Stat cards ────── */}
+          <div className="flex justify-center flex-wrap gap-3 mb-7">
+            {[
+              { label:"Score",    val:`${score}/${totalQ}`, color:"#FF8534" },
+              { label:"Accuracy", val:`${pct}%`,           color: pct>=75?"#22c55e":pct>=50?"#eab308":"#FF8534" },
+              { label:"XP",       val:`+${xp}`,            color:"#FFB800" },
+              { label:"Streak",   val:`${bestStreak}🔥`,   color:"#FF6200" },
+            ].map(s => (
+              <div key={s.label} className="rounded-2xl px-5 py-3 text-center min-w-[88px]"
+                style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.09)", backdropFilter:"blur(8px)" }}>
+                <div style={{ fontFamily:"Rajdhani, sans-serif", color:s.color }} className="text-2xl font-bold">{s.val}</div>
+                <div className="text-xs text-white/40 mt-0.5">{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Motivation card ─ */}
+          <div className="rounded-2xl p-5 mb-5 text-left"
+            style={{ background:"rgba(255,255,255,0.04)", border:`1px solid ${motivation.color}33`, animation:"heroFadeUp 0.7s 0.3s ease both" }}>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-3xl">{motivation.emoji}</span>
+              <span style={{ fontFamily:"Rajdhani, sans-serif", color:motivation.color }} className="text-xl font-bold">
+                {motivation.title}
+              </span>
+            </div>
+            <p className="text-sm text-white/75 leading-relaxed">{motivation.msg}</p>
+          </div>
+
+          {/* ── Conversion CTA ── */}
+          <div className="rounded-2xl p-6 mb-4"
+            style={{ background:"linear-gradient(135deg,#1A0800,#2A1000)", border:"2px solid rgba(255,98,0,0.4)", boxShadow:"0 0 40px rgba(255,98,0,0.15), inset 0 1px 0 rgba(255,255,255,0.05)", animation:"heroFadeUp 0.7s 0.5s ease both" }}>
+            <div className="text-xs font-bold tracking-widest text-orange-400 uppercase mb-2">🎯 Ready to Rank?</div>
+            <h2 style={{ fontFamily:"Rajdhani, sans-serif" }} className="text-2xl font-bold text-white mb-2 leading-tight">
+              Improve your rank with the full Civilezy course
+            </h2>
+            <p className="text-sm text-white/55 leading-relaxed mb-5">
+              Pool-mapped mock tests · Malayalam audio · Smart analytics · 100+ department papers
+            </p>
+
+            <div className="flex gap-3 flex-wrap justify-center">
+              <a href="/pricing"
+                className="inline-flex items-center gap-2 rounded-full font-extrabold transition-all duration-200 hover:scale-105"
+                style={{ background:"linear-gradient(135deg,#FF6200,#FF4500)", color:"white", padding:"13px 28px", fontFamily:"Nunito, sans-serif", fontSize:"15px", boxShadow:"0 6px 28px rgba(255,98,0,0.5)", textDecoration:"none", flex:"1 1 auto", justifyContent:"center", minWidth:"165px" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 10px 36px rgba(255,98,0,0.7)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 6px 28px rgba(255,98,0,0.5)"; }}
+              >
+                🚀 Start Preparation
+              </a>
+
+              <button
+                onClick={() => { setScreen("setup-domain"); setScore(0); setXp(0); setStreak(0); setQIndex(0); setQuestions([]); }}
+                className="inline-flex items-center gap-2 rounded-full font-bold transition-all duration-200 hover:scale-105"
+                style={{ background:"rgba(255,255,255,0.07)", color:"white", border:"1px solid rgba(255,255,255,0.15)", padding:"13px 22px", fontFamily:"Nunito, sans-serif", fontSize:"14px", cursor:"pointer", flex:"1 1 auto", justifyContent:"center", minWidth:"140px" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,98,0,0.12)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,98,0,0.4)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.07)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.15)"; }}
+              >
+                🎮 Play Again
+              </button>
+            </div>
+
+            <p className="text-xs text-white/25 text-center mt-4">
+              ✓ Free to start &nbsp;·&nbsp; ✓ Kerala PSC-specific &nbsp;·&nbsp; ✓ Cancel anytime
+            </p>
+          </div>
+
+        </div>
+      </GameShell>
+    );
+  }
+
+  return null;
 }
 
-// ─── Mock Questions ───────────────────────────────────────────────────────────
-
-const MOCK_QUESTIONS: Question[] = [
-  {
-    id: 1,
-    subject: "Fluid Mechanics",
-    question: "What is the unit of stress?",
-    options: ["N/m", "N/m²", "kg/m³", "Pa"],
-    answer: "N/m²",
-    explanation: "Stress = Force / Area. Both N/m² and Pa are correct units; N/m² is the SI derived form.",
-  },
-  {
-    id: 2,
-    subject: "Soil Mechanics",
-    question: "What is the specific gravity of water at 4°C?",
-    options: ["0.85", "1.00", "1.25", "0.99"],
-    answer: "1.00",
-    explanation: "Water at 4°C is densest at 1000 kg/m³, giving a specific gravity of exactly 1.00.",
-  },
-  {
-    id: 3,
-    subject: "RCC",
-    question: "Which of the following is a ferrous metal?",
-    options: ["Copper", "Aluminium", "Cast Iron", "Zinc"],
-    answer: "Cast Iron",
-    explanation: "Ferrous metals contain iron as a primary component. Cast iron is an iron-carbon alloy.",
-  },
-  {
-    id: 4,
-    subject: "Surveying",
-    question: "The angle of internal friction of loose sand is approximately:",
-    options: ["15°–20°", "25°–30°", "35°–40°", "45°–50°"],
-    answer: "25°–30°",
-    explanation: "Loose dry sand typically has an internal friction angle in the range of 25°–30°.",
-  },
-  {
-    id: 5,
-    subject: "Transportation",
-    question: "What does SBC stand for in foundation engineering?",
-    options: ["Safe Bearing Capacity", "Soil Bearing Code", "Structural Base Coefficient", "Standard Bore Calculation"],
-    answer: "Safe Bearing Capacity",
-    explanation: "SBC is the maximum load per unit area that the soil can safely carry without failure or excessive settlement.",
-  },
-  {
-    id: 6,
-    subject: "Fluid Mechanics",
-    question: "Bernoulli's theorem is applicable to:",
-    options: ["Compressible flow only", "Viscous flow only", "Ideal fluid flow along a streamline", "Turbulent flow only"],
-    answer: "Ideal fluid flow along a streamline",
-    explanation: "Bernoulli's principle applies to steady, incompressible, irrotational flow of an ideal (non-viscous) fluid along a streamline.",
-  },
-  {
-    id: 7,
-    subject: "RCC",
-    question: "The minimum grade of concrete for RCC work as per IS 456 is:",
-    options: ["M10", "M15", "M20", "M25"],
-    answer: "M20",
-    explanation: "IS 456:2000 specifies M20 as the minimum grade for reinforced concrete structures.",
-  },
-  {
-    id: 8,
-    subject: "Surveying",
-    question: "Which instrument is used to measure horizontal and vertical angles?",
-    options: ["Planimeter", "Theodolite", "Dumpy Level", "Compass"],
-    answer: "Theodolite",
-    explanation: "A theodolite measures both horizontal and vertical angles precisely and is used in triangulation surveys.",
-  },
-  {
-    id: 9,
-    subject: "Soil Mechanics",
-    question: "Consolidation settlement is primarily associated with:",
-    options: ["Sandy soils", "Gravel", "Clay soils", "Rock"],
-    answer: "Clay soils",
-    explanation: "Clay soils undergo consolidation when water is squeezed out under load, causing long-term settlement.",
-  },
-  {
-    id: 10,
-    subject: "Transportation",
-    question: "The camber on roads is provided to:",
-    options: ["Increase speed", "Drain rainwater", "Improve aesthetics", "Reduce friction"],
-    answer: "Drain rainwater",
-    explanation: "Camber is the transverse slope on a road surface designed to quickly drain rainwater to the sides.",
-  },
-];
-
-// ─── Data ────────────────────────────────────────────────────────────────────
-
-const DOMAINS: DomainOption[] = [
-  {
-    id: "ITI",
-    label: "ITI",
-    icon: "🔧",
-    desc: "Industrial Training Institute",
-  },
-  {
-    id: "Diploma",
-    label: "Diploma",
-    icon: "📐",
-    desc: "Diploma in Civil Engineering",
-  },
-  {
-    id: "BTech",
-    label: "BTech",
-    icon: "🎓",
-    desc: "Bachelor of Technology",
-  },
-];
-
-interface SubjectGroup {
-  core: SubjectOption[];
-  addon: SubjectOption[];
-}
-
-const DOMAIN_SUBJECTS: Record<Domain, SubjectGroup> = {
-  ITI: {
-    core: [
-      { id: "iti-math",    label: "Basic Mathematics", icon: "🔢" },
-      { id: "iti-sci",     label: "Basic Science",     icon: "🔬" },
-      { id: "iti-safety",  label: "Safety & First Aid", icon: "🩺" },
-    ],
-    addon: [
-      { id: "iti-masonry",    label: "Masonry",    icon: "🧱" },
-      { id: "iti-carpentry",  label: "Carpentry",  icon: "🪵" },
-      { id: "iti-plumbing",   label: "Plumbing",   icon: "🔧" },
-    ],
-  },
-  Diploma: {
-    core: [
-      { id: "dip-survey",   label: "Surveying",                  icon: "📏" },
-      { id: "dip-bm",       label: "Building Materials",         icon: "🧱" },
-      { id: "dip-ct",       label: "Construction Technology",    icon: "🏗️" },
-      { id: "dip-em",       label: "Engineering Mechanics",      icon: "⚙️" },
-      { id: "dip-irr",      label: "Irrigation Engineering",     icon: "💧" },
-      { id: "dip-env",      label: "Environmental Engineering",  icon: "🌿" },
-      { id: "dip-transport",label: "Transportation Engineering", icon: "🛣️" },
-    ],
-    addon: [
-      { id: "dip-geo",   label: "Geotechnical Engineering",  icon: "🏔️" },
-      { id: "dip-est",   label: "Estimation & Valuation",    icon: "📊" },
-      { id: "dip-adv",   label: "Advanced Surveying",        icon: "🗺️" },
-      { id: "dip-cm",    label: "Construction Management",   icon: "📋" },
-    ],
-  },
-  BTech: {
-    core: [
-      { id: "bt-sa",    label: "Structural Analysis",            icon: "🏛️" },
-      { id: "bt-fm",    label: "Fluid Mechanics",                icon: "💧" },
-      { id: "bt-sq",    label: "Surveying & Quantity Surveying", icon: "📏" },
-      { id: "bt-cm",    label: "Construction Management",        icon: "📋" },
-      { id: "bt-env",   label: "Environmental Engineering",      icon: "🌿" },
-      { id: "bt-ds",    label: "Design of Structures",           icon: "📐" },
-      { id: "bt-geo",   label: "Geotechnical Engineering",       icon: "🏔️" },
-      { id: "bt-trans", label: "Transportation Engineering",     icon: "🛣️" },
-    ],
-    addon: [
-      { id: "bt-kwa",   label: "KWA",         icon: "🚰" },
-      { id: "bt-lsgd",  label: "LSGD",        icon: "🏘️" },
-      { id: "bt-irr",   label: "Irrigation",  icon: "🌾" },
-      { id: "bt-pcb",   label: "PCB",         icon: "🔩" },
-      { id: "bt-gw",    label: "Groundwater", icon: "🌊" },
-    ],
-  },
-};
-
-const DIFFICULTIES: DifficultyOption[] = [
-  {
-    id: "Easy",
-    label: "Easy",
-    questions: "25 Questions",
-    desc: "Fundamental concepts & basics",
-    icon: "🌱",
-    color: "emerald",
-  },
-  {
-    id: "Medium",
-    label: "Medium",
-    questions: "50 Questions",
-    desc: "Application level problems",
-    icon: "⚡",
-    color: "amber",
-  },
-  {
-    id: "Hard",
-    label: "Hard",
-    questions: "PSC Level",
-    desc: "Exam-standard questions",
-    icon: "🔥",
-    color: "rose",
-  },
-];
-
-// ─── Sub-components ──────────────────────────────────────────────────────────
-
-function StepHeader({
-  step,
-  title,
-  subtitle,
-}: {
-  step: number;
-  title: string;
-  subtitle: string;
-}) {
+// ─── GameShell ───────────────────────────────────────────────────────────────
+function GameShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3 mb-5">
-      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-500 text-white font-bold text-sm shrink-0">
-        {step}
+    <div
+      className="min-h-screen flex flex-col overflow-x-hidden"
+      style={{ background:"linear-gradient(160deg,#050E1F 0%,#0B1E3D 50%,#060F20 100%)" }}
+    >
+      {/* Ambient glow — pointer-events-none so nothing is blocked */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex:0, background:"radial-gradient(ellipse at 60% 20%, rgba(255,98,0,0.06) 0%, transparent 55%), radial-gradient(ellipse at 20% 80%, rgba(100,200,255,0.04) 0%, transparent 50%)" }} />
+
+      {/* Scrollable centred content
+           pt-[80px]  — clears the 70px fixed navbar with 10px breathing room
+           pb-28      — clears the sticky bottom CTA bar                        */}
+      <div className="relative z-10 flex-1 flex flex-col pt-[80px] pb-28">
+        <div className="flex-1 flex items-start justify-center px-4 sm:px-6 py-6 sm:py-10">
+          <div className="w-full max-w-2xl">
+            {children}
+          </div>
+        </div>
       </div>
-      <div>
-        <h2 className="text-white font-semibold text-lg leading-tight">
-          {title}
-        </h2>
-        <p className="text-zinc-400 text-sm">{subtitle}</p>
-      </div>
+
+      <style>{`
+        @keyframes xpFloat {
+          0%   { opacity:0; transform:translate(-50%,-50%) scale(0.6); }
+          20%  { opacity:1; transform:translate(-50%,-65%) scale(1.1); }
+          70%  { opacity:1; transform:translate(-50%,-80%) scale(1); }
+          100% { opacity:0; transform:translate(-50%,-110%) scale(0.9); }
+        }
+      `}</style>
     </div>
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
-
-export default function GameArenaPage() {
-  const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
-  const [selectedDifficulty, setSelectedDifficulty] =
-    useState<Difficulty | null>(null);
-  const [showMoreSubjects, setShowMoreSubjects] = useState(false);
-
-  // ── Game engine state ──
-  const [gameStarted, setGameStarted]                   = useState(false);
-  const [questions, setQuestions]                       = useState<Question[]>([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer]             = useState<string | null>(null);
-  const [score, setScore]                               = useState(0);
-  const [xp, setXp]                                     = useState(0);
-  const [showResult, setShowResult]                     = useState(false);
-  const [animating, setAnimating]                       = useState(false);
-
-  // ── Advanced features state ──
-  const [timeLeft, setTimeLeft]       = useState(15);
-  const [streakCount, setStreakCount] = useState(0);
-  const [bestStreak, setBestStreak]   = useState(0);
-  const [showXpBurst, setShowXpBurst] = useState(false);
-  const [streakGlow, setStreakGlow]   = useState(false);
-  const [timedOut, setTimedOut]       = useState(false);
-
-  const timerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-
-  const handleDomainSelect = (domain: Domain) => {
-    if (selectedDomain !== domain) {
-      setSelectedSubjects([]);
-      setShowMoreSubjects(false);
-    }
-    setSelectedDomain(domain);
-  };
-
-  const currentSubjects = selectedDomain ? DOMAIN_SUBJECTS[selectedDomain] : null;
-
-  const isReady =
-    selectedDomain !== null &&
-    selectedSubjects.length > 0 &&
-    selectedDifficulty !== null;
-
-  const toggleSubject = (id: string) => {
-    setSelectedSubjects((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
-    );
-  };
-
-  // ── Sound engine (Web Audio API, no external files needed) ──────────────
-  const playSound = useCallback((type: "correct" | "wrong" | "timeout") => {
-    try {
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      }
-      const ctx = audioCtxRef.current;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      if (type === "correct") {
-        osc.frequency.setValueAtTime(523, ctx.currentTime);
-        osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1);
-        osc.frequency.setValueAtTime(784, ctx.currentTime + 0.2);
-        gain.gain.setValueAtTime(0.18, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.5);
-      } else if (type === "wrong") {
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(200, ctx.currentTime);
-        osc.frequency.setValueAtTime(150, ctx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.15, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.35);
-      } else {
-        osc.type = "triangle";
-        osc.frequency.setValueAtTime(300, ctx.currentTime);
-        osc.frequency.linearRampToValueAtTime(100, ctx.currentTime + 0.4);
-        gain.gain.setValueAtTime(0.12, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.4);
-      }
-    } catch (_) { /* Audio not supported — silently ignore */ }
-  }, []);
-
-  // ── Timer ─────────────────────────────────────────────────────────────────
-  const clearTimer = useCallback(() => {
-    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-  }, []);
-
-  const startTimer = useCallback(() => {
-    clearTimer();
-    setTimeLeft(15);
-    timerRef.current = setInterval(() => {
-      setTimeLeft((t) => {
-        if (t <= 1) {
-          clearTimer();
-          return 0;
-        }
-        return t - 1;
-      });
-    }, 1000);
-  }, [clearTimer]);
-
-  // Auto-advance when timer hits 0
-  useEffect(() => {
-    if (!gameStarted || showResult || selectedAnswer !== null) return;
-    if (timeLeft === 0) {
-      playSound("timeout");
-      setTimedOut(true);
-      setSelectedAnswer("__timeout__");
-      setStreakCount(0);
-      clearTimer();
-    }
-  }, [timeLeft, gameStarted, showResult, selectedAnswer, playSound, clearTimer]);
-
-  // ── Quiz engine helpers ──────────────────────────────────────────────────
-
-  const handleStart = () => {
-    if (!isReady) return;
-    const count = selectedDifficulty === "Easy" ? 5 : selectedDifficulty === "Medium" ? 7 : 10;
-    const pool  = [...MOCK_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, count);
-    setQuestions(pool);
-    setCurrentQuestionIndex(0);
-    setSelectedAnswer(null);
-    setScore(0);
-    setXp(0);
-    setShowResult(false);
-    setAnimating(false);
-    setStreakCount(0);
-    setBestStreak(0);
-    setTimedOut(false);
-    setShowXpBurst(false);
-    setGameStarted(true);
-    // Timer starts via useEffect below
-  };
-
-  // Start timer when question changes
-  useEffect(() => {
-    if (gameStarted && !showResult) {
-      setTimedOut(false);
-      startTimer();
-    }
-    return clearTimer;
-  }, [gameStarted, showResult, currentQuestionIndex]); // eslint-disable-line
-
-  const handleAnswerSelect = (option: string) => {
-    if (selectedAnswer !== null) return;
-    clearTimer();
-    setSelectedAnswer(option);
-    const correct = option === questions[currentQuestionIndex].answer;
-
-    if (correct) {
-      playSound("correct");
-      setScore((s) => s + 1);
-      setXp((x) => x + 10);
-      setStreakCount((s) => {
-        const next = s + 1;
-        setBestStreak((b) => Math.max(b, next));
-        return next;
-      });
-      // Streak glow pulse
-      setStreakGlow(true);
-      setTimeout(() => setStreakGlow(false), 800);
-      // XP burst animation
-      setShowXpBurst(true);
-      setTimeout(() => setShowXpBurst(false), 1200);
-    } else {
-      playSound("wrong");
-      setStreakCount(0);
-    }
-  };
-
-  const handleNext = () => {
-    setAnimating(true);
-    setTimedOut(false);
-    setTimeout(() => {
-      if (currentQuestionIndex + 1 >= questions.length) {
-        clearTimer();
-        setShowResult(true);
-      } else {
-        setCurrentQuestionIndex((i) => i + 1);
-        setSelectedAnswer(null);
-      }
-      setAnimating(false);
-    }, 300);
-  };
-
-  const handlePlayAgain = () => {
-    clearTimer();
-    setGameStarted(false);
-    setShowResult(false);
-    setSelectedAnswer(null);
-    setCurrentQuestionIndex(0);
-    setScore(0);
-    setXp(0);
-    setStreakCount(0);
-    setBestStreak(0);
-    setTimedOut(false);
-  };
-
-  // ── Derived quiz values ──────────────────────────────────────────────────
-  const currentQ   = questions[currentQuestionIndex];
-  const isLastQ    = currentQuestionIndex + 1 >= questions.length;
-  const pct        = questions.length ? Math.round(((currentQuestionIndex + (selectedAnswer ? 1 : 0)) / questions.length) * 100) : 0;
-  const grade      = score / (questions.length || 1);
-  const gradeLabel = grade >= 0.8
-    ? "🔥 Excellent! You're PSC ready"
-    : grade >= 0.6
-    ? "👍 Good progress, keep practicing"
-    : "📘 Keep learning, you'll improve";
-  const gradeColor = grade >= 0.8 ? "text-emerald-400" : grade >= 0.6 ? "text-amber-400" : "text-rose-400";
-  const timerDanger = timeLeft <= 5;
-  const timerPct    = (timeLeft / 15) * 100;
-  const revealed    = selectedAnswer !== null;
-  const BG = (
-    <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: "linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)", backgroundSize: "40px 40px" }} />
-  );
-
-  // ─── QUIZ SCREEN ─────────────────────────────────────────────────────────
-  if (gameStarted && !showResult && currentQ) {
-    return (
-      <main className="min-h-screen bg-zinc-950 text-white">
-        {BG}
-
-        {/* XP Burst floating animation */}
-        <div className={`fixed top-20 right-6 z-50 pointer-events-none transition-all duration-700 ${showXpBurst ? "opacity-100 -translate-y-8" : "opacity-0 translate-y-0"}`}>
-          <span className="text-amber-400 font-extrabold text-xl drop-shadow-lg">+10 XP ⚡</span>
-        </div>
-
-        <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
-
-          {/* ── Top bar ── */}
-          <div className="flex items-center justify-between mb-5">
-            <button onClick={handlePlayAgain} className="flex items-center gap-1.5 text-zinc-500 hover:text-zinc-300 text-sm transition-colors">
-              ← Exit
-            </button>
-            <div className="flex items-center gap-2.5">
-              {/* Streak pill */}
-              <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-all duration-300 border
-                ${streakCount >= 3
-                  ? `bg-orange-500/20 border-orange-500/40 text-orange-400 ${streakGlow ? "shadow-[0_0_16px_rgba(249,115,22,0.6)]" : "shadow-[0_0_8px_rgba(249,115,22,0.2)]"}`
-                  : "bg-zinc-800 border-zinc-700 text-zinc-400"}`}>
-                🔥 {streakCount}
-              </span>
-              {/* XP pill */}
-              <span className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full px-3 py-1 text-amber-400 text-xs font-semibold">
-                ⚡ {xp} XP
-              </span>
-              {/* Score pill */}
-              <span className="flex items-center gap-1.5 bg-orange-500/10 border border-orange-500/20 rounded-full px-3 py-1 text-orange-400 text-xs font-semibold">
-                🎯 {score}/{questions.length}
-              </span>
-            </div>
-          </div>
-
-          {/* ── Timer bar ── */}
-          <div className="mb-2">
-            <div className="flex justify-between items-center mb-1.5">
-              <span className="text-xs text-zinc-500">
-                Question {currentQuestionIndex + 1} of {questions.length}
-              </span>
-              <span className={`text-xs font-bold tabular-nums transition-colors duration-300 ${timerDanger ? "text-rose-400" : "text-zinc-400"}`}>
-                ⏱ {timeLeft}s
-              </span>
-            </div>
-
-            {/* Question progress bar */}
-            <div className="h-1 bg-zinc-800 rounded-full overflow-hidden mb-2">
-              <div className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all duration-500"
-                style={{ width: `${pct}%` }} />
-            </div>
-
-            {/* Timer countdown bar */}
-            <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-1000 ease-linear
-                  ${timerDanger
-                    ? "bg-gradient-to-r from-rose-600 to-red-400"
-                    : timeLeft <= 10
-                    ? "bg-gradient-to-r from-amber-500 to-yellow-400"
-                    : "bg-gradient-to-r from-emerald-500 to-teal-400"}`}
-                style={{ width: `${timerPct}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Timed out banner */}
-          {timedOut && (
-            <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-500/30 rounded-xl px-4 py-2.5 mb-4 text-rose-400 text-sm font-medium">
-              ⏰ Time&apos;s up! The correct answer is highlighted below.
-            </div>
-          )}
-
-          {/* ── Question card ── */}
-          <div className={`transition-all duration-300 ${animating ? "opacity-0 translate-y-3" : "opacity-100 translate-y-0"}`}>
-            <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-6 mb-4 backdrop-blur-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-semibold px-2.5 py-1 rounded-full">
-                  {currentQ.subject}
-                </span>
-                <span className="text-zinc-600 text-xs">{selectedDifficulty}</span>
-              </div>
-              <p className="text-white text-lg font-semibold leading-relaxed">{currentQ.question}</p>
-            </div>
-
-            {/* ── Options ── */}
-            <div className="grid grid-cols-1 gap-2.5 mb-5">
-              {currentQ.options.map((opt, i) => {
-                const isCorrect  = opt === currentQ.answer;
-                const isSelected = opt === selectedAnswer;
-                let cls = "border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:border-zinc-500 hover:bg-zinc-800 hover:shadow-[0_0_12px_rgba(255,255,255,0.04)]";
-                if (revealed) {
-                  if (isCorrect)       cls = "border-emerald-500 bg-emerald-500/10 text-emerald-300 shadow-[0_0_16px_rgba(16,185,129,0.18)]";
-                  else if (isSelected) cls = "border-rose-500 bg-rose-500/10 text-rose-300 shadow-[0_0_16px_rgba(244,63,94,0.18)]";
-                  else                 cls = "border-zinc-800 bg-zinc-900/40 text-zinc-600";
-                }
-                const optLabel = ["A","B","C","D"][i];
-                return (
-                  <button
-                    key={opt}
-                    onClick={() => handleAnswerSelect(opt)}
-                    disabled={revealed}
-                    className={`flex items-center gap-4 w-full px-4 py-3.5 rounded-xl border text-sm font-medium text-left transition-all duration-200
-                      ${cls} ${!revealed ? "cursor-pointer active:scale-[0.985]" : "cursor-default"}`}
-                  >
-                    <span className={`flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold shrink-0 transition-all duration-200
-                      ${revealed && isCorrect  ? "bg-emerald-500/25 text-emerald-300 scale-110"
-                      : revealed && isSelected ? "bg-rose-500/25 text-rose-300"
-                      : "bg-zinc-700/60 text-zinc-400"}`}>
-                      {revealed && isCorrect ? "✓" : revealed && isSelected ? "✗" : optLabel}
-                    </span>
-                    <span className="flex-1 leading-snug">{opt}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* ── Explanation + Next ── */}
-            {revealed && (
-              <div className="space-y-3">
-                <div className="bg-zinc-900/60 border border-zinc-700/50 rounded-xl px-4 py-3.5">
-                  <p className="text-xs font-semibold text-zinc-400 mb-1 uppercase tracking-wide">💡 Explanation</p>
-                  <p className="text-zinc-300 text-sm leading-relaxed">{currentQ.explanation}</p>
-                </div>
-                {/* Streak message on correct */}
-                {selectedAnswer === currentQ.answer && streakCount >= 2 && (
-                  <div className="flex items-center justify-center gap-2 text-orange-400 text-sm font-bold animate-pulse">
-                    🔥 {streakCount} in a row! Keep going!
-                  </div>
-                )}
-                <div className="flex justify-end">
-                  <button
-                    onClick={handleNext}
-                    className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-400 text-white font-bold px-7 py-3 rounded-xl shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:scale-105 active:scale-100 transition-all duration-200"
-                  >
-                    {isLastQ ? "See Results 🏁" : "Next Question →"}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  // ─── RESULT SCREEN ────────────────────────────────────────────────────────
-  if (gameStarted && showResult) {
-    const medal = score === questions.length ? "🥇" : score >= questions.length * 0.7 ? "🥈" : "🥉";
-    return (
-      <main className="min-h-screen bg-zinc-950 text-white flex items-center justify-center px-4">
-        {BG}
-        <div className="relative z-10 w-full max-w-md text-center py-10">
-
-          {/* Medal */}
-          <div className="text-7xl mb-4">{medal}</div>
-          <h2 className="text-3xl font-extrabold text-white mb-1">Game Over!</h2>
-          <p className={`text-lg font-semibold mb-8 ${gradeColor}`}>{gradeLabel}</p>
-
-          {/* Score card */}
-          <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-6 mb-5 backdrop-blur-sm">
-            {/* 4-stat grid */}
-            <div className="grid grid-cols-4 gap-3 mb-5">
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-2xl font-extrabold text-white leading-none">
-                  {score}<span className="text-zinc-600 text-base">/{questions.length}</span>
-                </span>
-                <span className="text-zinc-500 text-xs">Score</span>
-              </div>
-              <div className="flex flex-col items-center gap-1 border-x border-zinc-800">
-                <span className="text-2xl font-extrabold text-amber-400 leading-none">+{xp}</span>
-                <span className="text-zinc-500 text-xs">XP</span>
-              </div>
-              <div className="flex flex-col items-center gap-1 border-r border-zinc-800">
-                <span className="text-2xl font-extrabold text-orange-400 leading-none">
-                  🔥{bestStreak}
-                </span>
-                <span className="text-zinc-500 text-xs">Best Streak</span>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-2xl font-extrabold text-sky-400 leading-none">
-                  {Math.round((score / questions.length) * 100)}%
-                </span>
-                <span className="text-zinc-500 text-xs">Accuracy</span>
-              </div>
-            </div>
-
-            {/* Accuracy bar */}
-            <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-700
-                  ${grade >= 0.8 ? "bg-gradient-to-r from-emerald-500 to-teal-400"
-                  : grade >= 0.6 ? "bg-gradient-to-r from-amber-500 to-yellow-400"
-                  : "bg-gradient-to-r from-orange-500 to-amber-400"}`}
-                style={{ width: `${Math.round((score / questions.length) * 100)}%` }}
-              />
-            </div>
-            <div className="flex justify-between mt-1.5 text-xs text-zinc-600">
-              <span>0%</span><span>100%</span>
-            </div>
-
-            {/* Best streak badge */}
-            {bestStreak >= 3 && (
-              <div className="mt-4 flex items-center justify-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded-xl px-4 py-2">
-                <span className="text-orange-400 text-sm font-bold">🔥 Best streak of {bestStreak}!</span>
-                <span className="text-zinc-500 text-xs">Impressive focus</span>
-              </div>
-            )}
-          </div>
-
-          {/* Config recap */}
-          <div className="flex flex-wrap justify-center gap-2 mb-8">
-            {[selectedDomain, selectedDifficulty, `${selectedSubjects.length} subject${selectedSubjects.length > 1 ? "s" : ""}`].map((tag) => (
-              <span key={tag} className="inline-flex items-center gap-1 bg-zinc-800 border border-zinc-700 rounded-full px-3 py-1 text-xs text-zinc-400">
-                <span className="text-orange-400">●</span> {tag}
-              </span>
-            ))}
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={handleStart}
-              className="flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-400 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:scale-105 active:scale-100 transition-all duration-200"
-            >
-              🔄 Play Again
-            </button>
-            <button
-              onClick={handlePlayAgain}
-              className="flex items-center justify-center gap-2 bg-zinc-800 border border-zinc-700 text-zinc-300 font-semibold px-8 py-3.5 rounded-xl hover:bg-zinc-700 hover:border-zinc-500 transition-all duration-200"
-            >
-              ⚙️ Change Setup
-            </button>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  // ─── SETUP SCREEN ─────────────────────────────────────────────────────────
+// ─── SetupCard ────────────────────────────────────────────────────────────────
+function SetupCard({ step, title, sub, children, onBack }: {
+  step: number; title: string; sub: string; children: React.ReactNode; onBack?: () => void;
+}) {
   return (
-    <main className="min-h-screen bg-zinc-950 text-white">
-      {/* ── Background grid pattern ── */}
-      <div
-        className="absolute inset-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage:
-            "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-      />
-
-      <div className="relative z-10 max-w-3xl mx-auto px-4 py-12">
-        {/* ── Header ── */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded-full px-4 py-1.5 mb-5">
-            <span className="text-orange-400 text-xs font-semibold tracking-widest uppercase">
-              Quiz Mode
-            </span>
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold mb-3 tracking-tight">
-            🎮{" "}
-            <span className="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">
-              Game Arena
-            </span>
-          </h1>
-          <p className="text-zinc-400 text-lg max-w-md mx-auto">
-            Learn PSC Civil Engineering by playing
-          </p>
-        </div>
-
-        {/* ── Progress indicators ── */}
-        <div className="flex items-center gap-2 mb-10 justify-center">
-          {[
-            { n: 1, done: !!selectedDomain },
-            { n: 2, done: selectedSubjects.length > 0 },
-            { n: 3, done: !!selectedDifficulty },
-          ].map(({ n, done }, i, arr) => (
-            <div key={n} className="flex items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-                  done
-                    ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
-                    : "bg-zinc-800 text-zinc-500 border border-zinc-700"
-                }`}
-              >
-                {done ? "✓" : n}
-              </div>
-              {i < arr.length - 1 && (
-                <div
-                  className={`w-12 h-0.5 mx-1 transition-all duration-500 ${
-                    done ? "bg-orange-500/60" : "bg-zinc-800"
-                  }`}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* ────────────────────────────────────────────
-            STEP 1 — Select Domain
-        ──────────────────────────────────────────── */}
-        <section className="mb-10 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 backdrop-blur-sm">
-          <StepHeader
-            step={1}
-            title="Select Domain"
-            subtitle="Choose your qualification level"
-          />
-
-          <div className="grid grid-cols-3 gap-3">
-            {DOMAINS.map((d) => {
-              const isSelected = selectedDomain === d.id;
-              return (
-                <button
-                  key={d.id}
-                  onClick={() => handleDomainSelect(d.id)}
-                  className={`group relative flex flex-col items-center justify-center gap-2 p-5 rounded-xl border transition-all duration-200 cursor-pointer text-center
-                    ${
-                      isSelected
-                        ? "border-orange-500 bg-orange-500/10 shadow-lg shadow-orange-500/10"
-                        : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-500 hover:bg-zinc-800"
-                    }`}
-                >
-                  {isSelected && (
-                    <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-orange-500 shadow-sm shadow-orange-400" />
-                  )}
-                  <span className="text-2xl">{d.icon}</span>
-                  <span
-                    className={`font-bold text-base transition-colors ${
-                      isSelected ? "text-orange-400" : "text-white"
-                    }`}
-                  >
-                    {d.label}
-                  </span>
-                  <span className="text-zinc-500 text-xs leading-tight">
-                    {d.desc}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ────────────────────────────────────────────
-            STEP 2 — Select Subjects (dynamic, domain-gated)
-        ──────────────────────────────────────────── */}
-        <div
-          className={`transition-all duration-500 ease-in-out overflow-hidden ${
-            selectedDomain
-              ? "max-h-[1000px] opacity-100 mb-10"
-              : "max-h-0 opacity-0 mb-0"
-          }`}
-        >
-          <section className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 backdrop-blur-sm">
-            <StepHeader
-              step={2}
-              title="Choose Subjects"
-              subtitle={
-                selectedSubjects.length > 0
-                  ? `${selectedSubjects.length} subject${selectedSubjects.length > 1 ? "s" : ""} selected`
-                  : "Select one or more subjects based on your preparation"
-              }
-            />
-
-            {currentSubjects && (
-              <>
-                {/* ── Core subjects ── */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {currentSubjects.core.map((s) => {
-                    const isSelected = selectedSubjects.includes(s.id);
-                    return (
-                      <button
-                        key={s.id}
-                        onClick={() => toggleSubject(s.id)}
-                        className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer
-                          ${
-                            isSelected
-                              ? "border-orange-500 bg-orange-500/10 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.15)]"
-                              : "border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:border-zinc-500 hover:bg-zinc-800"
-                          }`}
-                      >
-                        <span className="text-base shrink-0">{s.icon}</span>
-                        <span className="leading-tight flex-1 text-left">{s.label}</span>
-                        {isSelected && (
-                          <span className="text-orange-500 text-xs shrink-0">✓</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* ── More / Add-on subjects ── */}
-                {currentSubjects.addon.length > 0 && (
-                  <>
-                    {/* Expand toggle */}
-                    <button
-                      onClick={() => setShowMoreSubjects((p) => !p)}
-                      className="mt-4 flex items-center gap-2 text-sm text-orange-400 hover:text-orange-300 transition-colors font-medium group"
-                    >
-                      <span
-                        className={`inline-flex items-center justify-center w-5 h-5 rounded-full border border-orange-500/50 bg-orange-500/10 text-orange-400 text-xs transition-transform duration-300 ${
-                          showMoreSubjects ? "rotate-45" : "rotate-0"
-                        }`}
-                      >
-                        +
-                      </span>
-                      {showMoreSubjects ? "Hide extra subjects" : `+ More Subjects (${currentSubjects.addon.length} add-ons)`}
-                    </button>
-
-                    {/* Add-on subject chips */}
-                    <div
-                      className={`grid grid-cols-2 sm:grid-cols-3 gap-2.5 transition-all duration-400 ease-in-out overflow-hidden ${
-                        showMoreSubjects
-                          ? "max-h-96 opacity-100 mt-2.5"
-                          : "max-h-0 opacity-0 mt-0"
-                      }`}
-                    >
-                      {currentSubjects.addon.map((s) => {
-                        const isSelected = selectedSubjects.includes(s.id);
-                        return (
-                          <button
-                            key={s.id}
-                            onClick={() => toggleSubject(s.id)}
-                            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer
-                              ${
-                                isSelected
-                                  ? "border-orange-500 bg-orange-500/10 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.15)]"
-                                  : "border-zinc-700/60 border-dashed bg-zinc-800/30 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"
-                              }`}
-                          >
-                            <span className="text-base shrink-0">{s.icon}</span>
-                            <span className="leading-tight flex-1 text-left">{s.label}</span>
-                            {isSelected && (
-                              <span className="text-orange-500 text-xs shrink-0">✓</span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-
-                {/* ── Bottom bar: select-all + clear ── */}
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-zinc-800">
-                  <button
-                    onClick={() => {
-                      const all = [
-                        ...currentSubjects.core,
-                        ...(showMoreSubjects ? currentSubjects.addon : []),
-                      ].map((s) => s.id);
-                      const allVisible = all.every((id) =>
-                        selectedSubjects.includes(id)
-                      );
-                      if (allVisible) {
-                        setSelectedSubjects([]);
-                      } else {
-                        setSelectedSubjects((prev) =>
-                          Array.from(new Set([...prev, ...all]))
-                        );
-                      }
-                    }}
-                    className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
-                  >
-                    {[
-                      ...currentSubjects.core,
-                      ...(showMoreSubjects ? currentSubjects.addon : []),
-                    ].every((s) => selectedSubjects.includes(s.id))
-                      ? "Deselect all"
-                      : "Select all visible"}
-                  </button>
-                  {selectedSubjects.length > 0 && (
-                    <button
-                      onClick={() => setSelectedSubjects([])}
-                      className="text-xs text-zinc-600 hover:text-rose-400 transition-colors"
-                    >
-                      Clear all
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
-          </section>
-        </div>
-
-        {/* ────────────────────────────────────────────
-            STEP 3 — Select Difficulty
-        ──────────────────────────────────────────── */}
-        <section className="mb-10 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 backdrop-blur-sm">
-          <StepHeader
-            step={3}
-            title="Select Difficulty"
-            subtitle="How challenging do you want it?"
-          />
-
-          <div className="grid grid-cols-3 gap-3">
-            {DIFFICULTIES.map((d) => {
-              const isSelected = selectedDifficulty === d.id;
-
-              const accentMap: Record<string, string> = {
-                emerald: isSelected
-                  ? "border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/10"
-                  : "border-zinc-700 bg-zinc-800/50 hover:border-emerald-700 hover:bg-zinc-800",
-                amber: isSelected
-                  ? "border-amber-500 bg-amber-500/10 shadow-lg shadow-amber-500/10"
-                  : "border-zinc-700 bg-zinc-800/50 hover:border-amber-700 hover:bg-zinc-800",
-                rose: isSelected
-                  ? "border-rose-500 bg-rose-500/10 shadow-lg shadow-rose-500/10"
-                  : "border-zinc-700 bg-zinc-800/50 hover:border-rose-700 hover:bg-zinc-800",
-              };
-
-              const textMap: Record<string, string> = {
-                emerald: "text-emerald-400",
-                amber: "text-amber-400",
-                rose: "text-rose-400",
-              };
-
-              return (
-                <button
-                  key={d.id}
-                  onClick={() => setSelectedDifficulty(d.id)}
-                  className={`group relative flex flex-col items-center gap-2 p-5 rounded-xl border transition-all duration-200 cursor-pointer text-center
-                    ${accentMap[d.color]}`}
-                >
-                  {isSelected && (
-                    <div
-                      className={`absolute top-2 right-2 w-2 h-2 rounded-full ${
-                        d.color === "emerald"
-                          ? "bg-emerald-500"
-                          : d.color === "amber"
-                          ? "bg-amber-500"
-                          : "bg-rose-500"
-                      }`}
-                    />
-                  )}
-                  <span className="text-2xl">{d.icon}</span>
-                  <span
-                    className={`font-bold text-base ${
-                      isSelected ? textMap[d.color] : "text-white"
-                    }`}
-                  >
-                    {d.label}
-                  </span>
-                  <span
-                    className={`text-xs font-semibold ${
-                      isSelected ? textMap[d.color] : "text-zinc-400"
-                    }`}
-                  >
-                    {d.questions}
-                  </span>
-                  <span className="text-zinc-500 text-xs">{d.desc}</span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ────────────────────────────────────────────
-            Summary + Start Button
-        ──────────────────────────────────────────── */}
-
-        {/* Config summary pills (visible when all set) */}
-        {isReady && (
-          <div className="flex flex-wrap justify-center gap-2 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <span className="inline-flex items-center gap-1 bg-zinc-800 border border-zinc-700 rounded-full px-3 py-1 text-xs text-zinc-300">
-              <span className="text-orange-400">●</span> {selectedDomain}
-            </span>
-            <span className="inline-flex items-center gap-1 bg-zinc-800 border border-zinc-700 rounded-full px-3 py-1 text-xs text-zinc-300">
-              <span className="text-orange-400">●</span>{" "}
-              {selectedSubjects.length} subject
-              {selectedSubjects.length > 1 ? "s" : ""}
-            </span>
-            <span className="inline-flex items-center gap-1 bg-zinc-800 border border-zinc-700 rounded-full px-3 py-1 text-xs text-zinc-300">
-              <span className="text-orange-400">●</span> {selectedDifficulty}
-            </span>
-          </div>
-        )}
-
-        {/* Start Button */}
-        <div className="flex justify-center">
-          <button
-            onClick={handleStart}
-            disabled={!isReady}
-            className={`
-              relative flex items-center gap-3 px-10 py-4 rounded-2xl text-lg font-bold tracking-wide transition-all duration-300
-              ${
-                isReady
-                  ? "bg-gradient-to-r from-orange-500 to-amber-400 text-white shadow-xl shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-105 active:scale-100 cursor-pointer"
-                  : "bg-zinc-800 text-zinc-600 border border-zinc-700 cursor-not-allowed"
-              }
-            `}
-          >
-            {isReady && (
-              <span className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-200" />
-            )}
-            <span className="relative">🚀</span>
-            <span className="relative">
-              {isReady ? "Start Game" : "Complete all steps to start"}
-            </span>
-          </button>
-        </div>
-
-        {!isReady && (
-          <p className="text-center text-zinc-600 text-xs mt-3">
-            {!selectedDomain
-              ? "Select a domain to begin"
-              : selectedSubjects.length === 0
-              ? "Pick at least one subject"
-              : "Choose a difficulty level"}
-          </p>
-        )}
+    <div style={{ animation:"heroFadeUp 0.45s ease forwards" }}>
+      {/* Step progress */}
+      <div className="flex items-center gap-2 mb-8">
+        {[1,2,3].map(s => (
+          <div key={s} className="flex-1 h-1 rounded-full transition-all duration-400"
+            style={{ background: s<=step ? "linear-gradient(90deg,#FF6200,#FF8534)" : "rgba(255,255,255,0.08)", boxShadow: s<=step ? "0 0 8px rgba(255,98,0,0.4)" : "none" }} />
+        ))}
       </div>
-    </main>
+
+      {onBack && (
+        <button onClick={onBack} className="flex items-center gap-1 text-sm text-white/45 hover:text-white/75 mb-4 transition-colors" style={{ background:"none", border:"none", cursor:"pointer", padding:0 }}>
+          ← Back
+        </button>
+      )}
+
+      <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-widest text-orange-400 mb-3"
+        style={{ background:"rgba(255,98,0,0.12)", border:"1px solid rgba(255,98,0,0.25)" }}>
+        STEP {step} OF 3
+      </div>
+      <h1 style={{ fontFamily:"Rajdhani, sans-serif" }} className="text-4xl font-bold text-white mb-2">{title}</h1>
+      <p className="text-sm text-white/50 mb-7">{sub}</p>
+      {children}
+    </div>
+  );
+}
+
+// ─── GlowBtn ──────────────────────────────────────────────────────────────────
+function GlowBtn({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+  return (
+    <button onClick={onClick}
+      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full font-extrabold transition-all duration-200 hover:scale-105 active:scale-95"
+      style={{ background:"linear-gradient(135deg,#FF6200,#FF4500)", color:"white", border:"none", padding:"14px 34px", fontFamily:"Nunito, sans-serif", fontSize:"16px", cursor:"pointer", boxShadow:"0 6px 28px rgba(255,98,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)" }}
+      onMouseEnter={e => { (e.currentTarget).style.boxShadow = "0 10px 36px rgba(255,98,0,0.65), inset 0 1px 0 rgba(255,255,255,0.15)"; }}
+      onMouseLeave={e => { (e.currentTarget).style.boxShadow = "0 6px 28px rgba(255,98,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)"; }}
+    >
+      {children}
+    </button>
   );
 }
