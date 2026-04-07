@@ -13,7 +13,7 @@ const NAV_LINKS = [
   { label: "Home",       href: "/"           },
   { label: "Courses",    href: "/courses"    },
   { label: "Game Arena", href: "/game-arena" },
-  { label: "Mock Tests", href: "/mock-tests" },
+  
   { label: "Pricing",    href: "/pricing"    },
   { label: "Blog",       href: "/blog"       },
 ] as const;
@@ -53,10 +53,11 @@ export default function Navbar() {
           background:     scrolled
             ? "rgba(11,30,61,0.98)"
             : "rgba(11,30,61,0.95)",
-          backdropFilter: "blur(12px)",
+          backdropFilter:       "blur(12px)",
           WebkitBackdropFilter: "blur(12px)",
           borderBottom:   "1px solid rgba(255,98,0,0.2)",
           transition:     "background 0.3s",
+          boxSizing:      "border-box",
         }}
       >
         {/* ── Logo ───────────────────────────────────────── */}

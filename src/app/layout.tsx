@@ -53,9 +53,12 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>
+      <body className="overflow-x-hidden">
         <Navbar />
-        <main style={{ paddingTop: "70px", paddingBottom: "72px" }}>
+        <main
+          className="overflow-x-hidden"
+          style={{ paddingTop: "70px", paddingBottom: "80px" }}
+        >
           {children}
         </main>
         <StickyCTA />
