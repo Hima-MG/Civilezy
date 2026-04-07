@@ -111,6 +111,7 @@ export default function Hero() {
           display:    "flex",
           alignItems: "center",
         }}
+        className="hero-section-pad"
       >
         {/* ── Background radial gradients ──────────────────────────── */}
         <div style={{
@@ -224,16 +225,20 @@ export default function Hero() {
             </p>
 
             {/* CTA Buttons */}
-            <div style={{
-              display:      "flex",
-              gap:          "16px",
-              flexWrap:     "wrap",
-              marginBottom: "40px",
-            }}>
+            <div
+              className="hero-ctas"
+              style={{
+                display:      "flex",
+                gap:          "16px",
+                flexWrap:     "wrap",
+                marginBottom: "40px",
+              }}
+            >
               <a
                 href={LMS_FREE_TEST}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="hero-cta-btn"
                 style={{
                   background:     "linear-gradient(135deg, #FF6200, #FF4500)",
                   color:          "white",
@@ -264,6 +269,7 @@ export default function Hero() {
               </a>
 
               <button
+                className="hero-cta-btn"
                 style={{
                   background:   "transparent",
                   color:        "#ffffff",

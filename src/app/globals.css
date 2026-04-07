@@ -17,10 +17,8 @@
   --card-border: rgba(255, 255, 255, 0.10);
 }
 
-/* ─── Base ─────────────────────────────────────────────────────────────── */
-html {
-  scroll-behavior: smooth;
-}
+/* ─── Base ───────────────────────────────────────────────────────────── */
+html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-nunito), "Nunito", sans-serif;
@@ -34,85 +32,137 @@ h1, h2, h3, h4, h5 {
   font-family: var(--font-rajdhani), "Rajdhani", sans-serif;
 }
 
-/* ─── Custom scrollbar ─────────────────────────────────────────────────── */
+/* ─── Custom scrollbar ───────────────────────────────────────────────── */
 ::-webkit-scrollbar       { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--navy); }
 ::-webkit-scrollbar-thumb { background: rgba(255,98,0,0.4); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--orange); }
 
-/* ─── Hero keyframes ────────────────────────────────────────────────────── */
+/* ─── Keyframes ──────────────────────────────────────────────────────── */
 @keyframes heroFadeUp {
   from { opacity: 0; transform: translateY(30px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes pulseDot {
-  0%, 100% { opacity: 1; transform: scale(1); }
+  0%, 100% { opacity: 1;   transform: scale(1);   }
   50%      { opacity: 0.5; transform: scale(0.8); }
 }
-
 @keyframes xpPopUp {
-  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-  20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-  80%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  100% { opacity: 0; transform: translate(-50%, -80%) scale(0.9); }
+  0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
+  20%  { opacity: 1; transform: translate(-50%,-50%) scale(1.1); }
+  80%  { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%,-80%) scale(0.9); }
+}
+@keyframes stickyPulse {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%      { opacity: 0.5; transform: scale(0.75); }
 }
 
-/* ─── Pain card scroll animation ───────────────────────────────────────── */
+/* ─── Reusable section container ─────────────────────────────────────── */
+.section-container {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+@media (min-width: 640px)  { .section-container { padding: 0 24px; } }
+@media (min-width: 1024px) { .section-container { padding: 0 5%;   } }
+
+/* ─── Scroll-reveal animations ───────────────────────────────────────── */
 .pain-card-animate {
-  opacity: 0;
-  transform: translateY(20px);
+  opacity: 0; transform: translateY(20px);
   transition: opacity 0.5s ease, transform 0.5s ease;
 }
-.pain-card-animate.in-view {
-  opacity: 1;
-  transform: translateY(0);
-}
+.pain-card-animate.in-view  { opacity: 1; transform: translateY(0); }
 
-/* ─── Level card scroll animation ──────────────────────────────────────── */
 .level-card-animate {
-  opacity: 0;
-  transform: translateY(20px);
+  opacity: 0; transform: translateY(20px);
   transition: opacity 0.5s ease, transform 0.5s ease;
 }
-.level-card-animate.in-view {
-  opacity: 1;
-  transform: translateY(0);
-}
+.level-card-animate.in-view { opacity: 1; transform: translateY(0); }
 
-/* ─── Levels grid responsive ────────────────────────────────────────────── */
+/* ─── Levels grid ────────────────────────────────────────────────────── */
 .levels-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 24px;
+  grid-template-columns: 1fr;
+  gap: 20px;
   max-width: 1100px;
   margin: 0 auto;
 }
+@media (min-width: 640px)  { .levels-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .levels-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
 
-/* ─── Arena grid mobile override ───────────────────────────────────────── */
+/* ─── Hero 2-col grid ────────────────────────────────────────────────── */
+.hero-content-grid { grid-template-columns: 1fr; }
+@media (min-width: 900px) {
+  .hero-content-grid { grid-template-columns: 1fr 1fr; }
+  .hero-floating-badge { display: block; }
+}
+.hero-floating-badge { display: none; }
+
+@media (max-width: 600px) { .hero-stats-row { gap: 16px !important; } }
+
+/* ─── Game Arena grid ────────────────────────────────────────────────── */
 @media (max-width: 900px) {
-  #arena-grid {
-    grid-template-columns: 1fr !important;
-    gap: 40px !important;
-  }
+  #arena-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
 }
 
-/* ─── Hero responsive grid ──────────────────────────────────────────────── */
-.hero-content-grid {
-  grid-template-columns: 1fr 1fr;
-}
-
+/* ─── Blog layout ────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
-  .hero-content-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .hero-floating-badge {
-    display: none !important;
-  }
+  .blog-layout { grid-template-columns: 1fr !important; }
+  .blog-sidebar { order: -1; }
 }
 
-@media (max-width: 600px) {
-  .hero-stats-row {
-    gap: 20px !important;
-  }
+/* ─── Pricing grids ──────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .pricing-cards-grid { grid-template-columns: 1fr !important; }
+  .features-grid      { grid-template-columns: 1fr !important; }
+}
+@media (min-width: 641px) and (max-width: 900px) {
+  .features-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ─── Sticky CTA bar ─────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .sticky-cta-inner   { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+  .sticky-cta-buttons { width: 100%; flex-direction: column !important; gap: 8px !important; }
+  .sticky-cta-buttons a,
+  .sticky-cta-buttons button { width: 100% !important; justify-content: center !important; }
+}
+
+/* ─── Mobile hero CTA buttons ────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .hero-cta-btn { width: 100% !important; justify-content: center !important; }
+  .hero-ctas    { flex-direction: column !important; }
+}
+
+/* ─── Section padding – mobile first ─────────────────────────────────── */
+.section-pad { padding: 60px 16px; }
+@media (min-width: 640px)  { .section-pad { padding: 70px 24px; } }
+@media (min-width: 1024px) { .section-pad { padding: 80px 5%;   } }
+
+/* ─── Card grids – mobile first ──────────────────────────────────────── */
+.card-grid-2 { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 640px)  { .card-grid-2 { grid-template-columns: repeat(2, 1fr); gap: 20px; } }
+
+.card-grid-3 { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 640px)  { .card-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 20px; } }
+@media (min-width: 1024px) { .card-grid-3 { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
+
+.card-grid-4 { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 480px)  { .card-grid-4 { grid-template-columns: repeat(2, 1fr); gap: 16px; } }
+@media (min-width: 1024px) { .card-grid-4 { grid-template-columns: repeat(4, 1fr); gap: 20px; } }
+
+/* ─── Overflow guard ─────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+img, video { max-width: 100%; height: auto; }
+
+/* ─── Hero section mobile padding ───────────────────────────────────── */
+@media (max-width: 640px) {
+  .hero-section-pad { padding: 90px 16px 40px !important; }
+}
+
+/* ─── Navbar CTA text — hide label on very small screens ─────────────── */
+@media (max-width: 360px) {
+  .nav-cta-label { display: none; }
 }
