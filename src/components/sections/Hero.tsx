@@ -176,7 +176,7 @@ export default function Hero() {
                 flexShrink:   0,
                 animation:    "pulseDot 2s infinite",
               }} />
-              Kerala&apos;s #1 PSC Civil Engineering Platform
+              Kerala&apos;s #1 PSC Civil Platform
             </div>
 
             {/* Heading */}
@@ -204,7 +204,7 @@ export default function Hero() {
                 fontSize:  "clamp(22px, 3.5vw, 40px)",
                 marginTop: "4px",
               }}>
-                Become a Confident<br />Rank Holder.
+                Stop Guessing.<br />Start Ranking.
               </span>
             </h1>
 
@@ -212,26 +212,63 @@ export default function Hero() {
             <p style={{
               fontSize:     "17px",
               color:        "rgba(255,255,255,0.85)",
-              marginBottom: "32px",
+              marginBottom: "28px",
               maxWidth:     "480px",
               lineHeight:   1.7,
             }}>
               The{" "}
-              <strong style={{ color: "#FF8534", fontWeight: 700 }}>only platform</strong>{" "}
-              built exclusively for Kerala PSC Civil Engineering —
-              pool-based mock tests, Malayalam content, ITI/Diploma/AE prep,
-              expert-crafted questions.{" "}
-              <strong style={{ color: "#FF8534", fontWeight: 700 }}>No more confusion.</strong>
+              <strong style={{ color: "#FF8534", fontWeight: 700 }}>only Kerala PSC platform</strong>{" "}
+              with pool-mapped content, Malayalam audio lessons, and a Game Arena that makes
+              daily practice impossible to skip.
             </p>
+
+            {/* Social proof strip */}
+            <div style={{
+              display:      "flex",
+              alignItems:   "center",
+              gap:          "12px",
+              marginBottom: "28px",
+              flexWrap:     "wrap",
+            }}>
+              {/* Avatar stack */}
+              <div style={{ display: "flex", alignItems: "center" }}>
+                {["AR", "MK", "SP", "AN"].map((init, i) => (
+                  <div key={init} style={{
+                    width:          "32px",
+                    height:         "32px",
+                    borderRadius:   "50%",
+                    background:     ["rgba(255,98,0,0.3)","rgba(255,184,0,0.25)","rgba(100,200,255,0.2)","rgba(50,200,100,0.2)"][i],
+                    border:         "2px solid #0B1E3D",
+                    display:        "flex",
+                    alignItems:     "center",
+                    justifyContent: "center",
+                    fontSize:       "10px",
+                    fontWeight:     700,
+                    color:          "#fff",
+                    marginLeft:     i === 0 ? 0 : "-10px",
+                    zIndex:         4 - i,
+                    position:       "relative",
+                  }}>{init}</div>
+                ))}
+              </div>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
+                  5,200+ students preparing right now
+                </div>
+                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)" }}>
+                  ★★★★★ &nbsp;4.9 average rating
+                </div>
+              </div>
+            </div>
 
             {/* CTA Buttons */}
             <div
               className="hero-ctas"
               style={{
                 display:      "flex",
-                gap:          "16px",
+                gap:          "14px",
                 flexWrap:     "wrap",
-                marginBottom: "40px",
+                marginBottom: "20px",
               }}
             >
               <a
@@ -265,7 +302,7 @@ export default function Hero() {
                   (e.currentTarget as HTMLElement).style.boxShadow  = "0 6px 30px rgba(255,98,0,0.5)";
                 }}
               >
-                🚀 Take Free Mock Test
+                🚀 Start Free — No Sign-up
               </a>
 
               <button
@@ -294,17 +331,22 @@ export default function Hero() {
                   (e.currentTarget as HTMLElement).style.background  = "transparent";
                 }}
               >
-                ▶ Watch Demo
+                ▶ See How It Works
               </button>
             </div>
 
+            {/* Trust micro-copy */}
+            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.38)", marginBottom: "32px" }}>
+              ✓ Free to start &nbsp;·&nbsp; ✓ No credit card &nbsp;·&nbsp; ✓ Kerala PSC-specific questions
+            </div>
+
             {/* Stats */}
-            <div style={{ display: "flex", gap: "32px", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "28px", flexWrap: "wrap" }}>
               {STATS.map(({ num, label }) => (
                 <div key={label} style={{ textAlign: "center" }}>
                   <div style={{
                     fontFamily:  "Rajdhani, sans-serif",
-                    fontSize:    "28px",
+                    fontSize:    "26px",
                     fontWeight:  700,
                     background:  "linear-gradient(135deg, #FF6200, #FFB800)",
                     WebkitBackgroundClip: "text",
@@ -314,10 +356,10 @@ export default function Hero() {
                     {num}
                   </div>
                   <span style={{
-                    fontSize:   "12px",
-                    color:      "rgba(255,255,255,0.55)",
+                    fontSize:   "11px",
+                    color:      "rgba(255,255,255,0.5)",
                     display:    "block",
-                    marginTop:  "-4px",
+                    marginTop:  "-2px",
                   }}>
                     {label}
                   </span>

@@ -157,13 +157,27 @@ export default function BlogDetailPage({ params }: { params: { slug: string } })
             textAlign:"center",
             boxShadow:"0 0 40px rgba(255,98,0,0.1)",
           }}>
-            <div style={{ fontSize:"32px", marginBottom:"12px" }}>🎯</div>
+            {/* Social proof row */}
+            <div style={{ display:"flex", justifyContent:"center", gap:"20px", flexWrap:"wrap", marginBottom:"20px" }}>
+              {[
+                { rank:"Rank #3", name:"Arun S.", dept:"KWA AE 2024" },
+                { rank:"Rank #7", name:"Meera K.", dept:"PWD Overseer 2024" },
+                { rank:"Rank #12", name:"Sreejith P.", dept:"LSGD AE 2024" },
+              ].map(s => (
+                <div key={s.name} style={{ background:"rgba(255,184,0,0.08)", border:"1px solid rgba(255,184,0,0.2)", borderRadius:"10px", padding:"8px 14px", fontSize:"12px" }}>
+                  <span style={{ color:"#FFB800", fontWeight:800 }}>{s.rank}</span>
+                  <span style={{ color:"rgba(255,255,255,0.55)" }}> · {s.name} · {s.dept}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize:"32px", marginBottom:"10px" }}>🏆</div>
             <h2 style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"clamp(22px,3vw,32px)", fontWeight:700, color:"#fff", marginBottom:"10px" }}>
-              Start Your Preparation Today
+              Join 98+ Students Who Got Government Jobs
             </h2>
             <p style={{ fontSize:"15px", color:"rgba(255,255,255,0.65)", lineHeight:1.7, marginBottom:"24px" }}>
-              Everything in this guide is built into Civilezy. Pool-mapped content,
-              smart analytics, Game Arena, and 100+ mock tests — all in one platform.
+              This guide is just the beginning. Civilezy gives you pool-mapped content,
+              smart analytics, Malayalam audio, and 100+ mock tests — everything built
+              specifically for Kerala PSC Civil Engineering.
             </p>
             <div style={{ display:"flex", justifyContent:"center", gap:"14px", flexWrap:"wrap" }}>
               <a
@@ -172,7 +186,7 @@ export default function BlogDetailPage({ params }: { params: { slug: string } })
                 rel="noopener noreferrer"
                 style={{ display:"inline-flex", alignItems:"center", gap:"8px", background:"linear-gradient(135deg,#FF6200,#FF4500)", color:"white", textDecoration:"none", padding:"14px 28px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"16px", fontWeight:800, boxShadow:"0 6px 24px rgba(255,98,0,0.4)", transition:"transform 0.2s, box-shadow 0.2s" }}
               >
-                🚀 Start Free Test
+                🚀 Start Free — No Sign-up
               </a>
               <Link
                 href="/game-arena"
@@ -182,7 +196,7 @@ export default function BlogDetailPage({ params }: { params: { slug: string } })
               </Link>
             </div>
             <p style={{ fontSize:"12px", color:"rgba(255,255,255,0.3)", marginTop:"14px" }}>
-              Free forever. No credit card required.
+              ✓ Free forever &nbsp;·&nbsp; ✓ No credit card &nbsp;·&nbsp; ✓ Kerala PSC-specific
             </p>
           </div>
         </article>

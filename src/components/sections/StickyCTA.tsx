@@ -1,34 +1,38 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 const LMS_FREE_TEST = "https://lms.civilezy.com/free-test";
 
 export default function StickyCTA() {
   const router          = useRouter();
-  const [visible, setVisible]   = useState(false);   // slide-up after mount
-  const [hidden,  setHidden]    = useState(false);   // hide when user scrolls near top
+  const pathname        = usePathname();
+  const [visible, setVisible]   = useState(false);
+  const [hidden,  setHidden]    = useState(false);
   const lastScrollY             = useRef(0);
 
-  // 1. Slide up after a short delay on mount
+  // Hide entirely on game-arena page — buttons there must never be blocked
+  const isGameArena = pathname === "/game-arena";
+
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 600);
     return () => clearTimeout(t);
   }, []);
 
-  // 2. Hide when user is near the very top (hero CTA is visible)
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
-      // hide when within 80px of top, show once user scrolls past hero
       setHidden(y < 80);
       lastScrollY.current = y;
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll(); // run once on mount
+    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Don't render at all on game-arena
+  if (isGameArena) return null;
 
   const shouldShow = visible && !hidden;
 
@@ -83,7 +87,7 @@ export default function StickyCTA() {
                 animation:    "stickyPulse 2s infinite",
               }} />
               <span style={{ fontSize: "11px", color: "#32C864", fontWeight: 700, letterSpacing: "0.5px" }}>
-                247 students online now
+                5,200+ students preparing right now
               </span>
             </div>
             <div style={{
@@ -93,14 +97,14 @@ export default function StickyCTA() {
               color:       "#ffffff",
               lineHeight:  1.2,
             }}>
-              Start your PSC Civil Engineering preparation today
+              98+ rank holders started here for free
             </div>
             <div style={{
               fontSize: "13px",
               color:    "rgba(255,255,255,0.45)",
               marginTop:"2px",
             }}>
-              Join thousands of students using Civilezy
+              ✓ No sign-up &nbsp;·&nbsp; ✓ Kerala PSC-specific &nbsp;·&nbsp; ✓ Free forever
             </div>
           </div>
 
@@ -176,7 +180,7 @@ export default function StickyCTA() {
                 el.style.boxShadow = "0 4px 20px rgba(255,98,0,0.45)";
               }}
             >
-              🚀 Start Free Test
+              🚀 Start Free — No Sign-up
             </a>
           </div>
         </div>

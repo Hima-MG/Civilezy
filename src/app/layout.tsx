@@ -57,7 +57,7 @@ export default function RootLayout({
         <Navbar />
         <main
           className="overflow-x-hidden"
-          style={{ paddingTop: "70px", paddingBottom: "80px" }}
+          style={{ paddingTop: "70px", paddingBottom: "96px" }}
         >
           {children}
         </main>

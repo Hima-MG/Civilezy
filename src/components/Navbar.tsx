@@ -4,14 +4,14 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 
 const URLS = {
-  LMS_LOGIN:     "https://lms.civilezy.com/login",
+  LMS_LOGIN:     "https://www.civilezy.in/en/login",
   LMS_ENROLL:    "https://lms.civilezy.com/enroll",
   LMS_FREE_TEST: "https://lms.civilezy.com/free-test",
 } as const;
 
 const NAV_LINKS = [
   { label: "Home",       href: "/"           },
-  { label: "Courses",    href: "/courses"    },
+ 
   { label: "Game Arena", href: "/game-arena" },
   
   { label: "Pricing",    href: "/pricing"    },

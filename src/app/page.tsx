@@ -10,7 +10,7 @@ import FinalCTASection from "@/components/sections/FinalCTASection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
 import ComparisonSection from "@/components/sections/Comparisonsection";
 import DepartmentSection from "@/components/sections/Departmentsection";
-// import Footer from "@/components/sections/Footer";
+import Footer from "@/components/sections/Footer";
 import TickerSection from "@/components/sections/TickerSection";
 import AppDownloadSection from "@/components/sections/AppDownloadSection";
 
@@ -36,7 +36,7 @@ export default function Home() {
       <TestimonialsSection />
       <DepartmentSection />
       <FinalCTASection />
-      {/* <Footer /> */}
+      <Footer />
       
       <StickyCTA />
       
