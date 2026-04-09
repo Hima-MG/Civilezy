@@ -7,8 +7,7 @@
       "Bash(npx tsc:*)",
       "Bash(mkdir -p src/styles)",
       "Bash(cp src/app/globals.css src/styles/globals.css)",
-      "mcp__Claude_Preview__preview_start",
-      "Bash(npx wrangler:*)"
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }
