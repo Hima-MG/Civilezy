@@ -1,6 +1,5 @@
-"use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import type { BlogPost } from "@/data/blogs";
 
 export default function BlogCard({ post }: { post: BlogPost }) {
@@ -54,7 +53,7 @@ export default function BlogCard({ post }: { post: BlogPost }) {
           {new Date(post.date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
         </span>
         <Link
-          href={`/blog/${post.slug}`}
+          to={`/blog/${post.slug}`}
           style={{
             display: "inline-flex", alignItems: "center", gap: "6px",
             background: "linear-gradient(135deg,#FF6200,#FF8534)",

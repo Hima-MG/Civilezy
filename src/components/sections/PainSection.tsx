@@ -1,4 +1,3 @@
-"use client";
 
 // All imports at the top — React convention
 import { useEffect, useRef, useCallback, forwardRef } from "react";

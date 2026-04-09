@@ -1,65 +1,37 @@
-import type { Metadata } from "next";
-import Link from "next/link";
+import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
 import { BLOG_POSTS } from "@/data/blogs";
 import BlogCard from "@/components/ui/BlogCard";
 import { SITE } from "@/lib/constants";
 
 const PAGE_URL = `${SITE.url}/blog`;
 
-export const metadata: Metadata = {
-  title:       "PSC Civil Engineering Blog — Kerala PSC Tips, Guides & Strategy",
-  description: "Expert articles on Kerala PSC Civil Engineering preparation. Syllabus guides, exam strategies, KWA AE tips, and more for ITI, Diploma and AE candidates.",
-  keywords: [
-    "Kerala PSC Civil Engineering blog",
-    "PSC AE preparation tips",
-    "Diploma Civil PSC guide",
-    "ITI Civil PSC strategy",
-    "Kerala PSC exam tips 2025",
-  ],
-  authors:     [{ name: SITE.name, url: SITE.url }],
-  metadataBase: new URL(SITE.url),
-  alternates: {
-    canonical: PAGE_URL,
-  },
-  openGraph: {
-    title:       "PSC Civil Engineering Blog | Civilezy",
-    description: "Expert guides for Kerala PSC Civil Engineering aspirants.",
-    url:         PAGE_URL,
-    siteName:    SITE.name,
-    type:        "website",
-    locale:      "en_IN",
-  },
-  twitter: {
-    card:        "summary_large_image",
-    title:       "PSC Civil Engineering Blog | Civilezy",
-    description: "Expert guides for Kerala PSC Civil Engineering aspirants.",
-    site:        "@civilezy",
-  },
-  robots: {
-    index:  true,
-    follow: true,
-    googleBot: { index: true, follow: true },
-  },
-};
-
 export default function BlogListPage() {
   return (
     <div style={{ background: "#080F1E", minHeight: "100vh" }}>
+      <Helmet>
+        <title>PSC Civil Engineering Blog — Kerala PSC Tips, Guides & Strategy | Civilezy</title>
+        <meta name="description" content="Expert articles on Kerala PSC Civil Engineering preparation. Syllabus guides, exam strategies, KWA AE tips, and more for ITI, Diploma and AE candidates." />
+        <link rel="canonical" href={PAGE_URL} />
+        <meta property="og:title" content="PSC Civil Engineering Blog | Civilezy" />
+        <meta property="og:description" content="Expert guides for Kerala PSC Civil Engineering aspirants." />
+        <meta property="og:url" content={PAGE_URL} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="PSC Civil Engineering Blog | Civilezy" />
+      </Helmet>
 
-      {/* ── Page Hero ──────────────────────────────────────────────── */}
+      {/* Page Hero */}
       <div style={{
         background: "linear-gradient(180deg,#080F1E 0%,#0B1E3D 100%)",
         padding: "64px 5% 56px",
         position: "relative",
         overflow: "hidden",
       }}>
-        {/* Grid texture */}
         <div style={{
           position:"absolute", inset:0, opacity:0.03, pointerEvents:"none",
           backgroundImage:"linear-gradient(rgba(255,98,0,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,98,0,0.5) 1px,transparent 1px)",
           backgroundSize:"60px 60px",
         }} />
-
         <div style={{ maxWidth:"700px", margin:"0 auto", textAlign:"center", position:"relative", zIndex:1 }}>
           <div style={{ display:"inline-block", background:"rgba(255,98,0,0.15)", border:"1px solid rgba(255,98,0,0.3)", borderRadius:"20px", padding:"4px 16px", fontSize:"12px", fontWeight:700, color:"#FF8534", letterSpacing:"0.5px", marginBottom:"16px" }}>
             PSC PREPARATION BLOG
@@ -77,7 +49,7 @@ export default function BlogListPage() {
         </div>
       </div>
 
-      {/* ── Blog card grid ─────────────────────────────────────────── */}
+      {/* Blog card grid */}
       <div style={{ maxWidth:"1100px", margin:"0 auto", padding:"60px 5% 80px" }}>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))", gap:"28px" }}>
           {BLOG_POSTS.map(post => (
@@ -85,7 +57,7 @@ export default function BlogListPage() {
           ))}
         </div>
 
-        {/* ── Bottom CTA ──────────────────────────────────────────── */}
+        {/* Bottom CTA */}
         <div style={{
           marginTop:"60px", textAlign:"center",
           background:"rgba(255,255,255,0.03)",
@@ -108,7 +80,7 @@ export default function BlogListPage() {
               🚀 Start Free Test
             </a>
             <Link
-              href="/game-arena"
+              to="/game-arena"
               style={{ display:"inline-flex", alignItems:"center", gap:"8px", background:"transparent", color:"white", textDecoration:"none", padding:"13px 26px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"15px", fontWeight:700, border:"2px solid rgba(255,255,255,0.2)" }}
             >
               🎮 Try Game Arena

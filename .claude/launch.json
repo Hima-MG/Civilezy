@@ -2,16 +2,16 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "Next.js Dev Server",
+      "name": "Vite Dev Server",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3000
+      "port": 5173
     },
     {
-      "name": "Next.js Production Server",
+      "name": "Vite Preview Server",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "start"],
-      "port": 3000
+      "runtimeArgs": ["run", "preview"],
+      "port": 4173
     }
   ]
 }

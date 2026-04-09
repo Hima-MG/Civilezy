@@ -1,6 +1,5 @@
-"use client";
 
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useCallback } from "react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -73,7 +72,7 @@ const onLbLeave = (e: React.MouseEvent<HTMLElement>) => { const el = e.currentTa
 
 // ─── Component ─────────────────────────────────────────────────────────────
 export default function GameArenaSection() {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   // Tier hover — depends on tier state so must be per-tier (useCallback stable ref)
   const makeTierEnter = useCallback((t: Tier) => (e: React.MouseEvent<HTMLElement>) => {
@@ -121,7 +120,7 @@ export default function GameArenaSection() {
           </p>
 
           <button
-            onClick={() => router.push("/game-arena")}
+            onClick={() => navigate("/game-arena")}
             aria-label="Go to Game Arena and practice PSC questions"
             style={{ background:"linear-gradient(135deg,#FF6200,#FF8534)", color:"white", border:"none", padding:"16px 40px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"18px", fontWeight:800, cursor:"pointer", boxShadow:"0 6px 30px rgba(255,98,0,0.45)", transition:"transform 0.2s, box-shadow 0.2s", display:"inline-flex", alignItems:"center", gap:"8px" }}
             onMouseEnter={onBtnEnter}

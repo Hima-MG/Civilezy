@@ -1,7 +1,6 @@
-"use client";
-
 import { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Domain = "ITI" | "Diploma" | "BTech";
@@ -496,7 +495,7 @@ export default function GameArenaPage() {
 
             <div className="flex gap-3 flex-col sm:flex-row">
               <Link
-                href="/pricing"
+                to="/pricing"
                 className="flex-1 flex items-center justify-center gap-2 rounded-xl font-extrabold text-white text-sm py-3 px-5 transition-all duration-200 hover:scale-105 hover:shadow-orange-500/50 hover:shadow-lg"
                 style={{ background:"linear-gradient(135deg,#FF6200,#FF4500)", boxShadow:"0 4px 20px rgba(255,98,0,0.4)", textDecoration:"none" }}
               >
@@ -525,6 +524,9 @@ export default function GameArenaPage() {
   // ═══════════════════════════════════════════════════════════════════════════
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
+      <Helmet>
+        <title>Game Arena — Practice Kerala PSC Questions | Civilezy</title>
+      </Helmet>
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage:"linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)", backgroundSize:"40px 40px" }} />
 
       <div className="relative z-10 max-w-3xl mx-auto px-4 py-12">

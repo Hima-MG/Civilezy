@@ -1,4 +1,3 @@
-"use client";
 
 // ─── URL Constants ──────────────────────────────────────────────────────────
 // ⚠️  Replace LMS_FREE_TEST with your real URL if different from lms.civilezy.com

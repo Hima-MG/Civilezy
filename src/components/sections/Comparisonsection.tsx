@@ -1,4 +1,3 @@
-"use client";
 
 // Kept as Client Component solely for row onMouseEnter/Leave hover effects.
 // If you want a pure Server Component, remove the hover handlers and use

@@ -1,4 +1,3 @@
-"use client";
 // Note: "use client" is required because of the inline <style> tag.
 // Next.js Server Components do not support <style>{`...`}</style>.
 // The component itself is still stateless and renders zero interactive JS.
