@@ -39,6 +39,14 @@ h1, h2, h3, h4, h5 {
 ::-webkit-scrollbar-thumb:hover { background: var(--orange); }
 
 /* ─── Keyframes ──────────────────────────────────────────────────────── */
+/* globals.css */
+@keyframes tickerScroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation: none !important; overflow-x: auto; }
+}
 @keyframes heroFadeUp {
   from { opacity: 0; transform: translateY(30px); }
   to   { opacity: 1; transform: translateY(0); }
