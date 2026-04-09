@@ -1,3 +1,4 @@
+"use client";
 
 import { useState, useCallback } from "react";
 import { EXTERNAL_URLS } from "@/lib/constants";

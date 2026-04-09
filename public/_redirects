@@ -1,6 +1,3 @@
 /courses https://learn.civilezy.in 301
 /course/* https://learn.civilezy.in/course/:splat 301
 /login https://learn.civilezy.in/login 301
-
-# SPA fallback — must be last
-/* /index.html 200

@@ -1,6 +1,7 @@
+"use client";
 
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useRouter, usePathname } from "next/navigation";
 
 const LMS_FREE_TEST = "https://lms.civilezy.com/free-test";
 
@@ -24,8 +25,8 @@ const onPrimaryLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 export default function StickyCTA() {
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const router   = useRouter();
+  const pathname = usePathname();
 
   const [visible, setVisible] = useState(false);
   const [hidden,  setHidden]  = useState(false);
@@ -109,7 +110,7 @@ export default function StickyCTA() {
           >
             {/* Secondary */}
             <button
-              onClick={() => navigate("/game-arena")}
+              onClick={() => router.push("/game-arena")}
               aria-label="Go to Game Arena practice mode"
               style={{ display:"inline-flex", alignItems:"center", gap:"7px", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.15)", color:"rgba(255,255,255,0.85)", padding:"10px 20px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"14px", fontWeight:700, cursor:"pointer", transition:"background 0.2s, border-color 0.2s", whiteSpace:"nowrap" }}
               onMouseEnter={onSecondaryEnter}

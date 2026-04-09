@@ -1,5 +1,6 @@
+"use client";
 
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { EXTERNAL_URLS } from "@/lib/constants";
 
 // ─── URL Constants ──────────────────────────────────────────────────────────
@@ -78,7 +79,7 @@ export default function Footer() {
           {/* ── Brand column ── */}
           <div style={{ maxWidth:"280px" }}>
             <Link
-              to="/"
+              href="/"
               aria-label="Civilezy home"
               style={{ display:"flex", alignItems:"center", gap:"10px", fontFamily:"Rajdhani, sans-serif", fontSize:"22px", fontWeight:700, textDecoration:"none", color:"#ffffff", marginBottom:"12px" }}
             >
@@ -125,7 +126,7 @@ export default function Footer() {
                       </a>
                     ) : (
                       <Link
-                        to={link.href}
+                        href={link.href}
                         style={{ color:"rgba(255,255,255,0.55)", textDecoration:"none", fontSize:"14px", transition:"color 0.2s" }}
                         onMouseEnter={onLinkEnter}
                         onMouseLeave={onLinkLeave}

@@ -1,6 +1,7 @@
+"use client";
 
 import { useEffect, useRef, forwardRef, useCallback } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type ColorScheme = "orange" | "gold" | "blue";
@@ -228,7 +229,7 @@ const LevelCard = forwardRef<HTMLDivElement, { data: LevelCardData }>(
 
         {/* CTA — uses Next.js Link for client-side nav + prefetch */}
         <Link
-          to={data.href}
+          href={data.href}
           aria-label={data.ariaLabel}
           style={{ display:"block", width:"100%", padding:"12px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"15px", fontWeight:700, cursor:"pointer", textAlign:"center", textDecoration:"none", background:t.ctaBg, color:t.ctaColor, boxShadow:t.ctaShadow, transition:"opacity 0.2s, transform 0.2s" }}
           onMouseEnter={onCtaEnter}

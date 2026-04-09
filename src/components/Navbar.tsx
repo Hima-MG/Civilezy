@@ -1,6 +1,7 @@
+"use client";
 
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { EXTERNAL_URLS } from "@/lib/constants";
 
 const URLS = {
@@ -61,7 +62,7 @@ export default function Navbar() {
         }}
       >
         {/* ── Logo ───────────────────────────────────────── */}
-        <Link to="/" style={styles.logo}>
+        <Link href="/" style={styles.logo}>
           <span style={styles.logoIcon}>C</span>
           Civil<span style={{ color: "#FF8534" }}>ezy</span>
         </Link>
@@ -70,7 +71,7 @@ export default function Navbar() {
         <ul style={styles.navLinks} className="nav-desktop">
           {NAV_LINKS.map(({ label, href }) => (
             <li key={href} style={{ listStyle: "none" }}>
-              <NavLink to={href}>{label}</NavLink>
+              <NavLink href={href}>{label}</NavLink>
             </li>
           ))}
         </ul>
@@ -132,7 +133,7 @@ export default function Navbar() {
           {NAV_LINKS.map(({ label, href }) => (
             <li key={href} style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
               <Link
-                to={href}
+                href={href}
                 onClick={() => setMenuOpen(false)}
                 style={styles.mobileLink}
               >
@@ -181,10 +182,10 @@ export default function Navbar() {
 }
 
 /* ─── Inline NavLink with hover ────────────────────────────────────────── */
-function NavLink({ to, children }: { to: string; children: React.ReactNode }) {
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <Link
-      to={to}
+      href={href}
       style={styles.navLinkBase}
       onMouseEnter={(e) =>
         ((e.currentTarget as HTMLElement).style.color = "#FF8534")
