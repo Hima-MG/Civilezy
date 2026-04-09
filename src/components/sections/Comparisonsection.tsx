@@ -101,7 +101,7 @@ export default function ComparisonSection() {
       <div
         style={{ maxWidth:"900px", margin:"0 auto", overflowX:"auto", WebkitOverflowScrolling:"touch" }}
         role="region"
-        aria-label="Feature comparison between Civilezy, Testbook, and Unacademy"
+        aria-label="Feature comparison between Civilezy, Testbook, and Others"
       >
         <div
           style={{ minWidth:"560px", borderRadius:"20px", overflow:"hidden", border:"1px solid rgba(255,255,255,0.08)" }}
@@ -122,7 +122,7 @@ export default function ComparisonSection() {
             <div role="columnheader" style={{ color:"rgba(255,255,255,0.7)" }}>Feature</div>
             <div role="columnheader" style={{ color:"#FF8534" }}>Civilezy</div>
             <div role="columnheader">Testbook</div>
-            <div role="columnheader">Unacademy</div>
+            <div role="columnheader">Others</div>
           </div>
 
           {/* ── Table rows ── */}
