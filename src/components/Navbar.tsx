@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { EXTERNAL_URLS } from "@/lib/constants";
 
 const URLS = {
-  LMS_LOGIN:     EXTERNAL_URLS.login,
-  LMS_ENROLL:    EXTERNAL_URLS.checkout,
-  LMS_FREE_TEST: EXTERNAL_URLS.freeTest,
+  LMS_LOGIN:     "https://www.civilezy.in/en/login",
+  LMS_ENROLL:    "https://lms.civilezy.com/enroll",
+  LMS_FREE_TEST: "https://lms.civilezy.com/free-test",
 } as const;
 
 const NAV_LINKS = [

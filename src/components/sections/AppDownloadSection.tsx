@@ -1,6 +1,3 @@
-
-"use client";
-
 export default function AppDownloadSection() {
   return (
     <section className="py-16 px-4 text-center">
