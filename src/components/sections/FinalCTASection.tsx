@@ -1,11 +1,36 @@
 "use client";
 
+// ─── URL Constants ──────────────────────────────────────────────────────────
+// ⚠️  Replace LMS_FREE_TEST with your real URL if different from lms.civilezy.com
 const LMS_FREE_TEST = "https://lms.civilezy.com/free-test";
-const WA_LINK       = "https://wa.me/919876543210";
 
+// ⚠️  WA_LINK uses a placeholder number — replace with your real WhatsApp business number
+//     Format: https://wa.me/<countrycode><number>  e.g. https://wa.me/918012345678
+const WA_LINK = "https://wa.me/919876543210";
+
+// ─── Stable hover handlers (defined once, not re-created per render) ─────────
+function onPrimaryEnter(e: React.MouseEvent<HTMLAnchorElement>) {
+  e.currentTarget.style.transform = "translateY(-3px)";
+  e.currentTarget.style.boxShadow = "0 12px 40px rgba(255,98,0,0.6)";
+}
+function onPrimaryLeave(e: React.MouseEvent<HTMLAnchorElement>) {
+  e.currentTarget.style.transform = "translateY(0)";
+  e.currentTarget.style.boxShadow = "0 6px 30px rgba(255,98,0,0.5)";
+}
+function onSecondaryEnter(e: React.MouseEvent<HTMLAnchorElement>) {
+  e.currentTarget.style.borderColor = "#FF6200";
+  e.currentTarget.style.background  = "rgba(255,98,0,0.1)";
+}
+function onSecondaryLeave(e: React.MouseEvent<HTMLAnchorElement>) {
+  e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)";
+  e.currentTarget.style.background  = "transparent";
+}
+
+// ─── Component ──────────────────────────────────────────────────────────────
 export default function FinalCTASection() {
   return (
     <section
+      aria-labelledby="final-cta-heading"
       style={{
         textAlign:  "center",
         background: "linear-gradient(180deg, #0B1E3D 0%, #05101F 100%)",
@@ -14,24 +39,29 @@ export default function FinalCTASection() {
         overflow:   "hidden",
       }}
     >
-      {/* Glow */}
+      {/* Decorative glow — hidden from assistive tech */}
       <div
+        aria-hidden="true"
         style={{
-          position:        "absolute",
-          top:             "50%",
-          left:            "50%",
-          transform:       "translate(-50%, -50%)",
-          width:           "600px",
-          height:          "600px",
-          borderRadius:    "50%",
-          background:      "radial-gradient(circle, rgba(255,98,0,0.1) 0%, transparent 70%)",
-          pointerEvents:   "none",
+          position:      "absolute",
+          top:           "50%",
+          left:          "50%",
+          transform:     "translate(-50%, -50%)",
+          width:         "600px",
+          height:        "600px",
+          borderRadius:  "50%",
+          background:    "radial-gradient(circle, rgba(255,98,0,0.1) 0%, transparent 70%)",
+          pointerEvents: "none",
         }}
       />
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: "700px", margin: "0 auto" }}>
-        {/* Malayalam headline */}
-        <h2
+      <div style={{ position:"relative", zIndex:1, maxWidth:"700px", margin:"0 auto" }}>
+
+        {/* Malayalam decorative line — NOT a heading, screen readers
+            will read it with lang="ml" for correct pronunciation       */}
+        <p
+          lang="ml"
+          aria-hidden="false"
           style={{
             fontFamily:           "Rajdhani, sans-serif",
             fontSize:             "clamp(24px, 4vw, 48px)",
@@ -44,10 +74,11 @@ export default function FinalCTASection() {
           }}
         >
           ഇനി ആശയക്കുഴപ്പം വേണ്ട.
-        </h2>
+        </p>
 
-        {/* English headline */}
+        {/* Primary heading — h2 fits within page hierarchy below h1 in Hero */}
         <h2
+          id="final-cta-heading"
           style={{
             fontFamily:   "Rajdhani, sans-serif",
             fontSize:     "clamp(20px, 3vw, 36px)",
@@ -73,11 +104,16 @@ export default function FinalCTASection() {
         </p>
 
         {/* CTA Buttons */}
-        <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
+        <div
+          style={{ display:"flex", gap:"16px", justifyContent:"center", flexWrap:"wrap" }}
+          role="group"
+          aria-label="Call to action buttons"
+        >
           <a
             href={LMS_FREE_TEST}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Take a free mock test — opens in new tab"
             style={{
               background:     "linear-gradient(135deg, #FF6200, #FF4500)",
               color:          "white",
@@ -93,16 +129,8 @@ export default function FinalCTASection() {
               textDecoration: "none",
               display:        "inline-block",
             }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.transform  = "translateY(-3px)";
-              el.style.boxShadow  = "0 12px 40px rgba(255,98,0,0.6)";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.transform  = "translateY(0)";
-              el.style.boxShadow  = "0 6px 30px rgba(255,98,0,0.5)";
-            }}
+            onMouseEnter={onPrimaryEnter}
+            onMouseLeave={onPrimaryLeave}
           >
             🚀 Take Free Mock Test Now
           </a>
@@ -111,6 +139,7 @@ export default function FinalCTASection() {
             href={WA_LINK}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Join the Civilezy WhatsApp community — opens in new tab"
             style={{
               background:     "transparent",
               color:          "white",
@@ -127,25 +156,23 @@ export default function FinalCTASection() {
               alignItems:     "center",
               gap:            "8px",
             }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.borderColor = "#FF6200";
-              el.style.background  = "rgba(255,98,0,0.1)";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.borderColor = "rgba(255,255,255,0.3)";
-              el.style.background  = "transparent";
-            }}
+            onMouseEnter={onSecondaryEnter}
+            onMouseLeave={onSecondaryLeave}
           >
             📱 Join WhatsApp Community
           </a>
         </div>
 
         {/* Trust signals */}
-        <div style={{ marginTop: "24px", fontSize: "13px", color: "rgba(255,255,255,0.55)" }}>
-          ✓ No credit card &nbsp;&nbsp; ✓ Instant access &nbsp;&nbsp; ✓ Kerala PSC-specific &nbsp;&nbsp; ✓ Malayalam supported
-        </div>
+        <p
+          style={{ marginTop:"24px", fontSize:"13px", color:"rgba(255,255,255,0.55)" }}
+          aria-label="Civilezy trust guarantees"
+        >
+          ✓ No credit card &nbsp;&nbsp;
+          ✓ Instant access &nbsp;&nbsp;
+          ✓ Kerala PSC-specific &nbsp;&nbsp;
+          ✓ Malayalam supported
+        </p>
       </div>
     </section>
   );
