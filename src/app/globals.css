@@ -94,11 +94,11 @@ h1, h2, h3, h4, h5 {
   display: grid;
   grid-template-columns: 1fr;
   gap: 20px;
-  max-width: 1100px;
+  max-width: 1300px;
   margin: 0 auto;
 }
 @media (min-width: 640px)  { .levels-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1024px) { .levels-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
+@media (min-width: 1024px) { .levels-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; } }
 
 /* ─── Hero 2-col grid ────────────────────────────────────────────────── */
 .hero-content-grid { grid-template-columns: 1fr; }

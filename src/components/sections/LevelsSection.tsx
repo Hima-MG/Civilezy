@@ -1,57 +1,76 @@
 "use client";
 
-import { useEffect, useRef, forwardRef, useCallback } from "react";
-import Link from "next/link";
+import { useEffect, useRef, forwardRef, useCallback, useState } from "react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
-type ColorScheme = "orange" | "gold" | "blue";
+type ColorScheme = "orange" | "gold" | "blue" | "emerald";
+type DomainKey = "ITI" | "Diploma" | "BTech" | "Surveyor";
 
 interface LevelCardData {
-  scheme: ColorScheme;
-  tag:    string;
-  title:  string;
-  desc:   string;
-  pools:  string[];
-  info:   string;
-  cta:    string;
-  href:   string;
-  ariaLabel: string;   // descriptive CTA label for screen readers
+  scheme:    ColorScheme;
+  domain:    DomainKey;
+  tag:       string;
+  title:     string;
+  desc:      string;
+  pools:     string[];
+  info:      string;
+  cta:       string;
+  ariaLabel: string;
 }
+
+// ─── Pricing links ──────────────────────────────────────────────────────────
+const PRICING_LINKS: Record<DomainKey, string> = {
+  ITI:      "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
+  Diploma:  "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
+  BTech:    "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
+  Surveyor: "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
+};
 
 // ─── Data ───────────────────────────────────────────────────────────────────
 const LEVEL_CARDS: LevelCardData[] = [
   {
     scheme:    "orange",
+    domain:    "ITI",
     tag:       "ITI LEVEL",
     title:     "ITI Civil PSC",
     desc:      "For ITI Civil Trade holders. Covers KWA Helper, PWD Mazdoor, LSGD posts and all ITI-grade civil engineering PSC pools.",
     pools:     ["KWA-ITI","PWD-ITI","LSGD-ITI","IRD-ITI"],
     info:      "3,200+ Questions • 45 Mock Tests • Malayalam Notes",
     cta:       "Start ITI Prep →",
-    href:      "/courses",
     ariaLabel: "Start ITI Civil PSC preparation",
   },
   {
     scheme:    "gold",
+    domain:    "Diploma",
     tag:       "DIPLOMA LEVEL",
     title:     "Diploma Civil PSC",
     desc:      "For Diploma Civil Engineering holders. Targets Overseer, Site Supervisor, Technical Assistant posts across all Kerala departments.",
     pools:     ["DIP-G1","KWA-DIP","PWD-DIP","KSEB-DIP"],
     info:      "5,800+ Questions • 72 Mock Tests • Bilingual",
     cta:       "Start Diploma Prep →",
-    href:      "/courses",
     ariaLabel: "Start Diploma Civil PSC preparation",
   },
   {
     scheme:    "blue",
+    domain:    "BTech",
     tag:       "AE / DEGREE",
     title:     "AE / B.Tech PSC",
     desc:      "For B.Tech Civil Engineering graduates. Targets Assistant Engineer posts in KWA, PWD, LSGD, KSEB — the most competitive PSC pool.",
     pools:     ["AE-KWA","AE-PWD","AE-LSGD","AE-KSEB"],
     info:      "7,400+ Questions • 95 Mock Tests • Expert Notes",
     cta:       "Start AE Prep →",
-    href:      "/courses",
     ariaLabel: "Start AE / BTech Civil PSC preparation",
+  },
+  {
+    scheme:    "emerald",
+    domain:    "Surveyor",
+    tag:       "SURVEYOR",
+    title:     "Surveyor PSC",
+    desc:      "For Surveyor license holders. Covers Land Surveyor, Survey Supervisor, and all surveyor-grade Kerala PSC civil engineering pools.",
+    pools:     ["SUR-KWA","SUR-PWD","SUR-LSGD","SUR-REV"],
+    info:      "2,800+ Questions • 38 Mock Tests • Malayalam Notes",
+    cta:       "Start Surveyor Prep →",
+    ariaLabel: "Start Surveyor Civil PSC preparation",
   },
 ];
 
@@ -86,6 +105,15 @@ const SCHEME_TOKENS: Record<ColorScheme, {
     tagBg:"rgba(100,200,255,0.15)", tagColor:"#64C8FF",
     ctaBg:"linear-gradient(90deg,#1565C0,#1E88E5)",  ctaColor:"white",
     ctaShadow:"0 4px 15px rgba(100,200,255,0.25)",
+  },
+  emerald: {
+    cardBg:"linear-gradient(135deg,#001A0A,#003D1A)",
+    cardBorder:"1px solid rgba(16,185,129,0.4)",
+    cardShadow:"0 4px 30px rgba(16,185,129,0.15)",
+    cardShadowHover:"0 16px 40px rgba(16,185,129,0.25)",
+    tagBg:"rgba(16,185,129,0.2)",  tagColor:"#34D399",
+    ctaBg:"linear-gradient(90deg,#059669,#10B981)", ctaColor:"white",
+    ctaShadow:"0 4px 15px rgba(16,185,129,0.3)",
   },
 };
 
@@ -157,8 +185,8 @@ export default function LevelsSection() {
 const LevelCard = forwardRef<HTMLDivElement, { data: LevelCardData }>(
   function LevelCard({ data }, ref) {
     const t = SCHEME_TOKENS[data.scheme];
+    const [redirecting, setRedirecting] = useState(false);
 
-    // Per-instance handlers — stable as long as `t` doesn't change (it never does)
     const onCardEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
       (e.currentTarget as HTMLDivElement).style.transform = "translateY(-8px)";
       (e.currentTarget as HTMLDivElement).style.boxShadow = t.cardShadowHover;
@@ -169,26 +197,45 @@ const LevelCard = forwardRef<HTMLDivElement, { data: LevelCardData }>(
       (e.currentTarget as HTMLDivElement).style.boxShadow = t.cardShadow;
     }, [t.cardShadow]);
 
-    const onCtaEnter = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    const onCtaEnter = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
       e.currentTarget.style.opacity   = "0.9";
-      e.currentTarget.style.transform = "scale(1.02)";
+      e.currentTarget.style.transform = "scale(1.04)";
     }, []);
 
-    const onCtaLeave = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    const onCtaLeave = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
       e.currentTarget.style.opacity   = "1";
       e.currentTarget.style.transform = "scale(1)";
     }, []);
+
+    const handleClick = useCallback(() => {
+      if (redirecting) return;
+      // Save selection to localStorage
+      try { localStorage.setItem("civilezy_domain", data.domain); } catch { /* ok */ }
+      setRedirecting(true);
+      // Brief delay for UX feedback, then redirect
+      setTimeout(() => {
+        window.location.href = PRICING_LINKS[data.domain];
+      }, 300);
+    }, [data.domain, redirecting]);
 
     return (
       <div
         ref={ref}
         role="listitem"
         className="level-card-animate"
-        style={{ background:t.cardBg, border:t.cardBorder, borderRadius:"20px", padding:"32px", position:"relative", overflow:"hidden", boxShadow:t.cardShadow, transition:"transform 0.3s, box-shadow 0.3s, opacity 0.5s ease" }}
+        style={{ background:t.cardBg, border:t.cardBorder, borderRadius:"20px", padding:"32px", position:"relative", overflow:"hidden", boxShadow:t.cardShadow, transition:"transform 0.3s, box-shadow 0.3s, opacity 0.5s ease", cursor:"pointer" }}
         onMouseEnter={onCardEnter}
         onMouseLeave={onCardLeave}
+        onClick={handleClick}
       >
-        {/* Level tag — aria-hidden: title already conveys this */}
+        {/* Redirecting overlay */}
+        {redirecting && (
+          <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.6)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:10, borderRadius:"20px", backdropFilter:"blur(4px)" }}>
+            <span style={{ color:"#fff", fontSize:"14px", fontWeight:700 }}>Redirecting to your course...</span>
+          </div>
+        )}
+
+        {/* Level tag */}
         <div
           aria-hidden="true"
           style={{ display:"inline-block", borderRadius:"8px", padding:"4px 12px", fontSize:"11px", fontWeight:800, letterSpacing:"1px", marginBottom:"16px", background:t.tagBg, color:t.tagColor }}
@@ -227,16 +274,16 @@ const LevelCard = forwardRef<HTMLDivElement, { data: LevelCardData }>(
           {data.info}
         </p>
 
-        {/* CTA — uses Next.js Link for client-side nav + prefetch */}
-        <Link
-          href={data.href}
+        {/* CTA button */}
+        <button
           aria-label={data.ariaLabel}
-          style={{ display:"block", width:"100%", padding:"12px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"15px", fontWeight:700, cursor:"pointer", textAlign:"center", textDecoration:"none", background:t.ctaBg, color:t.ctaColor, boxShadow:t.ctaShadow, transition:"opacity 0.2s, transform 0.2s" }}
+          onClick={(e) => { e.stopPropagation(); handleClick(); }}
+          style={{ display:"block", width:"100%", padding:"12px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"15px", fontWeight:700, cursor:"pointer", textAlign:"center", border:"none", background:t.ctaBg, color:t.ctaColor, boxShadow:t.ctaShadow, transition:"opacity 0.2s, transform 0.2s" }}
           onMouseEnter={onCtaEnter}
           onMouseLeave={onCtaLeave}
         >
-          {data.cta}
-        </Link>
+          {redirecting ? "Redirecting..." : data.cta}
+        </button>
       </div>
     );
   }
