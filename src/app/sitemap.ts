@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getAllSlugs } from "@/data/blogs";
 
+// Canonical domain — must match layout.tsx metadataBase and robots.ts
 const BASE_URL = "https://civilezy.in";
 
 export default function sitemap(): MetadataRoute.Sitemap {

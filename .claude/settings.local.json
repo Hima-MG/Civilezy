@@ -4,7 +4,15 @@
       "Bash(npx next:*)",
       "mcp__Claude_Preview__preview_start",
       "Bash(npx tailwindcss:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(find \"/c/Users/moham/Desktop/Civilezy website/civilezy/src/components\" -name \"*.tsx\" -exec grep -l \"Image\\\\|img\\\\|svg\" {} \\\\;)",
+      "Bash(grep -n \"useCallback\\\\|useMemo\" \"/c/Users/moham/Desktop/Civilezy website/civilezy/src/components/sections\"/*.tsx)",
+      "Bash(grep -n \"unused\\\\|@ts-ignore\\\\|// @\" \"/c/Users/moham/Desktop/Civilezy website/civilezy/src/components\"/**/*.tsx)",
+      "Bash(xargs wc:*)",
+      "WebFetch(domain:www.civilezy.in)",
+      "WebFetch(domain:learn.civilezy.in)",
+      "WebFetch(domain:civilezy.ezycourse.com)",
+      "Bash(taskkill //F //IM node.exe)"
     ]
   }
 }

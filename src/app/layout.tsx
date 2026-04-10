@@ -21,11 +21,11 @@ export const metadata: Metadata = {
     "PWD Overseer Kerala PSC",
     "civil engineering PSC Malayalam",
   ],
-  metadataBase: new URL("https://civilezy.com"),
+  metadataBase: new URL("https://civilezy.in"),
   openGraph: {
     type:        "website",
     locale:      "en_IN",
-    url:         "https://civilezy.com",
+    url:         "https://civilezy.in",
     siteName:    "Civilezy",
     title:       "Civilezy | Kerala's #1 Civil Engineering PSC Platform",
     description: "Kerala's only PSC Civil Engineering platform.",

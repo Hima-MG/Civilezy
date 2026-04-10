@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { BLOG_POSTS, getBlogBySlug, getAllSlugs, type BlogSection } from "@/data/blogs";
-import { SITE } from "@/lib/constants";
+import { SITE, EXTERNAL_URLS } from "@/lib/constants";
 
 // ─── Static params ─────────────────────────────────────────────────────────
 export async function generateStaticParams() {
@@ -181,7 +181,7 @@ export default function BlogDetailPage({ params }: { params: { slug: string } })
             </p>
             <div style={{ display:"flex", justifyContent:"center", gap:"14px", flexWrap:"wrap" }}>
               <a
-                href="https://lms.civilezy.com/free-test"
+                href={EXTERNAL_URLS.freeTest}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ display:"inline-flex", alignItems:"center", gap:"8px", background:"linear-gradient(135deg,#FF6200,#FF4500)", color:"white", textDecoration:"none", padding:"14px 28px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"16px", fontWeight:800, boxShadow:"0 6px 24px rgba(255,98,0,0.4)", transition:"transform 0.2s, box-shadow 0.2s" }}
@@ -212,7 +212,7 @@ export default function BlogDetailPage({ params }: { params: { slug: string } })
               Join 5,200+ students on Civilezy. Pool-mapped content built exclusively for Kerala PSC Civil Engineering.
             </p>
             <a
-              href="https://lms.civilezy.com/free-test"
+              href={EXTERNAL_URLS.freeTest}
               target="_blank"
               rel="noopener noreferrer"
               style={{ display:"block", textAlign:"center", background:"linear-gradient(135deg,#FF6200,#FF4500)", color:"white", textDecoration:"none", padding:"12px 16px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"14px", fontWeight:800, boxShadow:"0 4px 18px rgba(255,98,0,0.4)", marginBottom:"10px" }}

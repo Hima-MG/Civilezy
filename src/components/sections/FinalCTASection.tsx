@@ -1,8 +1,9 @@
 "use client";
 
+import { EXTERNAL_URLS } from "@/lib/constants";
+
 // ─── URL Constants ──────────────────────────────────────────────────────────
-// ⚠️  Replace LMS_FREE_TEST with your real URL if different from lms.civilezy.com
-const LMS_FREE_TEST = "https://lms.civilezy.com/free-test";
+const LMS_FREE_TEST = EXTERNAL_URLS.freeTest;
 
 // ⚠️  WA_LINK uses a placeholder number — replace with your real WhatsApp business number
 //     Format: https://wa.me/<countrycode><number>  e.g. https://wa.me/918012345678

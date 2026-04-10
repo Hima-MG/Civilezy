@@ -4,6 +4,15 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { saveScore, getLeaderboard, getLevel, getNextLevel, type LeaderboardEntry } from "@/lib/leaderboard";
 import { loadPlayer, createPlayer, recordGame, type PlayerData } from "@/lib/player";
+import {
+  SUBJECTS_BY_DOMAIN,
+  ADDON_SUBJECTS,
+  ADDON_GROUPS,
+  DIFFICULTY_COUNTS,
+  getQuestions,
+  type Domain     as DataDomain,
+  type Question,
+} from "@/data/quesions";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Domain = "ITI" | "Diploma" | "BTech";
@@ -12,21 +21,53 @@ type Difficulty = "Easy" | "Medium" | "Hard";
 interface DomainOption    { id: Domain;     label: string; icon: string; desc: string; }
 interface SubjectOption   { id: string;     label: string; icon: string; }
 interface DifficultyOption{ id: Difficulty; label: string; questions: string; desc: string; icon: string; color: string; }
-interface Question        { id: number; subject: string; question: string; options: string[]; answer: string; explanation: string; }
 
-// ─── Mock Questions ───────────────────────────────────────────────────────────
-const MOCK_QUESTIONS: Question[] = [
-  { id:1,  subject:"Fluid Mechanics",   question:"What is the unit of stress?",                                                          options:["N/m","N/m²","kg/m³","Pa"],                                                                              answer:"N/m²",                          explanation:"Stress = Force / Area. Both N/m² and Pa are correct units; N/m² is the SI derived form." },
-  { id:2,  subject:"Soil Mechanics",    question:"What is the specific gravity of water at 4°C?",                                        options:["0.85","1.00","1.25","0.99"],                                                                            answer:"1.00",                          explanation:"Water at 4°C is densest at 1000 kg/m³, giving a specific gravity of exactly 1.00." },
-  { id:3,  subject:"RCC",               question:"Which of the following is a ferrous metal?",                                           options:["Copper","Aluminium","Cast Iron","Zinc"],                                                                answer:"Cast Iron",                     explanation:"Ferrous metals contain iron as a primary component. Cast iron is an iron-carbon alloy." },
-  { id:4,  subject:"Surveying",         question:"The angle of internal friction of loose sand is approximately:",                       options:["15°–20°","25°–30°","35°–40°","45°–50°"],                                                               answer:"25°–30°",                       explanation:"Loose dry sand typically has an internal friction angle in the range of 25°–30°." },
-  { id:5,  subject:"Transportation",    question:"What does SBC stand for in foundation engineering?",                                   options:["Safe Bearing Capacity","Soil Bearing Code","Structural Base Coefficient","Standard Bore Calculation"],  answer:"Safe Bearing Capacity",         explanation:"SBC is the maximum load per unit area that soil can safely carry without failure or excessive settlement." },
-  { id:6,  subject:"Fluid Mechanics",   question:"Bernoulli's theorem is applicable to:",                                                options:["Compressible flow only","Viscous flow only","Ideal fluid flow along a streamline","Turbulent flow only"], answer:"Ideal fluid flow along a streamline", explanation:"Bernoulli's principle applies to steady, incompressible, irrotational flow of an ideal fluid along a streamline." },
-  { id:7,  subject:"RCC",               question:"The minimum grade of concrete for RCC work as per IS 456 is:",                        options:["M10","M15","M20","M25"],                                                                                answer:"M20",                           explanation:"IS 456:2000 specifies M20 as the minimum grade for reinforced concrete structures." },
-  { id:8,  subject:"Surveying",         question:"Which instrument is used to measure horizontal and vertical angles?",                  options:["Planimeter","Theodolite","Dumpy Level","Compass"],                                                      answer:"Theodolite",                    explanation:"A theodolite measures both horizontal and vertical angles precisely and is used in triangulation surveys." },
-  { id:9,  subject:"Soil Mechanics",    question:"Consolidation settlement is primarily associated with:",                                options:["Sandy soils","Gravel","Clay soils","Rock"],                                                             answer:"Clay soils",                    explanation:"Clay soils undergo consolidation when water is squeezed out under load, causing long-term settlement." },
-  { id:10, subject:"Transportation",    question:"The camber on roads is provided to:",                                                  options:["Increase speed","Drain rainwater","Improve aesthetics","Reduce friction"],                               answer:"Drain rainwater",               explanation:"Camber is the transverse slope on a road surface designed to quickly drain rainwater to the sides." },
-];
+// ─── Domain map (UI casing → data casing) ───────────────────────────────────
+const DOMAIN_MAP: Record<Domain, DataDomain> = { ITI:"iti", Diploma:"diploma", BTech:"btech" };
+
+// ─── Subject icon helper ─────────────────────────────────────────────────────
+function subjectIcon(s: string): string {
+  const l = s.toLowerCase();
+  if (l.includes("building material") || l.includes("construction tech")) return "🧱";
+  if (l.includes("building construction") || l.includes("building drawing")) return "🏗️";
+  if (l.includes("survey") || l.includes("levelling")) return "📏";
+  if (l.includes("modern") && l.includes("instrument")) return "🔭";
+  if (l.includes("drawing") || l.includes("autocad")) return "✏️";
+  if (l.includes("estimat") || l.includes("costing") || l.includes("valuation")) return "📊";
+  if (l.includes("rcc") || l.includes("structural") || l.includes("pre-stressed")) return "🏛️";
+  if (l.includes("steel")) return "⚙️";
+  if (l.includes("hydraulic") || l.includes("fluid") || l.includes("open channel")) return "💧";
+  if (l.includes("hydrology") || l.includes("irrigation")) return "🌊";
+  if (l.includes("water supply") || l.includes("sanit")) return "🚰";
+  if (l.includes("wastewater") || l.includes("environmental") || l.includes("pollution") || l.includes("public health")) return "🌿";
+  if (l.includes("highway") || l.includes("transport")) return "🛣️";
+  if (l.includes("railway")) return "🚂";
+  if (l.includes("bridge")) return "🌉";
+  if (l.includes("tunnel")) return "🚇";
+  if (l.includes("mechanic") && !l.includes("fluid")) return "⚡";
+  if (l.includes("soil") || l.includes("geotech") || l.includes("foundation")) return "🏔️";
+  if (l.includes("management") || l.includes("planning") && !l.includes("building")) return "📋";
+  if (l.includes("math")) return "🔢";
+  if (l.includes("electr")) return "⚡";
+  if (l.includes("airport")) return "✈️";
+  if (l.includes("dock") || l.includes("harbour")) return "⚓";
+  if (l.includes("gis") || l.includes("remote") || l.includes("geoinformatics")) return "🗺️";
+  if (l.includes("law") || l.includes("regulation")) return "⚖️";
+  if (l.includes("noise")) return "🔊";
+  if (l.includes("solid") || l.includes("hazardous") || l.includes("waste")) return "♻️";
+  if (l.includes("chemical")) return "🧪";
+  if (l.includes("dynamic") || l.includes("plastic") || l.includes("matrix")) return "🔬";
+  return "📚";
+}
+
+// ─── Build subject options from data file ────────────────────────────────────
+function buildSubjects(domain: DataDomain): { core: SubjectOption[]; addon: SubjectOption[] } {
+  const addonSet = new Set(ADDON_SUBJECTS[domain]);
+  return {
+    core:  SUBJECTS_BY_DOMAIN[domain].filter(s => !addonSet.has(s)).map(s => ({ id: s, label: s, icon: subjectIcon(s) })),
+    addon: ADDON_SUBJECTS[domain].map(s => ({ id: s, label: s, icon: subjectIcon(s) })),
+  };
+}
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 const DOMAINS: DomainOption[] = [
@@ -35,26 +76,16 @@ const DOMAINS: DomainOption[] = [
   { id:"BTech",   label:"BTech",   icon:"🎓", desc:"Bachelor of Technology" },
 ];
 
-interface SubjectGroup { core: SubjectOption[]; addon: SubjectOption[]; }
-const DOMAIN_SUBJECTS: Record<Domain, SubjectGroup> = {
-  ITI: {
-    core:  [{ id:"iti-math",   label:"Basic Mathematics", icon:"🔢" },{ id:"iti-sci",  label:"Basic Science",     icon:"🔬" },{ id:"iti-safety",label:"Safety & First Aid",  icon:"🩺" }],
-    addon: [{ id:"iti-masonry",label:"Masonry",           icon:"🧱" },{ id:"iti-carp", label:"Carpentry",         icon:"🪵" },{ id:"iti-plumb", label:"Plumbing",            icon:"🔧" }],
-  },
-  Diploma: {
-    core:  [{ id:"dip-survey",   label:"Surveying",                 icon:"📏" },{ id:"dip-bm",  label:"Building Materials",        icon:"🧱" },{ id:"dip-ct",      label:"Construction Technology",   icon:"🏗️" },{ id:"dip-em",      label:"Engineering Mechanics",     icon:"⚙️" },{ id:"dip-irr",     label:"Irrigation Engineering",    icon:"💧" },{ id:"dip-env",     label:"Environmental Engineering", icon:"🌿" },{ id:"dip-transport",label:"Transportation Engineering",icon:"🛣️" }],
-    addon: [{ id:"dip-geo",      label:"Geotechnical Engineering",  icon:"🏔️" },{ id:"dip-est",  label:"Estimation & Valuation",    icon:"📊" },{ id:"dip-adv",     label:"Advanced Surveying",        icon:"🗺️" },{ id:"dip-cm",      label:"Construction Management",   icon:"📋" }],
-  },
-  BTech: {
-    core:  [{ id:"bt-sa",    label:"Structural Analysis",           icon:"🏛️" },{ id:"bt-fm",   label:"Fluid Mechanics",              icon:"💧" },{ id:"bt-sq",    label:"Surveying & Quantity Surveying",icon:"📏" },{ id:"bt-cm",    label:"Construction Management",       icon:"📋" },{ id:"bt-env",   label:"Environmental Engineering",     icon:"🌿" },{ id:"bt-ds",    label:"Design of Structures",          icon:"📐" },{ id:"bt-geo",   label:"Geotechnical Engineering",      icon:"🏔️" },{ id:"bt-trans", label:"Transportation Engineering",    icon:"🛣️" }],
-    addon: [{ id:"bt-kwa",   label:"KWA",         icon:"🚰" },{ id:"bt-lsgd",  label:"LSGD",        icon:"🏘️" },{ id:"bt-irr",   label:"Irrigation",  icon:"🌾" },{ id:"bt-pcb",   label:"PCB",         icon:"🔩" },{ id:"bt-gw",    label:"Groundwater", icon:"🌊" }],
-  },
+const DOMAIN_SUBJECTS: Record<Domain, { core: SubjectOption[]; addon: SubjectOption[] }> = {
+  ITI:     buildSubjects("iti"),
+  Diploma: buildSubjects("diploma"),
+  BTech:   buildSubjects("btech"),
 };
 
 const DIFFICULTIES: DifficultyOption[] = [
-  { id:"Easy",   label:"Easy",   questions:"25 Questions", desc:"Fundamental concepts & basics",  icon:"🌱", color:"emerald" },
-  { id:"Medium", label:"Medium", questions:"50 Questions", desc:"Application level problems",      icon:"⚡", color:"amber"   },
-  { id:"Hard",   label:"Hard",   questions:"PSC Level",    desc:"Exam-standard questions",         icon:"🔥", color:"rose"    },
+  { id:"Easy",   label:"Easy",   questions:`${DIFFICULTY_COUNTS.easy} Questions`,  desc:"Fundamental concepts & basics",  icon:"🌱", color:"emerald" },
+  { id:"Medium", label:"Medium", questions:`${DIFFICULTY_COUNTS.medium} Questions`, desc:"Application level problems",      icon:"⚡", color:"amber"   },
+  { id:"Hard",   label:"Hard",   questions:`${DIFFICULTY_COUNTS.hard} Questions`,  desc:"Exam-standard questions",         icon:"🔥", color:"rose"    },
 ];
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -186,8 +217,8 @@ export default function GameArenaPage() {
   // ── Quiz engine helpers ──────────────────────────────────────────────────
   const handleStart = () => {
     if (!isReady) return;
-    const count = selectedDifficulty === "Easy" ? 5 : selectedDifficulty === "Medium" ? 7 : 10;
-    const pool  = [...MOCK_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, count);
+    const dataDomain = DOMAIN_MAP[selectedDomain!];
+    const pool       = getQuestions(dataDomain, selectedSubjects);
     setQuestions(pool); setCurrentQuestionIndex(0); setSelectedAnswer(null);
     setScore(0); setXp(0); setShowResult(false); setAnimating(false);
     setStreakCount(0); setBestStreak(0); setTimedOut(false);
@@ -217,12 +248,12 @@ export default function GameArenaPage() {
     setSavingScore(true); setSaveError("");
     try {
       // Update local player data (totalScore + streak)
-      const updated = recordGame(player, score);
+      const updated = recordGame(player, xp);
       setPlayer(updated);
       // Save to Firebase
       await saveScore({
         name: updated.name,
-        score,
+        score: xp,
         totalScore: updated.totalScore,
         streak: updated.streak,
       });
@@ -244,11 +275,14 @@ export default function GameArenaPage() {
     setClickedOpt(option);
     setTimeout(() => setClickedOpt(null), 200);
     setSelectedAnswer(option);
-    const correct = option === questions[currentQuestionIndex].answer;
-    if (correct) {
+    const q = questions[currentQuestionIndex];
+    const correctAnswer = q.options[q.correct];
+    const isCorrect = option === correctAnswer;
+    if (isCorrect) {
       playSound("correct");
       setScore(s => s + 1);
-      const bonus = streakCount >= 2 ? 20 : 10;
+      const baseXp = q.xp ?? 10;
+      const bonus  = streakCount >= 2 ? baseXp * 2 : baseXp;
       setXp(x => x + bonus);
       setXpBurstVal(streakCount >= 2 ? `+${bonus} XP 🔥` : `+${bonus} XP ⚡`);
       setStreakCount(s => { const next = s + 1; setBestStreak(b => Math.max(b, next)); return next; });
@@ -379,7 +413,7 @@ export default function GameArenaPage() {
             {/* ── Options ── */}
             <div className="grid grid-cols-1 gap-2.5 mb-5">
               {currentQ.options.map((opt, i) => {
-                const isCorrect  = opt === currentQ.answer;
+                const isCorrect  = i === currentQ.correct;
                 const isSelected = opt === selectedAnswer;
                 const isClicked  = opt === clickedOpt;
                 let cls = "border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:border-zinc-500 hover:bg-zinc-800 hover:shadow-[0_0_12px_rgba(255,255,255,0.04)] hover:scale-[1.01]";
@@ -417,7 +451,7 @@ export default function GameArenaPage() {
                   <p className="text-xs font-semibold text-zinc-400 mb-1 uppercase tracking-wide">💡 Explanation</p>
                   <p className="text-zinc-300 text-sm leading-relaxed">{currentQ.explanation}</p>
                 </div>
-                {selectedAnswer === currentQ.answer && streakCount >= 2 && (
+                {selectedAnswer === currentQ.options[currentQ.correct] && streakCount >= 2 && (
                   <div className="flex items-center justify-center gap-2 text-orange-400 text-sm font-bold">
                     🔥 {streakCount} in a row! Keep going!
                   </div>
@@ -495,7 +529,7 @@ export default function GameArenaPage() {
 
           {/* Player stats + Level badge */}
           {(() => {
-            const totalScore = player ? player.totalScore + (scoreSaved ? 0 : score) : score;
+            const totalScore = player ? player.totalScore + (scoreSaved ? 0 : xp) : xp;
             const lvl = getLevel(totalScore);
             const next = getNextLevel(totalScore);
             const streak = player?.streak ?? 0;
@@ -777,19 +811,48 @@ export default function GameArenaPage() {
                       <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full border border-orange-500/50 bg-orange-500/10 text-orange-400 text-xs transition-transform duration-300 ${showMoreSubjects ? "rotate-45" : "rotate-0"}`}>+</span>
                       {showMoreSubjects ? "Hide extra subjects" : `+ More Subjects (${currentSubjects.addon.length} add-ons)`}
                     </button>
-                    <div className={`grid grid-cols-2 sm:grid-cols-3 gap-2.5 transition-all duration-400 ease-in-out overflow-hidden ${showMoreSubjects ? "max-h-96 opacity-100 mt-2.5" : "max-h-0 opacity-0 mt-0"}`}>
-                      {currentSubjects.addon.map(s => {
-                        const isSelected = selectedSubjects.includes(s.id);
+                    <div className={`transition-all duration-400 ease-in-out overflow-hidden ${showMoreSubjects ? "max-h-[2000px] opacity-100 mt-2.5" : "max-h-0 opacity-0 mt-0"}`}>
+                      {(() => {
+                        const dataDomain = DOMAIN_MAP[selectedDomain!];
+                        const groups = ADDON_GROUPS[dataDomain];
+                        if (groups && groups.length > 0) {
+                          return groups.map(group => (
+                            <div key={group.label} className="mb-4 last:mb-0">
+                              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">{group.label}</p>
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                                {group.subjects.map(subj => {
+                                  const isSelected = selectedSubjects.includes(subj);
+                                  return (
+                                    <button key={subj} onClick={() => toggleSubject(subj)}
+                                      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer hover:scale-[1.02]
+                                        ${isSelected ? "border-orange-500 bg-orange-500/10 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.15)]" : "border-zinc-700/60 border-dashed bg-zinc-800/30 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"}`}>
+                                      <span className="text-base shrink-0">{subjectIcon(subj)}</span>
+                                      <span className="leading-tight flex-1 text-left">{subj}</span>
+                                      {isSelected && <span className="text-orange-500 text-xs shrink-0">✓</span>}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ));
+                        }
                         return (
-                          <button key={s.id} onClick={() => toggleSubject(s.id)}
-                            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer hover:scale-[1.02]
-                              ${isSelected ? "border-orange-500 bg-orange-500/10 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.15)]" : "border-zinc-700/60 border-dashed bg-zinc-800/30 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"}`}>
-                            <span className="text-base shrink-0">{s.icon}</span>
-                            <span className="leading-tight flex-1 text-left">{s.label}</span>
-                            {isSelected && <span className="text-orange-500 text-xs shrink-0">✓</span>}
-                          </button>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                            {currentSubjects.addon.map(s => {
+                              const isSelected = selectedSubjects.includes(s.id);
+                              return (
+                                <button key={s.id} onClick={() => toggleSubject(s.id)}
+                                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer hover:scale-[1.02]
+                                    ${isSelected ? "border-orange-500 bg-orange-500/10 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.15)]" : "border-zinc-700/60 border-dashed bg-zinc-800/30 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"}`}>
+                                  <span className="text-base shrink-0">{s.icon}</span>
+                                  <span className="leading-tight flex-1 text-left">{s.label}</span>
+                                  {isSelected && <span className="text-orange-500 text-xs shrink-0">✓</span>}
+                                </button>
+                              );
+                            })}
+                          </div>
                         );
-                      })}
+                      })()}
                     </div>
                   </>
                 )}

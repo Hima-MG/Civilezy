@@ -12,8 +12,10 @@ interface QuizData {
   correctIndex: number;
 }
 
+import { EXTERNAL_URLS } from "@/lib/constants";
+
 // ─── Constants ───────────────────────────────────────────────────────────────
-const LMS_FREE_TEST = "https://lms.civilezy.com/free-test";
+const LMS_FREE_TEST = EXTERNAL_URLS.freeTest;
 const STORAGE_KEY = "civilezy_user";
 
 // ─── Rank System ────────────────────────────────────────────────────────────

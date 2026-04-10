@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { EXTERNAL_URLS } from "@/lib/constants";
+import { EXTERNAL_URLS, COURSE_LINKS } from "@/lib/constants";
 
 // ─── URL Constants ──────────────────────────────────────────────────────────
 // ⚠️  Replace with your real WhatsApp Business number before going live
@@ -17,28 +17,28 @@ const SOCIAL = [
 ] as const;
 
 // ─── Nav data ───────────────────────────────────────────────────────────────
-// Internal paths use Next.js <Link>; external use <a>
+// All course / resource links point to the LMS (external).
+// Internal paths use Next.js <Link>; external use <a>.
 const FOOTER_NAV: Record<string, { label: string; href: string; external?: boolean }[]> = {
   Courses: [
-    { label:"ITI Civil PSC",     href:"/courses/iti"     },
-    { label:"Diploma Civil PSC", href:"/courses/diploma" },
-    { label:"AE / B.Tech PSC",   href:"/courses/ae"      },
-    { label:"KWA AE Prep",       href:"/courses/kwa-ae"  },
-    { label:"PWD Overseer",      href:"/courses/pwd"     },
+    { label:"ITI Civil PSC",     href:COURSE_LINKS.iti,      external:true },
+    { label:"Diploma Civil PSC", href:COURSE_LINKS.diploma,  external:true },
+    { label:"AE / B.Tech PSC",   href:COURSE_LINKS.btech,    external:true },
+    { label:"KWA AE Prep",       href:COURSE_LINKS.kwa,      external:true },
+    { label:"PWD Overseer",      href:COURSE_LINKS.pwd,      external:true },
   ],
   Resources: [
-    { label:"Previous Year Questions", href:"/resources/pyq"           },
-    { label:"Study Plans",             href:"/resources/study-plans"   },
-    { label:"PSC Notifications",       href:"/resources/notifications" },
-    { label:"Rank Holder Stories",     href:"/resources/stories"       },
-    { label:"Free Mock Test",          href:"/mock-tests"              },
+    { label:"Previous Year Questions", href:EXTERNAL_URLS.freeTest, external:true },
+    { label:"Free Mock Test",          href:"/game-arena"                         },
+    { label:"Blog & Guides",           href:"/blog"                               },
+    { label:"Pricing Plans",           href:"/pricing"                            },
   ],
   Company: [
     { label:"About Us",         href:EXTERNAL_URLS.about,   external:true },
-    { label:"Contact",          href:"/contact"                           },
+    { label:"Contact",          href:EXTERNAL_URLS.contact, external:true },
     { label:"WhatsApp Support", href:WA_LINK,               external:true },
     { label:"Privacy Policy",   href:EXTERNAL_URLS.privacy, external:true },
-    { label:"Refund Policy",    href:"/refund"                            },
+    { label:"Terms of Use",     href:EXTERNAL_URLS.terms,   external:true },
   ],
 };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useCallback, forwardRef } from "react";
+import { EXTERNAL_URLS } from "@/lib/constants";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface FeatureCardData {
@@ -53,7 +54,7 @@ const FEATURE_CARDS: FeatureCardData[] = [
   },
 ];
 
-const LMS_FREE_TEST = "https://lms.civilezy.com/free-test";
+const LMS_FREE_TEST = EXTERNAL_URLS.freeTest;
 
 // ─── Stable CTA hover handlers (module-level) ────────────────────────────────
 const onCtaEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
