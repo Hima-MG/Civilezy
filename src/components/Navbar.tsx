@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { EXTERNAL_URLS } from "@/lib/constants";
 
 const URLS = {
@@ -62,9 +63,16 @@ export default function Navbar() {
         }}
       >
         {/* ── Logo ───────────────────────────────────────── */}
-        <Link href="/" style={styles.logo}>
-          <span style={styles.logoIcon}>C</span>
-          Civil<span style={{ color: "#FF8534" }}>ezy</span>
+        <Link href="/" aria-label="Civilezy home" style={{ display: "flex", alignItems: "center", textDecoration: "none", flexShrink: 0 }}>
+          <Image
+            src="/civilezy_logo_orange.png"
+            alt="Civilezy Logo"
+            width={140}
+            height={40}
+            priority
+            className="h-10 w-auto"
+            style={{ objectFit: "contain" }}
+          />
         </Link>
 
         {/* ── Desktop nav links ──────────────────────────── */}
@@ -217,33 +225,6 @@ function hamburgerBar(open: boolean, index: number): React.CSSProperties {
 
 /* ─── Static styles object ─────────────────────────────────────────────── */
 const styles = {
-  logo: {
-    display:        "flex",
-    alignItems:     "center",
-    gap:            "10px",
-    fontFamily:     "Rajdhani, sans-serif",
-    fontSize:       "24px",
-    fontWeight:     700,
-    textDecoration: "none",
-    color:          "#ffffff",
-    flexShrink:     0,
-  } as React.CSSProperties,
-
-  logoIcon: {
-    width:          "38px",
-    height:         "38px",
-    borderRadius:   "10px",
-    background:     "linear-gradient(135deg, #FF6200, #FFB347)",
-    display:        "flex",
-    alignItems:     "center",
-    justifyContent: "center",
-    fontSize:       "20px",
-    fontWeight:     800,
-    color:          "white",
-    boxShadow:      "0 4px 15px rgba(255,98,0,0.4)",
-    flexShrink:     0,
-  } as React.CSSProperties,
-
   navLinks: {
     display:    "flex",
     alignItems: "center",

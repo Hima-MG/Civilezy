@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { EXTERNAL_URLS, COURSE_LINKS } from "@/lib/constants";
 
 // ─── URL Constants ──────────────────────────────────────────────────────────
@@ -81,13 +82,16 @@ export default function Footer() {
             <Link
               href="/"
               aria-label="Civilezy home"
-              style={{ display:"flex", alignItems:"center", gap:"10px", fontFamily:"Rajdhani, sans-serif", fontSize:"22px", fontWeight:700, textDecoration:"none", color:"#ffffff", marginBottom:"12px" }}
+              style={{ display:"flex", alignItems:"center", textDecoration:"none", marginBottom:"12px" }}
             >
-              <span aria-hidden="true"
-                style={{ width:"36px", height:"36px", borderRadius:"10px", background:"linear-gradient(135deg,#FF6200,#FFB347)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"18px", fontWeight:800, color:"white", boxShadow:"0 4px 15px rgba(255,98,0,0.4)", flexShrink:0 }}>
-                C
-              </span>
-              Civil<span style={{ color:"#FF8534" }}>ezy</span>
+              <Image
+                src="/civilezy_logo_orange.png"
+                alt="Civilezy Logo"
+                width={120}
+                height={34}
+                className="h-9 w-auto"
+                style={{ objectFit:"contain" }}
+              />
             </Link>
 
             <p style={{ fontSize:"14px", color:"rgba(255,255,255,0.55)", lineHeight:1.7 }}>
