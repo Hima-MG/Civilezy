@@ -186,7 +186,7 @@ export default function BlogDetailPage({ params }: { params: { slug: string } })
                 rel="noopener noreferrer"
                 style={{ display:"inline-flex", alignItems:"center", gap:"8px", background:"linear-gradient(135deg,#FF6200,#FF4500)", color:"white", textDecoration:"none", padding:"14px 28px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"16px", fontWeight:800, boxShadow:"0 6px 24px rgba(255,98,0,0.4)", transition:"transform 0.2s, box-shadow 0.2s" }}
               >
-                🚀 Start Free — No Sign-up
+                🚀 Sign Up for 48 Hr Free Demo
               </a>
               <Link
                 href="/game-arena"
@@ -196,7 +196,7 @@ export default function BlogDetailPage({ params }: { params: { slug: string } })
               </Link>
             </div>
             <p style={{ fontSize:"12px", color:"rgba(255,255,255,0.3)", marginTop:"14px" }}>
-              ✓ Free forever &nbsp;·&nbsp; ✓ No credit card &nbsp;·&nbsp; ✓ Kerala PSC-specific
+              ✓ 48 Hr free access &nbsp;·&nbsp; ✓ No credit card &nbsp;·&nbsp; ✓ Kerala PSC-specific
             </p>
           </div>
         </article>
@@ -217,7 +217,7 @@ export default function BlogDetailPage({ params }: { params: { slug: string } })
               rel="noopener noreferrer"
               style={{ display:"block", textAlign:"center", background:"linear-gradient(135deg,#FF6200,#FF4500)", color:"white", textDecoration:"none", padding:"12px 16px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"14px", fontWeight:800, boxShadow:"0 4px 18px rgba(255,98,0,0.4)", marginBottom:"10px" }}
             >
-              🚀 Start Free Test
+              🚀 Sign Up for 48 Hr Free Demo
             </a>
             <Link
               href="/pricing"

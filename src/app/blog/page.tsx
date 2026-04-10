@@ -105,7 +105,7 @@ export default function BlogListPage() {
               rel="noopener noreferrer"
               style={{ display:"inline-flex", alignItems:"center", gap:"8px", background:"linear-gradient(135deg,#FF6200,#FF4500)", color:"white", textDecoration:"none", padding:"14px 28px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"16px", fontWeight:800, boxShadow:"0 6px 24px rgba(255,98,0,0.4)" }}
             >
-              🚀 Start Free Test
+              🚀 Sign Up for 48 Hr Free Demo
             </a>
             <Link
               href="/game-arena"

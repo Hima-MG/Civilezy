@@ -3,7 +3,7 @@
 
 export default function AppDownloadSection() {
   return (
-    <section className="py-16 px-4 text-center">
+    <section className="py-12 sm:py-16 lg:py-20 px-[5%] text-center">
       <h2 className="text-2xl sm:text-3xl font-bold mb-4">
         Learn Anytime, Anywhere
       </h2>

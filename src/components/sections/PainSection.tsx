@@ -6,24 +6,24 @@ import { useEffect, useRef, useCallback, forwardRef } from "react";
 // ─── Data ───────────────────────────────────────────────────────────────────
 const PAIN_CARDS = [
   {
-    icon:  "😵",
-    title: "Total Confusion",
-    desc:  "Which topics to study? ITI pool vs Diploma pool? Nobody explains the PSC syllabus structure clearly in Malayalam.",
+    icon:  "⚠️",
+    title: "No Roadmap",
+    desc:  "ഏത് subject ആദ്യം പഠിക്കണം? ഏതൊക്കെ skip ചെയ്യാം? Material ഒരുപാടുണ്ട് — പക്ഷേ ഒരു daily study plan ഇല്ല. ആദ്യ ദിവസം തൊട്ട് എങ്ങനെ proceed ചെയ്യണം എന്ന് ആരും പറഞ്ഞുതരില്ല.",
   },
   {
-    icon:  "📚",
-    title: "Scattered Resources",
-    desc:  "Study material in 10 different Telegram groups. No structure, no sequence, no quality control. Total chaos.",
+    icon:  "⏳",
+    title: "Too Hard, No Time",
+    desc:  "Design, Analysis, Structural — ഇംഗ്ലീഷ് technical jargons കണ്ടാൽ തലകറങ്ങും. Notes എഴുതാൻ സമയവുമില്ല. ജോലിക്കിടയിൽ മണിക്കൂറുകൾ ഇരുന്ന് പഠിക്കാൻ ആർക്കാണ് കഴിയുക?",
   },
   {
     icon:  "💸",
-    title: "Wrong Platforms",
-    desc:  "Expensive platforms charge ₹5000+ for generic content that has zero Kerala PSC relevance. Money wasted.",
+    title: "Coaching is Too Expensive",
+    desc:  "വലിയ coaching platforms ₹5,000–₹8,000 ഒറ്റത്തവണ വാങ്ങും — Kerala PSC-ന് യോജിക്കാത്ത generic content-ന്. എല്ലാവർക്കും ആ risk എടുക്കാൻ കഴിയില്ല.",
   },
   {
-    icon:  "⏰",
-    title: "Exam is Coming",
-    desc:  "PSC notification released. You know you should start. But you don't know where to begin. Every day wasted = rank lost.",
+    icon:  "📉",
+    title: "Learning Without Results",
+    desc:  "വായിക്കും, വായിക്കും — പക്ഷേ exam day-ൽ blank ആകും. Regular practice tests ഇല്ല, progress track ചെയ്യുന്നില്ല. വെറും reading കൊണ്ട് മാത്രം rank list-ൽ ഇടം കിട്ടില്ല.",
   },
 ] as const;
 
@@ -62,7 +62,7 @@ export default function PainSection() {
   return (
     <section
       aria-labelledby="pain-heading"
-      style={{ background:"#080F1E", padding:"80px 5%" }}
+      style={{ background:"#080F1E", padding:"80px 5% 20px" }}
     >
       {/* ── Section header ── */}
       <div style={{ textAlign:"center", maxWidth:"700px", margin:"0 auto 60px" }}>
@@ -95,11 +95,11 @@ export default function PainSection() {
         </p>
       </div>
 
-      {/* ── Pain cards grid — role="list" restores list semantics ── */}
+      {/* ── Pain cards grid ── */}
       <ul
         role="list"
         aria-label="Common challenges faced by Kerala PSC aspirants"
-        style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))", gap:"20px", maxWidth:"1200px", margin:"0 auto", listStyle:"none", padding:0 }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto list-none p-0"
       >
         {PAIN_CARDS.map((card, i) => (
           <PainCard
@@ -132,25 +132,26 @@ const PainCard = forwardRef<
   { icon: string; title: string; desc: string }
 >(function PainCard({ icon, title, desc }, ref) {
   return (
-    <li>
+    <li className="h-full">
       <div
         ref={ref}
-        className="pain-card-animate"
-        style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,50,50,0.2)", borderRadius:"16px", padding:"24px", position:"relative", overflow:"hidden", transition:"border-color 0.3s, transform 0.3s, opacity 0.5s ease" }}
+        className="pain-card-animate bg-white/[0.03] border border-red-500/20 rounded-xl p-5 min-h-[220px] h-full flex flex-col transition-all duration-300 hover:scale-[1.03] hover:border-red-500/50"
         onMouseEnter={onCardEnter}
         onMouseLeave={onCardLeave}
       >
-        {/* Emoji icon — decorative, aria-hidden */}
-        <div aria-hidden="true" style={{ fontSize:"32px", marginBottom:"12px" }}>{icon}</div>
+        {/* Icon */}
+        <div aria-hidden="true" className="w-10 h-10 flex items-center justify-center text-[28px] mb-3 shrink-0">{icon}</div>
 
-        {/* h3 — correct heading level under the section h2 */}
+        {/* Title */}
         <h3
-          style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"20px", fontWeight:700, color:"#FF6B6B", marginBottom:"8px" }}
+          style={{ fontFamily:"Rajdhani, sans-serif" }}
+          className="text-lg font-bold text-red-400 mb-2"
         >
           {title}
         </h3>
 
-        <p style={{ fontSize:"14px", color:"rgba(255,255,255,0.85)", lineHeight:1.6, margin:0 }}>
+        {/* Description */}
+        <p className="text-sm leading-relaxed text-white/85 m-0 flex-1">
           {desc}
         </p>
       </div>

@@ -1,5 +1,4 @@
 import Hero               from "@/components/sections/Hero";
-import Navbar from "@/components/Navbar";
 import PainSection         from "@/components/sections/PainSection";
 import SolutionSection     from "@/components/sections/SolutionSection";
 import LevelsSection       from "@/components/sections/LevelsSection";
@@ -14,16 +13,11 @@ import Footer from "@/components/sections/Footer";
 import TickerSection from "@/components/sections/TickerSection";
 import AppDownloadSection from "@/components/sections/AppDownloadSection";
 
-import StickyCTA from "@/components/sections/StickyCTA";
-
-
 export default function Home() {
   return (
     <>
       <Hero />
-      <AppDownloadSection/>
-
-      <Navbar />
+      <AppDownloadSection />
       <TickerSection />
       <PainSection />
       <SolutionSection />
@@ -31,15 +25,10 @@ export default function Home() {
       <GameArenaSection />
       <QuizModesSection />
       <ComparisonSection />
-     
-     
       <TestimonialsSection />
       {/* <DepartmentSection /> */}
       <FinalCTASection />
       <Footer />
-      
-      <StickyCTA />
-      
     </>
   );
 }

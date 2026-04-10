@@ -8,7 +8,6 @@ import { EXTERNAL_URLS } from "@/lib/constants";
 const URLS = {
   LMS_LOGIN:     EXTERNAL_URLS.login,
   LMS_ENROLL:    EXTERNAL_URLS.checkout,
-  LMS_FREE_TEST: EXTERNAL_URLS.freeTest,
 } as const;
 
 const NAV_LINKS = [
@@ -94,23 +93,6 @@ export default function Navbar() {
             style={styles.loginLink}
           >
             Login
-          </a>
-
-          <a
-            href={URLS.LMS_FREE_TEST}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={styles.ctaButton}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.transform   = "translateY(-2px)";
-              (e.currentTarget as HTMLElement).style.boxShadow  = "0 8px 25px rgba(255,98,0,0.5)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.transform   = "translateY(0)";
-              (e.currentTarget as HTMLElement).style.boxShadow  = "0 4px 20px rgba(255,98,0,0.4)";
-            }}
-          >
-            🎯 Start Free Test
           </a>
 
           {/* Hamburger — mobile only */}
@@ -249,23 +231,6 @@ const styles = {
     fontWeight:     600,
     transition:     "color 0.2s",
     whiteSpace:     "nowrap",
-  } as React.CSSProperties,
-
-  ctaButton: {
-    background:     "linear-gradient(135deg, #FF6200, #FF8534)",
-    color:          "white",
-    border:         "none",
-    padding:        "10px 24px",
-    borderRadius:   "30px",
-    fontFamily:     "Nunito, sans-serif",
-    fontSize:       "15px",
-    fontWeight:     700,
-    cursor:         "pointer",
-    boxShadow:      "0 4px 20px rgba(255,98,0,0.4)",
-    transition:     "transform 0.2s, box-shadow 0.2s",
-    whiteSpace:     "nowrap",
-    textDecoration: "none",
-    display:        "inline-block",
   } as React.CSSProperties,
 
   hamburger: {

@@ -114,7 +114,7 @@ export default function FinalCTASection() {
             href={LMS_FREE_TEST}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Take a free mock test — opens in new tab"
+            aria-label="Sign up for 48 hour free demo — opens in new tab"
             style={{
               background:     "linear-gradient(135deg, #FF6200, #FF4500)",
               color:          "white",
@@ -133,7 +133,7 @@ export default function FinalCTASection() {
             onMouseEnter={onPrimaryEnter}
             onMouseLeave={onPrimaryLeave}
           >
-            🚀 Take Free Mock Test Now
+            🚀 Sign Up for 48 Hr Free Demo
           </a>
 
           <a

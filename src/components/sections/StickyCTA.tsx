@@ -125,12 +125,12 @@ export default function StickyCTA() {
               href={LMS_FREE_TEST}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Start free preparation — no sign-up required, opens in new tab"
+              aria-label="Sign up for 48 hour free demo — opens in new tab"
               style={{ display:"inline-flex", alignItems:"center", gap:"7px", background:"linear-gradient(135deg,#FF6200,#FF4500)", color:"white", border:"none", padding:"11px 26px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"15px", fontWeight:800, cursor:"pointer", boxShadow:"0 4px 20px rgba(255,98,0,0.45)", transition:"transform 0.2s, box-shadow 0.2s", whiteSpace:"nowrap", textDecoration:"none" }}
               onMouseEnter={onPrimaryEnter}
               onMouseLeave={onPrimaryLeave}
             >
-              <span aria-hidden="true">🚀</span> Start Free — No Sign-up
+              <span aria-hidden="true">🚀</span> 48 Hr Free Demo
             </a>
           </div>
         </div>
