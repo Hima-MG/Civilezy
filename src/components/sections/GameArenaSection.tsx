@@ -1,92 +1,112 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
+import { getLeaderboard, getLevel, getNextLevel, type LeaderboardEntry } from "@/lib/leaderboard";
+import { loadPlayer, type PlayerData } from "@/lib/player";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
-interface Tier {
-  icon:   string;
-  name:   string;
-  desc:   string;
-  xp:     string;
-  active: boolean;
-  locked: boolean;
-}
-interface StatMini {
-  icon:   string;
-  value:  string;
-  label:  string;
-  bg:     string;
-  border: string;
-}
-interface LeaderboardRow {
-  rank:      string;
-  rankColor: string;
-  avatar:    string;
-  avatarBg:  string;
-  avatarC:   string;
+interface TierDef {
+  icon:      string;
   name:      string;
-  loc:       string;
+  desc:      string;
   xp:        string;
-  rowBg:     string;
-  borderTop: string;
-  nameColor: string;
+  threshold: number; // min totalScore to reach this tier
 }
 
-// ─── Data ──────────────────────────────────────────────────────────────────
-// ⚠️  LEADERBOARD, STAT_MINI values (streak, rank, badge) are demo placeholders.
-//     Connect to your backend/database before going live.
-const TIERS: Tier[] = [
-  { icon:"🌱", name:"Rookie",  desc:"0 – 500 XP • Basics unlocked",     xp:"500 XP",    active:false, locked:false },
-  { icon:"📖", name:"Scholar", desc:"501 – 2,000 XP • Topic Tests",      xp:"2,000 XP",  active:false, locked:false },
-  { icon:"⚡", name:"Pro",     desc:"2,001 – 5,000 XP • Mock Tests",     xp:"5,000 XP",  active:true,  locked:false },
-  { icon:"🏅", name:"Expert",  desc:"5,001 – 10,000 XP • Boss Rounds",   xp:"10,000 XP", active:false, locked:true  },
-  { icon:"🔥", name:"Legend",  desc:"10,000+ XP • Elite Access",         xp:"∞ XP",      active:false, locked:true  },
+// ─── Static data ───────────────────────────────────────────────────────────
+const TIER_DEFS: TierDef[] = [
+  { icon:"🌱", name:"Rookie",  desc:"0 – 499 pts • Basics unlocked",       xp:"500 pts",    threshold:0     },
+  { icon:"📖", name:"Scholar", desc:"500 – 1,999 pts • Topic Tests",       xp:"2,000 pts",  threshold:500   },
+  { icon:"⚡", name:"Expert",  desc:"2,000 – 4,999 pts • Mock Tests",      xp:"5,000 pts",  threshold:2000  },
+  { icon:"🏅", name:"Master",  desc:"5,000 – 9,999 pts • Boss Rounds",     xp:"10,000 pts", threshold:5000  },
+  { icon:"🔥", name:"Legend",  desc:"10,000+ pts • Elite Access",           xp:"∞ pts",      threshold:10000 },
 ];
 
-const STAT_MINI: StatMini[] = [
-  { icon:"🔥", value:"14-Day",      label:"Current Streak", bg:"rgba(255,98,0,0.1)",    border:"rgba(255,98,0,0.25)"    },
-  { icon:"🏆", value:"#247",        label:"Kerala Rank",    bg:"rgba(255,184,0,0.1)",   border:"rgba(255,184,0,0.25)"   },
-  { icon:"🎖️", value:"Speed King",  label:"Badge Earned",   bg:"rgba(100,200,255,0.08)",border:"rgba(100,200,255,0.2)"  },
-  { icon:"📜", value:"Certificate", label:"Mock Test #12",  bg:"rgba(50,200,100,0.08)", border:"rgba(50,200,100,0.2)"   },
+const AVATAR_COLORS = [
+  { bg:"rgba(255,184,0,0.2)",    c:"#FFB800" },
+  { bg:"rgba(100,200,255,0.15)", c:"#64C8FF" },
+  { bg:"rgba(255,98,0,0.15)",    c:"#FF8534" },
+  { bg:"rgba(50,200,100,0.15)",  c:"#32C864" },
+  { bg:"rgba(200,100,255,0.15)", c:"#C864FF" },
+  { bg:"rgba(255,100,150,0.15)", c:"#FF6496" },
+  { bg:"rgba(255,255,255,0.06)", c:"rgba(255,255,255,0.55)" },
 ];
 
-const LEADERBOARD: LeaderboardRow[] = [
-  { rank:"#1",   rankColor:"#FFB800",               avatar:"AR",  avatarBg:"rgba(255,184,0,0.2)",   avatarC:"#FFB800", name:"Arjun Ravi",     loc:"Thrissur • AE Level", xp:"12,840 XP", rowBg:"rgba(255,184,0,0.08)", borderTop:"",                              nameColor:""       },
-  { rank:"#2",   rankColor:"#C0C0C0",               avatar:"MK",  avatarBg:"rgba(100,200,255,0.15)",avatarC:"#64C8FF", name:"Meera Krishnan", loc:"Kochi • Diploma",    xp:"11,220 XP", rowBg:"",                    borderTop:"",                              nameColor:""       },
-  { rank:"#3",   rankColor:"#CD7F32",               avatar:"SP",  avatarBg:"rgba(255,98,0,0.15)",   avatarC:"#FF8534", name:"Sreejith P.",    loc:"Kozhikode • AE",     xp:"10,450 XP", rowBg:"",                    borderTop:"",                              nameColor:""       },
-  { rank:"#4",   rankColor:"rgba(255,255,255,0.55)",avatar:"AN",  avatarBg:"rgba(255,255,255,0.06)",avatarC:"rgba(255,255,255,0.55)", name:"Anjali Nair", loc:"Trivandrum • ITI", xp:"9,870 XP", rowBg:"", borderTop:"", nameColor:"" },
-  { rank:"#247", rankColor:"#FF6200",               avatar:"YOU", avatarBg:"rgba(255,98,0,0.2)",    avatarC:"#FF8534", name:"You",            loc:"Pro Level",           xp:"1,840 XP",  rowBg:"rgba(255,98,0,0.06)", borderTop:"1px dashed rgba(255,98,0,0.2)", nameColor:"#FF6200" },
-];
-
+const RANK_COLORS = ["#FFB800", "#C0C0C0", "#CD7F32"];
 const BADGES = ["🔥 Streak Champion","⚡ Speed King","🎯 Topic Master","🌟 30-Day Legend"] as const;
 
-// ─── Stable hover handlers (module-level, no re-creation per render) ────────
+// ─── Stable hover handlers (module-level) ──────────────────────────────────
 const onStatEnter  = (e: React.MouseEvent<HTMLElement>) => { (e.currentTarget as HTMLElement).style.transform="translateY(-3px)"; };
 const onStatLeave  = (e: React.MouseEvent<HTMLElement>) => { (e.currentTarget as HTMLElement).style.transform="translateY(0)"; };
 const onBtnEnter   = (e: React.MouseEvent<HTMLButtonElement>) => { (e.currentTarget as HTMLElement).style.transform="translateY(-3px)"; (e.currentTarget as HTMLElement).style.boxShadow="0 12px 40px rgba(255,98,0,0.6)"; };
 const onBtnLeave   = (e: React.MouseEvent<HTMLButtonElement>) => { (e.currentTarget as HTMLElement).style.transform="translateY(0)";    (e.currentTarget as HTMLElement).style.boxShadow="0 6px 30px rgba(255,98,0,0.45)"; };
+const onLbEnter    = (e: React.MouseEvent<HTMLElement>) => { (e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.03)"; };
+const onLbLeave    = (e: React.MouseEvent<HTMLElement>) => { (e.currentTarget as HTMLElement).style.background=""; };
 
-// Leaderboard row hover — only affects rows without a pre-set rowBg
-const onLbEnter = (e: React.MouseEvent<HTMLElement>) => { const el = e.currentTarget as HTMLElement; if(!el.dataset.hasbg) el.style.background="rgba(255,255,255,0.03)"; };
-const onLbLeave = (e: React.MouseEvent<HTMLElement>) => { const el = e.currentTarget as HTMLElement; if(!el.dataset.hasbg) el.style.background=""; };
+// ─── Helper: which tier index is active for a given totalScore ─────────────
+function getActiveTierIdx(totalScore: number): number {
+  let idx = 0;
+  for (let i = TIER_DEFS.length - 1; i >= 0; i--) {
+    if (totalScore >= TIER_DEFS[i].threshold) { idx = i; break; }
+  }
+  return idx;
+}
 
 // ─── Component ─────────────────────────────────────────────────────────────
 export default function GameArenaSection() {
   const router = useRouter();
+  const [lbData, setLbData]       = useState<LeaderboardEntry[]>([]);
+  const [lbLoading, setLbLoading] = useState(true);
+  const [player, setPlayer]       = useState<PlayerData | null>(null);
 
-  // Tier hover — depends on tier state so must be per-tier (useCallback stable ref)
-  const makeTierEnter = useCallback((t: Tier) => (e: React.MouseEvent<HTMLElement>) => {
-    if (t.locked) return;
-    (e.currentTarget as HTMLElement).style.background   = t.active ? "rgba(255,98,0,0.18)" : "rgba(255,98,0,0.08)";
-    (e.currentTarget as HTMLElement).style.borderColor  = t.active ? "rgba(255,98,0,0.5)"  : "rgba(255,98,0,0.2)";
+  // Load player + leaderboard on mount (and when user returns from game)
+  useEffect(() => {
+    setPlayer(loadPlayer());
+    getLeaderboard()
+      .then(setLbData)
+      .catch(() => {})
+      .finally(() => setLbLoading(false));
   }, []);
 
-  const makeTierLeave = useCallback((t: Tier) => (e: React.MouseEvent<HTMLElement>) => {
-    if (t.locked) return;
-    (e.currentTarget as HTMLElement).style.background   = t.active ? "rgba(255,98,0,0.12)" : "rgba(255,255,255,0.04)";
-    (e.currentTarget as HTMLElement).style.borderColor  = t.active ? "rgba(255,98,0,0.35)" : "rgba(255,255,255,0.08)";
+  // Re-read player data when tab regains focus (user may have just played a game)
+  useEffect(() => {
+    const onFocus = () => setPlayer(loadPlayer());
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, []);
+
+  // ── Derived player values (memoized) ──
+  const totalScore   = player?.totalScore ?? 0;
+  const streak       = player?.streak ?? 0;
+  const activeTierIdx = useMemo(() => getActiveTierIdx(totalScore), [totalScore]);
+  const level        = useMemo(() => getLevel(totalScore), [totalScore]);
+  const nextLevel    = useMemo(() => getNextLevel(totalScore), [totalScore]);
+
+  // ── Dynamic stat mini-cards ──
+  const statMini = useMemo(() => [
+    { icon:"🔥", value: streak > 0 ? `${streak}-Day` : "0",            label:"Current Streak", bg:"rgba(255,98,0,0.1)",    border:"rgba(255,98,0,0.25)"    },
+    { icon:"🏆", value: `${level.icon} ${level.label}`,                 label:"Your Level",     bg:"rgba(255,184,0,0.1)",   border:"rgba(255,184,0,0.25)"   },
+    { icon:"⭐", value: totalScore.toLocaleString(),                     label:"Total Score",    bg:"rgba(100,200,255,0.08)",border:"rgba(100,200,255,0.2)"  },
+    { icon:"📈", value: nextLevel ? `${nextLevel.threshold.toLocaleString()} pts` : "Max!", label: nextLevel ? `Next: ${nextLevel.label}` : "Top Level", bg:"rgba(50,200,100,0.08)", border:"rgba(50,200,100,0.2)" },
+  ], [streak, level, totalScore, nextLevel]);
+
+  // ── Tier hover handlers (stable per-tier via useCallback) ──
+  const makeTierEnter = useCallback((tierIdx: number) => (e: React.MouseEvent<HTMLElement>) => {
+    const isActive = tierIdx === activeTierIdx;
+    const isLocked = tierIdx > activeTierIdx + 1;
+    if (isLocked) return;
+    (e.currentTarget as HTMLElement).style.background  = isActive ? "rgba(255,98,0,0.18)" : "rgba(255,98,0,0.08)";
+    (e.currentTarget as HTMLElement).style.borderColor = isActive ? "rgba(255,98,0,0.5)"  : "rgba(255,98,0,0.2)";
+  }, [activeTierIdx]);
+
+  const makeTierLeave = useCallback((tierIdx: number) => (e: React.MouseEvent<HTMLElement>) => {
+    const isActive = tierIdx === activeTierIdx;
+    const isLocked = tierIdx > activeTierIdx + 1;
+    if (isLocked) return;
+    (e.currentTarget as HTMLElement).style.background  = isActive ? "rgba(255,98,0,0.12)" : "rgba(255,255,255,0.04)";
+    (e.currentTarget as HTMLElement).style.borderColor = isActive ? "rgba(255,98,0,0.35)" : "rgba(255,255,255,0.08)";
+  }, [activeTierIdx]);
 
   return (
     <section
@@ -144,44 +164,89 @@ export default function GameArenaSection() {
               id="journey-label"
               style={{ fontSize:"15px", fontWeight:700, color:"rgba(255,255,255,0.55)", letterSpacing:"0.5px", marginBottom:"16px" }}
             >
-              YOUR JOURNEY
+              {player ? `${player.name.toUpperCase()}'S JOURNEY` : "YOUR JOURNEY"}
             </p>
 
-            {/* Tier list — role="list" restores list semantics removed by CSS reset */}
+            {/* Tier list */}
             <ul
               role="list"
               aria-labelledby="journey-label"
               style={{ listStyle:"none", padding:0, margin:0, display:"flex", flexDirection:"column", gap:"10px", marginBottom:"24px" }}
             >
-              {TIERS.map(t => (
-                <li
-                  key={t.name}
-                  aria-label={`${t.name} tier — ${t.desc}${t.active ? " — your current level" : ""}${t.locked ? " — locked" : ""}`}
-                  aria-current={t.active ? "true" : undefined}
-                  style={{ display:"flex", alignItems:"center", gap:"16px", background:t.active?"rgba(255,98,0,0.12)":"rgba(255,255,255,0.04)", border:t.active?"1px solid rgba(255,98,0,0.35)":"1px solid rgba(255,255,255,0.08)", borderRadius:"14px", padding:"14px 18px", opacity:t.locked?0.5:1, transition:"background 0.3s, border-color 0.3s", cursor:t.locked?"default":"default" }}
-                  onMouseEnter={makeTierEnter(t)}
-                  onMouseLeave={makeTierLeave(t)}
-                >
-                  <span aria-hidden="true" style={{ fontSize:"24px", flexShrink:0 }}>{t.icon}</span>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"18px", fontWeight:700, color:t.active?"#FF6200":"#fff", display:"flex", alignItems:"center", gap:"8px", flexWrap:"wrap" }}>
-                      {t.name}
-                      {t.active && (
-                        <span style={{ fontSize:"11px", background:"#FF6200", color:"white", padding:"2px 8px", borderRadius:"10px", fontFamily:"Nunito, sans-serif", fontWeight:700 }}>
-                          YOU ARE HERE
-                        </span>
-                      )}
+              {TIER_DEFS.map((t, i) => {
+                const isActive  = i === activeTierIdx;
+                const isReached = i <= activeTierIdx;
+                const isLocked  = i > activeTierIdx + 1;
+                return (
+                  <li
+                    key={t.name}
+                    aria-label={`${t.name} tier — ${t.desc}${isActive ? " — your current level" : ""}${isLocked ? " — locked" : ""}`}
+                    aria-current={isActive ? "true" : undefined}
+                    style={{
+                      display:"flex", alignItems:"center", gap:"16px",
+                      background: isActive ? "rgba(255,98,0,0.12)" : "rgba(255,255,255,0.04)",
+                      border: isActive ? "1px solid rgba(255,98,0,0.35)" : "1px solid rgba(255,255,255,0.08)",
+                      borderRadius:"14px", padding:"14px 18px",
+                      opacity: isLocked ? 0.5 : isReached ? 1 : 0.7,
+                      transition:"background 0.3s, border-color 0.3s, box-shadow 0.3s",
+                      boxShadow: isActive ? "0 0 20px rgba(255,98,0,0.15)" : "none",
+                      cursor:"default",
+                    }}
+                    onMouseEnter={makeTierEnter(i)}
+                    onMouseLeave={makeTierLeave(i)}
+                  >
+                    <span aria-hidden="true" style={{ fontSize:"24px", flexShrink:0 }}>{t.icon}</span>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"18px", fontWeight:700, color: isActive ? "#FF6200" : isReached ? "#fff" : "rgba(255,255,255,0.6)", display:"flex", alignItems:"center", gap:"8px", flexWrap:"wrap" }}>
+                        {t.name}
+                        {isActive && (
+                          <span style={{ fontSize:"11px", background:"#FF6200", color:"white", padding:"2px 8px", borderRadius:"10px", fontFamily:"Nunito, sans-serif", fontWeight:700, animation:"pulse 2s ease-in-out infinite" }}>
+                            YOU ARE HERE
+                          </span>
+                        )}
+                        {isReached && !isActive && (
+                          <span style={{ fontSize:"10px", color:"rgba(255,255,255,0.35)" }}>✓</span>
+                        )}
+                      </div>
+                      <div style={{ fontSize:"12px", color:"rgba(255,255,255,0.55)" }}>{t.desc}</div>
                     </div>
-                    <div style={{ fontSize:"12px", color:"rgba(255,255,255,0.55)" }}>{t.desc}</div>
-                  </div>
-                  <div style={{ fontSize:"13px", fontWeight:700, color:"#FF8534", flexShrink:0 }}>{t.xp}</div>
-                </li>
-              ))}
+                    <div style={{ fontSize:"13px", fontWeight:700, color: isActive ? "#FF8534" : "rgba(255,255,255,0.4)", flexShrink:0 }}>{t.xp}</div>
+                  </li>
+                );
+              })}
             </ul>
+
+            {/* Next level progress (only if not at max) */}
+            {nextLevel && (
+              <div style={{ background:"rgba(255,98,0,0.08)", border:"1px solid rgba(255,98,0,0.2)", borderRadius:"12px", padding:"12px 16px", marginBottom:"16px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"6px" }}>
+                  <span style={{ fontSize:"12px", fontWeight:700, color:"#FF8534" }}>
+                    Next: {nextLevel.icon} {nextLevel.label}
+                  </span>
+                  <span style={{ fontSize:"11px", color:"rgba(255,255,255,0.45)" }}>
+                    {totalScore.toLocaleString()} / {nextLevel.threshold.toLocaleString()} pts
+                  </span>
+                </div>
+                <div style={{ height:"6px", background:"rgba(255,255,255,0.08)", borderRadius:"3px", overflow:"hidden" }}>
+                  <div
+                    style={{
+                      height:"100%",
+                      borderRadius:"3px",
+                      background:"linear-gradient(90deg,#FF6200,#FFB800)",
+                      width:`${Math.min(100, (totalScore / nextLevel.threshold) * 100)}%`,
+                      transition:"width 0.5s ease",
+                    }}
+                  />
+                </div>
+                <p style={{ fontSize:"11px", color:"rgba(255,255,255,0.4)", marginTop:"4px" }}>
+                  {(nextLevel.threshold - totalScore).toLocaleString()} pts to go — keep playing!
+                </p>
+              </div>
+            )}
 
             {/* Stat mini-cards */}
             <div style={{ display:"flex", gap:"10px", flexWrap:"wrap" }} aria-label="Your current stats">
-              {STAT_MINI.map(c => (
+              {statMini.map(c => (
                 <div
                   key={c.label}
                   role="img"
@@ -211,33 +276,46 @@ export default function GameArenaSection() {
                 <div style={{ marginLeft:"auto", fontSize:"12px", color:"rgba(255,255,255,0.55)" }}>This Week</div>
               </div>
 
-              {/* Leaderboard rows — use name as key (unique), not index */}
+              {/* Leaderboard rows */}
               <ol
-                aria-label="Kerala PSC leaderboard — top ranked students this week"
+                aria-label="Kerala PSC leaderboard — top ranked students"
                 style={{ listStyle:"none", padding:"8px 0", margin:0 }}
               >
-                {LEADERBOARD.map(row => (
-                  <li
-                    key={row.name}
-                    data-hasbg={row.rowBg ? "1" : undefined}
-                    style={{ display:"flex", alignItems:"center", gap:"14px", padding:"10px 20px", background:row.rowBg||"", borderTop:row.borderTop||"", transition:"background 0.2s" }}
-                    onMouseEnter={onLbEnter}
-                    onMouseLeave={onLbLeave}
-                  >
-                    <div style={{ width:"28px", textAlign:"center", fontFamily:"Rajdhani, sans-serif", fontSize:"16px", fontWeight:700, color:row.rankColor }}>{row.rank}</div>
-                    <div
-                      aria-hidden="true"
-                      style={{ width:"36px", height:"36px", borderRadius:"50%", background:row.avatarBg, color:row.avatarC, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"14px", fontWeight:700, flexShrink:0 }}
-                    >
-                      {row.avatar}
-                    </div>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontSize:"14px", fontWeight:700, color:row.nameColor||"#fff" }}>{row.name}</div>
-                      <div style={{ fontSize:"11px", color:"rgba(255,255,255,0.55)" }}>{row.loc}</div>
-                    </div>
-                    <div style={{ fontSize:"14px", fontWeight:700, color:"#FF8534" }}>{row.xp}</div>
+                {lbLoading ? (
+                  <li style={{ padding:"20px", textAlign:"center", fontSize:"14px", color:"rgba(255,255,255,0.45)" }}>
+                    Loading leaderboard...
                   </li>
-                ))}
+                ) : lbData.length === 0 ? (
+                  <li style={{ padding:"20px", textAlign:"center", fontSize:"14px", color:"rgba(255,255,255,0.45)" }}>
+                    No scores yet. Play a game to get on the board!
+                  </li>
+                ) : lbData.map((entry, i) => {
+                  const avatar = AVATAR_COLORS[i % AVATAR_COLORS.length];
+                  const initials = entry.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+                  const rankColor = i < 3 ? RANK_COLORS[i] : "rgba(255,255,255,0.55)";
+                  const isFirst = i === 0;
+                  return (
+                    <li
+                      key={`${entry.name}-${i}`}
+                      style={{ display:"flex", alignItems:"center", gap:"14px", padding:"10px 20px", background:isFirst ? "rgba(255,184,0,0.08)" : "", transition:"background 0.2s" }}
+                      onMouseEnter={onLbEnter}
+                      onMouseLeave={onLbLeave}
+                    >
+                      <div style={{ width:"28px", textAlign:"center", fontFamily:"Rajdhani, sans-serif", fontSize:"16px", fontWeight:700, color:rankColor }}>#{i + 1}</div>
+                      <div
+                        aria-hidden="true"
+                        style={{ width:"36px", height:"36px", borderRadius:"50%", background:avatar.bg, color:avatar.c, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"14px", fontWeight:700, flexShrink:0 }}
+                      >
+                        {initials}
+                      </div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:"14px", fontWeight:700, color:"#fff" }}>{entry.name}</div>
+                        {entry.level && <div style={{ fontSize:"11px", color:"rgba(255,255,255,0.55)" }}>{entry.level}</div>}
+                      </div>
+                      <div style={{ fontSize:"14px", fontWeight:700, color:"#FF8534" }}>{(entry.totalScore ?? entry.score).toLocaleString()} pts</div>
+                    </li>
+                  );
+                })}
               </ol>
 
               {/* Achievement badges */}
@@ -261,6 +339,10 @@ export default function GameArenaSection() {
       <style>{`
         @media (max-width: 900px) {
           #arena-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
         }
       `}</style>
     </section>

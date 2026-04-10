@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { saveScore, getLeaderboard, getLevel, getNextLevel, type LeaderboardEntry } from "@/lib/leaderboard";
+import { loadPlayer, createPlayer, recordGame, type PlayerData } from "@/lib/player";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Domain = "ITI" | "Diploma" | "BTech";
@@ -95,8 +97,25 @@ export default function GameArenaPage() {
   const [timedOut,     setTimedOut]     = useState(false);
   const [clickedOpt,   setClickedOpt]   = useState<string | null>(null);
 
+  // ── Player persistence state ──
+  const [player,          setPlayer]          = useState<PlayerData | null>(null);
+  const [playerLoaded,    setPlayerLoaded]    = useState(false);
+  const [nameInput,       setNameInput]       = useState("");
+  const [scoreSaved,      setScoreSaved]      = useState(false);
+  const [savingScore,     setSavingScore]     = useState(false);
+  const [saveError,       setSaveError]       = useState("");
+  const [leaderboard,     setLeaderboard]     = useState<LeaderboardEntry[]>([]);
+  const [lbLoading,       setLbLoading]       = useState(false);
+
   const timerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+
+  // ── Load player from localStorage on mount ──
+  useEffect(() => {
+    const saved = loadPlayer();
+    if (saved) setPlayer(saved);
+    setPlayerLoaded(true);
+  }, []);
 
   const handleDomainSelect = (domain: Domain) => {
     if (selectedDomain !== domain) { setSelectedSubjects([]); setShowMoreSubjects(false); }
@@ -173,6 +192,45 @@ export default function GameArenaPage() {
     setScore(0); setXp(0); setShowResult(false); setAnimating(false);
     setStreakCount(0); setBestStreak(0); setTimedOut(false);
     setShowXpBurst(false); setClickedOpt(null); setGameStarted(true);
+    setScoreSaved(false); setSaveError(""); setLeaderboard([]);
+  };
+
+  // ── Fetch leaderboard when results show ──
+  const fetchLeaderboard = useCallback(async () => {
+    setLbLoading(true);
+    try { setLeaderboard(await getLeaderboard()); }
+    catch { /* silently fail */ }
+    finally { setLbLoading(false); }
+  }, []);
+
+  // ── Register player name (first time only) ──
+  const handleRegisterName = () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed) return;
+    const p = createPlayer(trimmed);
+    setPlayer(p);
+  };
+
+  // ── Save score handler (auto-uses stored name) ──
+  const handleSaveScore = async () => {
+    if (!player) return;
+    setSavingScore(true); setSaveError("");
+    try {
+      // Update local player data (totalScore + streak)
+      const updated = recordGame(player, score);
+      setPlayer(updated);
+      // Save to Firebase
+      await saveScore({
+        name: updated.name,
+        score,
+        totalScore: updated.totalScore,
+        streak: updated.streak,
+      });
+      setScoreSaved(true);
+      fetchLeaderboard();
+    } catch {
+      setSaveError("Failed to save score. Please try again.");
+    } finally { setSavingScore(false); }
   };
 
   useEffect(() => {
@@ -213,7 +271,11 @@ export default function GameArenaPage() {
   const handlePlayAgain = () => {
     clearTimer(); setGameStarted(false); setShowResult(false); setSelectedAnswer(null);
     setCurrentQuestionIndex(0); setScore(0); setXp(0); setStreakCount(0); setBestStreak(0); setTimedOut(false);
+    setScoreSaved(false); setSaveError(""); setLeaderboard([]);
   };
+
+  // ── Load leaderboard when game ends ──
+  useEffect(() => { if (showResult) fetchLeaderboard(); }, [showResult, fetchLeaderboard]);
 
   // ── Derived quiz values ──────────────────────────────────────────────────
   const currentQ   = questions[currentQuestionIndex];
@@ -431,6 +493,50 @@ export default function GameArenaPage() {
             )}
           </div>
 
+          {/* Player stats + Level badge */}
+          {(() => {
+            const totalScore = player ? player.totalScore + (scoreSaved ? 0 : score) : score;
+            const lvl = getLevel(totalScore);
+            const next = getNextLevel(totalScore);
+            const streak = player?.streak ?? 0;
+            return (
+              <div className={`${lvl.bgColor} border ${lvl.borderColor} rounded-2xl p-5 mb-5 shadow-lg ${lvl.glowColor}`}>
+                {/* Level + name */}
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <span className="text-2xl">{lvl.icon}</span>
+                  <span className={`text-lg font-extrabold ${lvl.color}`}>{lvl.label}</span>
+                </div>
+                {player && <p className="text-zinc-300 text-sm font-semibold mb-3">{player.name}</p>}
+
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-3 mb-3">
+                  <div className="flex flex-col items-center">
+                    <span className="text-xl font-extrabold text-white">⭐ {totalScore.toLocaleString()}</span>
+                    <span className="text-zinc-500 text-xs">Total Score</span>
+                  </div>
+                  <div className="flex flex-col items-center border-x border-white/10">
+                    <span className="text-xl font-extrabold text-amber-400">+{score}</span>
+                    <span className="text-zinc-500 text-xs">This Game</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="text-xl font-extrabold text-orange-400">🔥 {streak}</span>
+                    <span className="text-zinc-500 text-xs">{streak === 1 ? "Day" : "Days"} Streak</span>
+                  </div>
+                </div>
+
+                {/* Next level progress */}
+                {next ? (
+                  <p className="text-zinc-500 text-xs">
+                    Next: <span className={`font-bold ${next.color}`}>{next.icon} {next.label}</span> at {next.threshold.toLocaleString()} pts
+                    <span className="block mt-1 text-orange-400/80">🔥 Keep playing to reach the next level</span>
+                  </p>
+                ) : (
+                  <p className="text-orange-400 text-xs font-bold">🏆 You reached the highest level!</p>
+                )}
+              </div>
+            );
+          })()}
+
           {/* Config recap */}
           <div className="flex flex-wrap justify-center gap-2 mb-6">
             {[selectedDomain, selectedDifficulty, `${selectedSubjects.length} subject${selectedSubjects.length > 1 ? "s" : ""}`].map(tag => (
@@ -448,6 +554,77 @@ export default function GameArenaPage() {
             <button onClick={handlePlayAgain} className="flex items-center justify-center gap-2 bg-zinc-800 border border-zinc-700 text-zinc-300 font-semibold px-8 py-3.5 rounded-xl hover:bg-zinc-700 hover:border-zinc-500 transition-all duration-200">
               ⚙️ Change Setup
             </button>
+          </div>
+
+          {/* ── Save Score + Leaderboard ── */}
+          <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-6 mb-5 backdrop-blur-sm shadow-xl shadow-black/30 text-left">
+            <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+              🏆 Leaderboard
+            </h3>
+
+            {/* Save score */}
+            {!scoreSaved ? (
+              <div className="mb-5">
+                {!player ? (
+                  /* First-time: ask for name */
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={nameInput}
+                      onChange={(e) => setNameInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleRegisterName(); }}
+                      placeholder="Enter your name to save"
+                      maxLength={30}
+                      className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/30 transition-all"
+                    />
+                    <button
+                      onClick={handleRegisterName}
+                      disabled={!nameInput.trim()}
+                      className="bg-gradient-to-r from-orange-500 to-amber-400 text-white font-bold px-5 py-2.5 rounded-xl text-sm hover:scale-105 active:scale-100 transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100 whitespace-nowrap"
+                    >
+                      Set Name
+                    </button>
+                  </div>
+                ) : (
+                  /* Returning player: one-click save */
+                  <button
+                    onClick={handleSaveScore}
+                    disabled={savingScore}
+                    className="w-full bg-gradient-to-r from-orange-500 to-amber-400 text-white font-bold px-5 py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-100 transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100"
+                  >
+                    {savingScore ? "Saving..." : `Save Score as ${player.name}`}
+                  </button>
+                )}
+                {saveError && <p className="text-rose-400 text-xs mt-2">{saveError}</p>}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2.5 mb-5 text-emerald-400 text-sm font-medium">
+                ✓ Score saved!
+              </div>
+            )}
+
+            {/* Leaderboard list */}
+            {lbLoading ? (
+              <div className="text-zinc-500 text-sm text-center py-4">Loading leaderboard...</div>
+            ) : leaderboard.length > 0 ? (
+              <ol className="space-y-1.5">
+                {leaderboard.map((entry, i) => {
+                  const medals = ["🥇", "🥈", "🥉"];
+                  const rankDisplay = i < 3 ? medals[i] : `#${i + 1}`;
+                  return (
+                    <li key={`${entry.name}-${i}`} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/[0.03] transition-colors">
+                      <span className="w-7 text-center text-sm font-bold text-zinc-400">{rankDisplay}</span>
+                      <span className="flex-1 text-sm font-semibold text-white truncate">{entry.name}</span>
+                      {entry.level && <span className="text-xs text-zinc-400 shrink-0">{entry.level}</span>}
+                      {entry.streak && entry.streak > 1 && <span className="text-xs text-orange-400/70 shrink-0">🔥{entry.streak}</span>}
+                      <span className="text-sm font-bold text-orange-400 shrink-0">{(entry.totalScore ?? entry.score).toLocaleString()} pts</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            ) : (
+              <div className="text-zinc-500 text-sm text-center py-4">No scores yet. Be the first!</div>
+            )}
           </div>
 
           {/* ── Conversion CTA ── */}
