@@ -9,7 +9,7 @@ export default function AppDownloadSection() {
       </h2>
 
       <p className="text-gray-400 mb-8">
-        Download the Civilezy app and practice PSC Civil Engineering on the go
+        Download the CivilEzy app and practice PSC Civil Engineering on the go
       </p>
 
       <div className="flex flex-col sm:flex-row gap-4 justify-center">

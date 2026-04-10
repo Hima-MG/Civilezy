@@ -114,12 +114,12 @@ export default function PainSection() {
 
       {/* ── Bottom CTA text ── */}
       <p
-        aria-label="Civilezy solves all of these problems"
+        aria-label="CivilEzy solves all of these problems"
         style={{ textAlign:"center", padding:"30px", fontFamily:"Rajdhani, sans-serif", fontSize:"22px", fontWeight:700, color:"#FF6200" }}
       >
         {/* Arrow symbols are decorative */}
         <span aria-hidden="true">↓&nbsp;&nbsp;</span>
-        Civilezy solves all of this
+        CivilEzy solves all of this
         <span aria-hidden="true">&nbsp;&nbsp;↓</span>
       </p>
     </section>

@@ -7,14 +7,10 @@ import { EXTERNAL_URLS, COURSE_LINKS } from "@/lib/constants";
 // ─── URL Constants ──────────────────────────────────────────────────────────
 // ⚠️  Replace with your real WhatsApp Business number before going live
 //     Format: https://wa.me/<countrycode><number>
-const WA_LINK = "https://wa.me/919876543210";
+const WA_LINK = "https://wa.me/919074557825";
 
-// ⚠️  Replace "#" hrefs with real social profile URLs before going live
 const SOCIAL = [
   { label: "Chat on WhatsApp", emoji: "💬", href: WA_LINK },
-  { label: "Watch on YouTube",  emoji: "▶",  href: "#"    },  // ⚠️ add real URL
-  { label: "Follow on Instagram",emoji:"📷", href: "#"    },  // ⚠️ add real URL
-  { label: "Join Telegram",      emoji: "✈", href: "#"    },  // ⚠️ add real URL
 ] as const;
 
 // ─── Nav data ───────────────────────────────────────────────────────────────
@@ -81,12 +77,12 @@ export default function Footer() {
           <div style={{ maxWidth:"280px" }}>
             <Link
               href="/"
-              aria-label="Civilezy home"
+              aria-label="CivilEzy home"
               style={{ display:"flex", alignItems:"center", textDecoration:"none", marginBottom:"12px" }}
             >
               <Image
                 src="/civilezy_logo_orange.png"
-                alt="Civilezy Logo"
+                alt="CivilEzy Logo"
                 width={120}
                 height={34}
                 className="h-9 w-auto"
@@ -148,7 +144,7 @@ export default function Footer() {
         {/* ── Bottom bar ── */}
         <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", paddingTop:"24px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"12px", marginTop:"40px" }}>
           <p style={{ fontSize:"13px", color:"rgba(255,255,255,0.55)" }}>
-            © {year} Civilezy. All rights reserved. Made with ❤️ for Kerala PSC aspirants.
+            © {year} CivilEzy. All rights reserved. Made with ❤️ for Kerala PSC aspirants.
           </p>
 
           <div style={{ display:"flex", gap:"12px" }} role="list" aria-label="Social media links">
@@ -178,7 +174,7 @@ export default function Footer() {
         href={WA_LINK}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Chat with Civilezy support on WhatsApp"
+        aria-label="Chat with CivilEzy support on WhatsApp"
         style={{ position:"fixed", bottom:"28px", right:"28px", zIndex:800, width:"56px", height:"56px", borderRadius:"50%", background:"#25D366", boxShadow:"0 6px 25px rgba(37,211,102,0.5)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"28px", transition:"transform 0.2s, box-shadow 0.2s", textDecoration:"none" }}
         onMouseEnter={onFabEnter}
         onMouseLeave={onFabLeave}

@@ -8,7 +8,7 @@ export const EXTERNAL_URLS = {
   about:    "https://learn.civilezy.in/en/about-v2",
   terms:    "https://learn.civilezy.in/en/terms-of-use-v2",
   privacy:  "https://learn.civilezy.in/en/privacy-policy-v2",
-  freeTest: "https://learn.civilezy.in/en/free-test",
+  freeTest: "https://learn.civilezy.in/en/login",
   contact:  "https://www.civilezy.in/en/contact-v2",
 } as const;
 
@@ -24,10 +24,10 @@ export const COURSE_LINKS: Record<string, string> = {
 
 // ─── Site metadata ───────────────────────────────────────────────────────────
 export const SITE = {
-  name:        "Civilezy",
+  name:        "CivilEzy",
   tagline:     "Kerala's #1 Civil Engineering PSC Platform",
   description: "Kerala's only PSC Civil Engineering platform with Smart Lessons, Malayalam Audio Lessons, Smart Quiz System, Short Video Lessons (40–50 min), and Game Arena. ITI / Diploma / AE prep.",
   url:         "https://civilezy.in",
   email:       "support@civilezy.in",
-  phone:       "+91 98765 43210",
+  phone:       "+91 90745 57825",
 } as const;

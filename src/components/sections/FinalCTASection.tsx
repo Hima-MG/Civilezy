@@ -140,7 +140,7 @@ export default function FinalCTASection() {
             href={WA_LINK}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Join the Civilezy WhatsApp community — opens in new tab"
+            aria-label="Join the CivilEzy WhatsApp community — opens in new tab"
             style={{
               background:     "transparent",
               color:          "white",
@@ -167,7 +167,7 @@ export default function FinalCTASection() {
         {/* Trust signals */}
         <p
           style={{ marginTop:"24px", fontSize:"13px", color:"rgba(255,255,255,0.55)" }}
-          aria-label="Civilezy trust guarantees"
+          aria-label="CivilEzy trust guarantees"
         >
           ✓ No credit card &nbsp;&nbsp;
           ✓ Instant access &nbsp;&nbsp;

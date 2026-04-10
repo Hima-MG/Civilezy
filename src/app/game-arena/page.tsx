@@ -673,7 +673,7 @@ export default function GameArenaPage() {
           >
             <div className="text-xs font-bold tracking-widest text-orange-400 uppercase mb-2">🎯 Want to improve your score?</div>
             <h3 className="text-xl font-extrabold text-white mb-3 leading-tight">
-              🔥 Unlock the full Civilezy course
+              🔥 Unlock the full CivilEzy course
             </h3>
 
             <ul className="space-y-2 mb-5">

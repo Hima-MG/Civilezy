@@ -83,7 +83,7 @@ export default function ComparisonSection() {
     >
       {/* ── Header ─────────────────────────────────────────────── */}
       <div style={{ textAlign:"center", maxWidth:"700px", margin:"0 auto 60px" }}>
-        <div style={styles.tag} aria-hidden="true">WHY CIVILEZY</div>
+        <div style={styles.tag} aria-hidden="true">WHY CivilEzy</div>
 
         <h2 id="comparison-heading" style={styles.heading}>
           We&apos;re Not Just{" "}
@@ -101,7 +101,7 @@ export default function ComparisonSection() {
       <div
         style={{ maxWidth:"900px", margin:"0 auto", overflowX:"auto", WebkitOverflowScrolling:"touch" }}
         role="region"
-        aria-label="Feature comparison between Civilezy, Testbook, and Others"
+        aria-label="Feature comparison between CivilEzy, Testbook, and Others"
       >
         <div
           style={{ minWidth:"560px", borderRadius:"20px", overflow:"hidden", border:"1px solid rgba(255,255,255,0.08)" }}
@@ -120,7 +120,7 @@ export default function ComparisonSection() {
             }}
           >
             <div role="columnheader" style={{ color:"rgba(255,255,255,0.7)" }}>Feature</div>
-            <div role="columnheader" style={{ color:"#FF8534" }}>Civilezy</div>
+            <div role="columnheader" style={{ color:"#FF8534" }}>CivilEzy</div>
             <div role="columnheader">Testbook</div>
             <div role="columnheader">Others</div>
           </div>

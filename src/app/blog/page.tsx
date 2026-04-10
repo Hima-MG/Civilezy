@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     canonical: PAGE_URL,
   },
   openGraph: {
-    title:       "PSC Civil Engineering Blog | Civilezy",
+    title:       "PSC Civil Engineering Blog | CivilEzy",
     description: "Expert guides for Kerala PSC Civil Engineering aspirants.",
     url:         PAGE_URL,
     siteName:    SITE.name,
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card:        "summary_large_image",
-    title:       "PSC Civil Engineering Blog | Civilezy",
+    title:       "PSC Civil Engineering Blog | CivilEzy",
     description: "Expert guides for Kerala PSC Civil Engineering aspirants.",
     site:        "@civilezy",
   },

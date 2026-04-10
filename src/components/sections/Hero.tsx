@@ -307,7 +307,7 @@ export default function Hero() {
 
               <button
                 className="hero-cta-btn"
-                aria-label="See how Civilezy works"
+                aria-label="See how CivilEzy works"
                 style={{ background:"transparent", color:"#ffffff", border:"2px solid rgba(255,255,255,0.3)", padding:"14px 28px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"16px", fontWeight:600, cursor:"pointer", transition:"border-color 0.2s, background 0.2s", display:"inline-flex", alignItems:"center", gap:"8px" }}
                 onMouseEnter={onSecondaryEnter}
                 onMouseLeave={onSecondaryLeave}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const solutions = [
   {
@@ -97,8 +97,11 @@ const solutions = [
   },
 ];
 
+type Lang = "en" | "ml";
+
 export default function SolutionSection() {
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [lang, setLang] = useState<Lang>("en");
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -162,7 +165,7 @@ export default function SolutionSection() {
               color: "#ffffff",
             }}
           >
-            Civilezy തരുന്നു —{" "}
+            <span lang="ml" style={{ fontSize: "0.65em" }}>CivilEzy തരുന്നു —</span>{" "}
             <span
               style={{
                 background: "linear-gradient(135deg, #FF6200, #FFB800)",
@@ -171,7 +174,7 @@ export default function SolutionSection() {
                 backgroundClip: "text",
               }}
             >
-              ഒരു Smart Solution
+              <span lang="ml" style={{ fontSize: "0.65em" }}>ഒരു</span> Smart Solution
             </span>
           </h2>
 
@@ -186,6 +189,55 @@ export default function SolutionSection() {
             Built specifically for Kerala PSC Civil Engineering aspirants —
             structured, simple, and result-focused.
           </p>
+
+          {/* Language toggle */}
+          <div
+            style={{
+              display: "inline-flex",
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "30px",
+              padding: "3px",
+              marginTop: "20px",
+            }}
+          >
+            <button
+              onClick={() => setLang("en")}
+              style={{
+                padding: "6px 18px",
+                borderRadius: "26px",
+                border: "none",
+                fontFamily: "Nunito, sans-serif",
+                fontSize: "13px",
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "all 0.25s",
+                background: lang === "en" ? "linear-gradient(135deg, #FF6200, #FF8534)" : "transparent",
+                color: lang === "en" ? "white" : "rgba(255,255,255,0.5)",
+                boxShadow: lang === "en" ? "0 2px 10px rgba(255,98,0,0.3)" : "none",
+              }}
+            >
+              English
+            </button>
+            <button
+              onClick={() => setLang("ml")}
+              style={{
+                padding: "6px 18px",
+                borderRadius: "26px",
+                border: "none",
+                fontFamily: "Nunito, sans-serif",
+                fontSize: "13px",
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "all 0.25s",
+                background: lang === "ml" ? "linear-gradient(135deg, #FF6200, #FF8534)" : "transparent",
+                color: lang === "ml" ? "white" : "rgba(255,255,255,0.5)",
+                boxShadow: lang === "ml" ? "0 2px 10px rgba(255,98,0,0.3)" : "none",
+              }}
+            >
+              മലയാളം
+            </button>
+          </div>
         </div>
 
         {/* Cards Grid */}
@@ -193,7 +245,7 @@ export default function SolutionSection() {
           className="solution-cards-grid"
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
+            gridTemplateColumns: "repeat(4, 1fr)",
             gap: "20px",
           }}
         >
@@ -248,33 +300,20 @@ export default function SolutionSection() {
                 {s.icon}
               </div>
 
-              {/* Title EN */}
+              {/* Title */}
               <h3
+                lang={lang === "ml" ? "ml" : undefined}
                 style={{
                   fontFamily: "Rajdhani, sans-serif",
                   fontSize: "20px",
                   fontWeight: 700,
                   color: s.color,
-                  marginBottom: "3px",
+                  marginBottom: "12px",
                   lineHeight: 1.3,
                 }}
               >
-                {s.titleEn}
+                {lang === "en" ? s.titleEn : s.titleMl}
               </h3>
-
-              {/* Title ML */}
-              <p
-                lang="ml"
-                style={{
-                  fontSize: "13px",
-                  color: s.color,
-                  opacity: 0.6,
-                  marginBottom: "12px",
-                  fontWeight: 400,
-                }}
-              >
-                {s.titleMl}
-              </p>
 
               {/* Divider */}
               <div
@@ -285,29 +324,17 @@ export default function SolutionSection() {
                 }}
               />
 
-              {/* Body EN */}
+              {/* Body */}
               <p
+                lang={lang === "ml" ? "ml" : undefined}
                 style={{
                   fontSize: "14px",
                   color: "rgba(255,255,255,0.8)",
-                  lineHeight: 1.75,
-                  marginBottom: "8px",
-                }}
-              >
-                {s.bodyEn}
-              </p>
-
-              {/* Body ML */}
-              <p
-                lang="ml"
-                style={{
-                  fontSize: "13px",
-                  color: "rgba(255,255,255,0.5)",
-                  lineHeight: 1.85,
+                  lineHeight: 1.8,
                   marginBottom: "18px",
                 }}
               >
-                {s.bodyMl}
+                {lang === "en" ? s.bodyEn : s.bodyMl}
               </p>
 
               {/* Chip */}
@@ -334,7 +361,12 @@ export default function SolutionSection() {
       </div>
 
       <style>{`
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
+          .solution-cards-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        @media (max-width: 600px) {
           .solution-cards-grid {
             grid-template-columns: 1fr !important;
           }

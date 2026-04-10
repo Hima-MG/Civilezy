@@ -19,7 +19,7 @@ export async function generateMetadata(
   const postUrl = `${SITE.url}/blog/${post.slug}`;
 
   return {
-    title:       `${post.title} | Civilezy`,
+    title:       `${post.title} | CivilEzy`,
     description: post.description,
     keywords:    post.keywords,
     authors:     [{ name: SITE.name, url: SITE.url }],
@@ -127,7 +127,7 @@ export default function BlogDetailPage({ params }: { params: { slug: string } })
 
           {/* Meta */}
           <div style={{ display:"flex", alignItems:"center", gap:"16px", fontSize:"13px", color:"rgba(255,255,255,0.45)" }}>
-            <span>Civilezy Editorial</span>
+            <span>CivilEzy Editorial</span>
             <span>•</span>
             <time dateTime={post.date}>
               {new Date(post.date).toLocaleDateString("en-IN", { day:"numeric", month:"long", year:"numeric" })}
@@ -175,7 +175,7 @@ export default function BlogDetailPage({ params }: { params: { slug: string } })
               Join 98+ Students Who Got Government Jobs
             </h2>
             <p style={{ fontSize:"15px", color:"rgba(255,255,255,0.65)", lineHeight:1.7, marginBottom:"24px" }}>
-              This guide is just the beginning. Civilezy gives you pool-mapped content,
+              This guide is just the beginning. CivilEzy gives you pool-mapped content,
               smart analytics, Malayalam audio, and 100+ mock tests — everything built
               specifically for Kerala PSC Civil Engineering.
             </p>
@@ -209,7 +209,7 @@ export default function BlogDetailPage({ params }: { params: { slug: string } })
               Ready to Rank?
             </div>
             <p style={{ fontSize:"13px", color:"rgba(255,255,255,0.6)", lineHeight:1.6, marginBottom:"20px" }}>
-              Join 5,200+ students on Civilezy. Pool-mapped content built exclusively for Kerala PSC Civil Engineering.
+              Join 5,200+ students on CivilEzy. Pool-mapped content built exclusively for Kerala PSC Civil Engineering.
             </p>
             <a
               href={EXTERNAL_URLS.freeTest}

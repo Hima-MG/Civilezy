@@ -120,7 +120,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: "cta-inline",
-        text: "Practice Diploma-level mock tests on Civilezy's Game Arena — 5,800+ questions mapped to the exact PSC pool.",
+        text: "Practice Diploma-level mock tests on CivilEzy's Game Arena — 5,800+ questions mapped to the exact PSC pool.",
         linkText: "Try Game Arena →",
         linkHref: "/game-arena",
       },
@@ -169,7 +169,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: "p",
-        text: "Knowing the syllabus is step one. A structured preparation plan is what separates rank holders from those who just attempt the exam. Here is a proven 90-day preparation framework used by Civilezy students.",
+        text: "Knowing the syllabus is step one. A structured preparation plan is what separates rank holders from those who just attempt the exam. Here is a proven 90-day preparation framework used by CivilEzy students.",
       },
       {
         type: "ul",
@@ -182,7 +182,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: "tip",
-        text: "💡 Civilezy tracks your weak subjects automatically after every quiz. Students who use the Smart Analytics dashboard score 43% higher on average within 30 days.",
+        text: "💡 CivilEzy tracks your weak subjects automatically after every quiz. Students who use the Smart Analytics dashboard score 43% higher on average within 30 days.",
       },
     ],
   },
@@ -247,7 +247,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: "p",
-        text: "KWA AE papers historically focus heavily on water supply, hydraulics, environmental engineering, and structural topics. Based on analysis of previous KWA papers available on Civilezy.",
+        text: "KWA AE papers historically focus heavily on water supply, hydraulics, environmental engineering, and structural topics. Based on analysis of previous KWA papers available on CivilEzy.",
       },
       {
         type: "h3",
@@ -290,7 +290,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: "cta-inline",
-        text: "Civilezy has 95 KWA AE-specific mock tests built from previous paper analysis. Start with a free test now.",
+        text: "CivilEzy has 95 KWA AE-specific mock tests built from previous paper analysis. Start with a free test now.",
         linkText: "Take KWA AE Mock Test →",
         linkHref: "/mock-tests",
       },
@@ -336,7 +336,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: "tip",
-        text: "💡 Previous KWA AE toppers on Civilezy averaged 4.2 mock tests per week in the final month. Consistency > intensity.",
+        text: "💡 Previous KWA AE toppers on CivilEzy averaged 4.2 mock tests per week in the final month. Consistency > intensity.",
       },
       {
         type: "h2",
@@ -374,7 +374,7 @@ export const BLOG_POSTS: BlogPost[] = [
     content: [
       {
         type: "p",
-        text: "Every year, thousands of Civil Engineering candidates appear for Kerala PSC exams. But less than 2% secure a rank in the first attempt. The difference is not intelligence — it is strategy. In this guide, we break down the exact approach used by Civilezy rank holders to crack the exam in their very first try.",
+        text: "Every year, thousands of Civil Engineering candidates appear for Kerala PSC exams. But less than 2% secure a rank in the first attempt. The difference is not intelligence — it is strategy. In this guide, we break down the exact approach used by CivilEzy rank holders to crack the exam in their very first try.",
       },
       {
         type: "h2",
@@ -400,7 +400,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: "tip",
-        text: "💡 Before opening any study material, confirm your exact pool and the posts available in that pool. Civilezy maps every question to the exact pool — this is something no generic platform does.",
+        text: "💡 Before opening any study material, confirm your exact pool and the posts available in that pool. CivilEzy maps every question to the exact pool — this is something no generic platform does.",
       },
       {
         type: "h2",
@@ -437,7 +437,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: "cta-inline",
-        text: "Civilezy's Game Arena makes the 20% quiz practice addictive. XP, streaks, and daily challenges keep you consistent.",
+        text: "CivilEzy's Game Arena makes the 20% quiz practice addictive. XP, streaks, and daily challenges keep you consistent.",
         linkText: "Start Game Arena →",
         linkHref: "/game-arena",
       },
@@ -465,7 +465,7 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: "tip",
-        text: "💡 Civilezy's analytics dashboard builds your weak area map automatically. Students who review analytics after every mock improve 43% faster than those who just attempt tests.",
+        text: "💡 CivilEzy's analytics dashboard builds your weak area map automatically. Students who review analytics after every mock improve 43% faster than those who just attempt tests.",
       },
       {
         type: "h2",
@@ -473,13 +473,13 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: "p",
-        text: "The number one predictor of first-attempt success is daily study consistency. Not the number of hours per day — but the number of consecutive days you study without a break. Here is how top Civilezy performers build unbreakable habits.",
+        text: "The number one predictor of first-attempt success is daily study consistency. Not the number of hours per day — but the number of consecutive days you study without a break. Here is how top CivilEzy performers build unbreakable habits.",
       },
       {
         type: "ul",
         items: [
           "Set a non-negotiable daily minimum — even 10 questions counts as a streak day",
-          "Use the Civilezy streak tracker to visualise your consistency",
+          "Use the CivilEzy streak tracker to visualise your consistency",
           "Never break a streak of 14+ days — the psychological momentum is priceless",
           "Study in the same place and time daily to build an automatic habit",
         ],
@@ -506,11 +506,11 @@ export const BLOG_POSTS: BlogPost[] = [
       },
       {
         type: "p",
-        text: "Arjun Ravi, Rank 3 in KWA AE 2024: \"I used to study randomly from YouTube and Telegram groups. After switching to Civilezy's structured pool-based content, everything became clear. The mock tests were so accurate that the real exam felt like a practice test.\"",
+        text: "Arjun Ravi, Rank 3 in KWA AE 2024: \"I used to study randomly from YouTube and Telegram groups. After switching to CivilEzy's structured pool-based content, everything became clear. The mock tests were so accurate that the real exam felt like a practice test.\"",
       },
       {
         type: "p",
-        text: "Meera Krishnan, Rank 7 in PWD Overseer 2024: \"The streak feature on Civilezy made me study every single day without fail. 21 days of consistency put me in the top 50 of the leaderboard. On exam day, I was calm because I had already seen every type of question.\"",
+        text: "Meera Krishnan, Rank 7 in PWD Overseer 2024: \"The streak feature on CivilEzy made me study every single day without fail. 21 days of consistency put me in the top 50 of the leaderboard. On exam day, I was calm because I had already seen every type of question.\"",
       },
       {
         type: "h2",

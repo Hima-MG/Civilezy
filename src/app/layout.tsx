@@ -6,8 +6,8 @@ import StickyCTA from "@/components/sections/StickyCTA";
 
 export const metadata: Metadata = {
   title: {
-    default:  "Civilezy | Kerala's #1 Civil Engineering PSC Platform",
-    template: "%s | Civilezy",
+    default:  "CivilEzy | Kerala's #1 Civil Engineering PSC Platform",
+    template: "%s | CivilEzy",
   },
   description:
     "Kerala's only PSC Civil Engineering platform with Smart Lessons, Malayalam Audio Lessons, Smart Quiz System, Short Video Lessons (40–50 min), and Game Arena. ITI / Diploma / AE prep.",
@@ -26,13 +26,13 @@ export const metadata: Metadata = {
     type:        "website",
     locale:      "en_IN",
     url:         "https://civilezy.in",
-    siteName:    "Civilezy",
-    title:       "Civilezy | Kerala's #1 Civil Engineering PSC Platform",
+    siteName:    "CivilEzy",
+    title:       "CivilEzy | Kerala's #1 Civil Engineering PSC Platform",
     description: "Kerala's only PSC Civil Engineering platform.",
   },
   twitter: {
     card:        "summary_large_image",
-    title:       "Civilezy | Kerala's #1 Civil Engineering PSC Platform",
+    title:       "CivilEzy | Kerala's #1 Civil Engineering PSC Platform",
     description: "Kerala's only PSC Civil Engineering platform.",
   },
   robots: { index: true, follow: true },

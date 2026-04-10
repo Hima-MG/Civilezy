@@ -62,10 +62,10 @@ export default function Navbar() {
         }}
       >
         {/* ── Logo ───────────────────────────────────────── */}
-        <Link href="/" aria-label="Civilezy home" style={{ display: "flex", alignItems: "center", textDecoration: "none", flexShrink: 0 }}>
+        <Link href="/" aria-label="CivilEzy home" style={{ display: "flex", alignItems: "center", textDecoration: "none", flexShrink: 0 }}>
           <Image
             src="/civilezy_logo_orange.png"
-            alt="Civilezy Logo"
+            alt="CivilEzy Logo"
             width={140}
             height={40}
             priority

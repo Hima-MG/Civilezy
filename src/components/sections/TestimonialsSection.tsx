@@ -174,7 +174,7 @@ export default function TestimonialsSection() {
         </h2>
         <p style={styles.sub}>
           These are real results from real students. Average score improvement: +43% after
-          30 days of practice on Civilezy.
+          30 days of practice on CivilEzy.
         </p>
       </div>
 
