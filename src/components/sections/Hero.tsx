@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type Level       = "iti" | "dip" | "ae";
@@ -14,6 +14,28 @@ interface QuizData {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const LMS_FREE_TEST = "https://lms.civilezy.com/free-test";
+const STORAGE_KEY = "civilezy_user";
+
+// ─── Rank System ────────────────────────────────────────────────────────────
+interface RankInfo {
+  label: string;
+  icon:  string;
+  color: string;
+}
+
+function getRank(score: number): RankInfo {
+  if (score >= 5000) return { label: "Top Performer", icon: "🏆", color: "#FFB800" };
+  if (score >= 2000) return { label: "Advanced",      icon: "🟣", color: "#C864FF" };
+  if (score >= 500)  return { label: "Intermediate",   icon: "🔵", color: "#64C8FF" };
+  return                     { label: "Beginner",       icon: "🟢", color: "#32C864" };
+}
+
+// ─── Player data from localStorage ──────────────────────────────────────────
+interface PlayerData {
+  name:       string;
+  totalScore: number;
+  streak:     number;
+}
 
 // ─── Quiz data ───────────────────────────────────────────────────────────────
 const QUIZ_BY_LEVEL: Record<Level, QuizData> = {
@@ -42,17 +64,8 @@ const STATS = [
   { num: "4.9★",    label: "Student Rating"  },
 ];
 
-// ⚠️  STREAK_DAYS, XP values, rank badge, online count are demo placeholders
-//     Connect to your backend/user auth before going live
-const STREAK_DAYS = [
-  { id:"M1", letter:"M", state:"done"  },
-  { id:"T1", letter:"T", state:"done"  },
-  { id:"W",  letter:"W", state:"done"  },
-  { id:"T2", letter:"T", state:"done"  },
-  { id:"F",  letter:"F", state:"done"  },
-  { id:"S1", letter:"S", state:"today" },
-  { id:"S2", letter:"S", state:"miss"  },
-] as const;
+// Streak day labels (Mon–Sun)
+const WEEK_LETTERS = ["M","T","W","T","F","S","S"] as const;
 
 // ─── Stable CTA hover handlers ───────────────────────────────────────────────
 const onPrimaryEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -100,11 +113,89 @@ export default function Hero() {
   const [answerStates, setAnswerStates] = useState<AnswerState[]>(INITIAL_STATES);
   const [xpPop,        setXpPop]        = useState<string | null>(null);
   const [xpWidth,      setXpWidth]      = useState("0%");
+  const [mounted,      setMounted]      = useState(false);
+  const [totalScore,   setTotalScore]   = useState(0);
+  const [streak,       setStreak]       = useState(0);
+  const [onlineUsers,  setOnlineUsers]  = useState(0);
+
+  // ── Hydration guard + load player from localStorage ──
+  useEffect(() => {
+    setMounted(true);
+
+    // Load player data
+    let score = Math.floor(Math.random() * (1500 - 100) + 100); // fallback
+    let playerStreak = 0;
+
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as PlayerData;
+        if (parsed && typeof parsed.totalScore === "number") {
+          score = parsed.totalScore;
+          playerStreak = parsed.streak ?? 0;
+        }
+      }
+    } catch { /* no player data */ }
+
+    setTotalScore(score);
+    setStreak(playerStreak);
+  }, []);
+
+  // ── Derived rank (safe: returns Beginner for 0 during SSR) ──
+  const rank = useMemo(() => getRank(totalScore), [totalScore]);
+
+  // ── Compute XP bar percentage ──
+  const xpTarget = useMemo(() => {
+    const thresholds = [0, 500, 2000, 5000, 10000];
+    let currentTierStart = 0;
+    let nextTierEnd      = 500;
+    for (let i = thresholds.length - 1; i >= 0; i--) {
+      if (totalScore >= thresholds[i]) {
+        currentTierStart = thresholds[i];
+        nextTierEnd      = thresholds[i + 1] ?? thresholds[i] + 5000;
+        break;
+      }
+    }
+    const range    = nextTierEnd - currentTierStart;
+    const progress = totalScore - currentTierStart;
+    const pct      = Math.min((progress / range) * 100, 100);
+    return { current: totalScore, max: nextTierEnd, pct: `${pct.toFixed(1)}%` };
+  }, [totalScore]);
 
   // Animate XP bar after mount
   useEffect(() => {
-    const t = setTimeout(() => setXpWidth("73.6%"), 500);
+    if (!mounted) return;
+    const t = setTimeout(() => setXpWidth(xpTarget.pct), 500);
     return () => clearTimeout(t);
+  }, [mounted, xpTarget.pct]);
+
+  // ── Build streak days for the week ──
+  const streakDays = useMemo(() => {
+    if (!mounted) {
+      // SSR-safe default: all days are "miss"
+      return WEEK_LETTERS.map((letter, i) => ({
+        id: `${letter}${i}`, letter, state: "miss" as const,
+      }));
+    }
+    const today     = new Date().getDay(); // 0=Sun
+    const dayIndex  = today === 0 ? 6 : today - 1; // convert to 0=Mon
+    return WEEK_LETTERS.map((letter, i) => {
+      let state: "done" | "today" | "miss";
+      if (i < dayIndex && i >= dayIndex - streak) state = "done";
+      else if (i === dayIndex)                     state = streak > 0 ? "done" : "today";
+      else                                         state = "miss";
+      return { id: `${letter}${i}`, letter, state };
+    });
+  }, [streak, mounted]);
+
+  // ── Random online users (100–300), updated every ~6s ──
+  useEffect(() => {
+    const updateUsers = () => {
+      setOnlineUsers(Math.floor(Math.random() * (300 - 100) + 100));
+    };
+    updateUsers();
+    const interval = setInterval(updateUsers, 6000);
+    return () => clearInterval(interval);
   }, []);
 
   // Reset quiz when level changes
@@ -247,8 +338,8 @@ export default function Hero() {
           <div style={{ position:"relative", animation:"heroFadeUp 0.7s 0.2s ease both" }}>
 
             {/* Floating badge top-right */}
-            <div aria-hidden="true" style={{ position:"absolute", top:"-16px", right:"-16px", background:"rgba(11,30,61,0.9)", border:"1px solid rgba(255,98,0,0.4)", borderRadius:"12px", padding:"8px 14px", fontSize:"13px", fontWeight:700, backdropFilter:"blur(8px)", boxShadow:"0 8px 24px rgba(0,0,0,0.4)", color:"#FFB800", zIndex:2, whiteSpace:"nowrap" }}>
-              🏆 Global Rank #247
+            <div aria-hidden="true" style={{ position:"absolute", top:"-16px", right:"-16px", background:"rgba(11,30,61,0.9)", border:"1px solid rgba(255,98,0,0.4)", borderRadius:"12px", padding:"8px 14px", fontSize:"13px", fontWeight:700, backdropFilter:"blur(8px)", boxShadow:"0 8px 24px rgba(0,0,0,0.4)", color:mounted ? rank.color : "#FFB800", zIndex:2, whiteSpace:"nowrap" }}>
+              {mounted ? `${rank.icon} Your Rank: ${rank.label}` : "🏆 Your Rank: —"}
             </div>
 
             {/* Glass card */}
@@ -289,32 +380,34 @@ export default function Hero() {
 
               {/* XP bar */}
               <div style={{ display:"flex", alignItems:"center", gap:"10px", marginTop:"12px" }}>
-                <span style={{ fontSize:"12px", color:"#FF8534", fontWeight:700, whiteSpace:"nowrap" }}>⚡ XP 1,840 / 2,500</span>
+                <span style={{ fontSize:"12px", color:"#FF8534", fontWeight:700, whiteSpace:"nowrap" }}>
+                  ⚡ XP {mounted ? totalScore.toLocaleString() : "—"} / {mounted ? xpTarget.max.toLocaleString() : "—"}
+                </span>
                 <div
                   role="progressbar"
-                  aria-valuenow={1840}
+                  aria-valuenow={mounted ? totalScore : 0}
                   aria-valuemin={0}
-                  aria-valuemax={2500}
-                  aria-label="XP progress: 1840 of 2500"
+                  aria-valuemax={mounted ? xpTarget.max : 500}
+                  aria-label={mounted ? `XP progress: ${totalScore.toLocaleString()} of ${xpTarget.max.toLocaleString()}` : "XP progress loading"}
                   style={{ flex:1, height:"8px", background:"rgba(255,255,255,0.1)", borderRadius:"10px", overflow:"hidden" }}
                 >
                   <div style={{ height:"100%", background:"linear-gradient(90deg,#FF6200,#FFB800)", borderRadius:"10px", width:xpWidth, transition:"width 1.5s ease" }} />
                 </div>
-                <span style={{ fontSize:"12px", color:"rgba(255,255,255,0.55)" }}>Pro</span>
+                <span style={{ fontSize:"12px", color:"rgba(255,255,255,0.55)" }}>{mounted ? rank.label : "—"}</span>
               </div>
 
               {/* Streak row */}
               <div
                 role="region"
-                aria-label="14-day study streak — 6 days completed this week"
+                aria-label={`${streak}-day study streak`}
                 style={{ display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(255,98,0,0.1)", border:"1px solid rgba(255,98,0,0.2)", borderRadius:"10px", padding:"10px 14px", marginTop:"12px" }}
               >
                 <div style={{ display:"flex", alignItems:"center", gap:"8px", fontSize:"14px", fontWeight:700 }}>
                   <span aria-hidden="true">🔥</span>
-                  <strong>14-Day Streak</strong>
+                  <strong>{!mounted ? "Daily Streak" : streak > 0 ? `${streak}-Day Streak` : "Start Your Streak!"}</strong>
                 </div>
                 <div style={{ display:"flex", gap:"4px" }} aria-hidden="true">
-                  {STREAK_DAYS.map(({ id, letter, state }) => (
+                  {streakDays.map(({ id, letter, state }) => (
                     <StreakDay key={id} letter={letter} state={state} />
                   ))}
                 </div>
@@ -326,7 +419,7 @@ export default function Hero() {
             {/* Floating badge bottom-left */}
             <div aria-hidden="true" style={{ position:"absolute", bottom:"-16px", left:"-16px", background:"rgba(11,30,61,0.9)", border:"1px solid rgba(255,98,0,0.4)", borderRadius:"12px", padding:"8px 14px", fontSize:"13px", fontWeight:700, backdropFilter:"blur(8px)", boxShadow:"0 8px 24px rgba(0,0,0,0.4)", color:"#64C8FF", zIndex:2, display:"flex", alignItems:"center", gap:"6px", whiteSpace:"nowrap" }}>
               <span style={{ width:"8px", height:"8px", borderRadius:"50%", background:"#32C864", flexShrink:0, animation:"pulseDot 1.5s infinite" }} />
-              247 students online now
+              👥 {mounted ? onlineUsers : 200} students learning now
             </div>
           </div>
 
