@@ -294,22 +294,29 @@ export default function GameArenaSection() {
                   const initials = entry.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
                   const rankColor = i < 3 ? RANK_COLORS[i] : "rgba(255,255,255,0.55)";
                   const isFirst = i === 0;
+                  const isMe = player?.name?.toLowerCase() === entry.name?.toLowerCase();
                   return (
                     <li
                       key={`${entry.name}-${i}`}
-                      style={{ display:"flex", alignItems:"center", gap:"14px", padding:"10px 20px", background:isFirst ? "rgba(255,184,0,0.08)" : "", transition:"background 0.2s" }}
+                      style={{
+                        display:"flex", alignItems:"center", gap:"14px", padding:"10px 20px",
+                        background: isMe ? "rgba(255,98,0,0.12)" : isFirst ? "rgba(255,184,0,0.08)" : "",
+                        border: isMe ? "1px solid rgba(255,98,0,0.3)" : "1px solid transparent",
+                        borderRadius: isMe ? "10px" : "0",
+                        transition:"background 0.2s",
+                      }}
                       onMouseEnter={onLbEnter}
                       onMouseLeave={onLbLeave}
                     >
                       <div style={{ width:"28px", textAlign:"center", fontFamily:"Rajdhani, sans-serif", fontSize:"16px", fontWeight:700, color:rankColor }}>#{i + 1}</div>
                       <div
                         aria-hidden="true"
-                        style={{ width:"36px", height:"36px", borderRadius:"50%", background:avatar.bg, color:avatar.c, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"14px", fontWeight:700, flexShrink:0 }}
+                        style={{ width:"36px", height:"36px", borderRadius:"50%", background: isMe ? "rgba(255,98,0,0.35)" : avatar.bg, color: isMe ? "#fff" : avatar.c, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"14px", fontWeight:700, flexShrink:0 }}
                       >
                         {initials}
                       </div>
                       <div style={{ flex:1 }}>
-                        <div style={{ fontSize:"14px", fontWeight:700, color:"#fff" }}>{entry.name}</div>
+                        <div style={{ fontSize:"14px", fontWeight:700, color: isMe ? "#FF8534" : "#fff" }}>{entry.name}{isMe ? " (You)" : ""}</div>
                         {entry.level && <div style={{ fontSize:"11px", color:"rgba(255,255,255,0.55)" }}>{entry.level}</div>}
                       </div>
                       <div style={{ fontSize:"14px", fontWeight:700, color:"#FF8534" }}>{(entry.totalScore ?? entry.score).toLocaleString()} pts</div>

@@ -5,8 +5,6 @@ import Image from "next/image";
 import { EXTERNAL_URLS, COURSE_LINKS } from "@/lib/constants";
 
 // ─── URL Constants ──────────────────────────────────────────────────────────
-// ⚠️  Replace with your real WhatsApp Business number before going live
-//     Format: https://wa.me/<countrycode><number>
 const WA_LINK = "https://wa.me/919074557825";
 
 const SOCIAL = [
@@ -27,7 +25,7 @@ const FOOTER_NAV: Record<string, { label: string; href: string; external?: boole
   Resources: [
     { label:"Previous Year Questions", href:EXTERNAL_URLS.freeTest, external:true },
     { label:"Free Mock Test",          href:"/game-arena"                         },
-    { label:"Blog & Guides",           href:"/blog"                               },
+    { label:"Blog & Guides",           href:"https://learn.civilezy.in/blog", external:true },
     { label:"Pricing Plans",           href:"/pricing"                            },
   ],
   Company: [

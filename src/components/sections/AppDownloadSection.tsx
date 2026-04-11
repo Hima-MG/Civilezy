@@ -16,6 +16,8 @@ export default function AppDownloadSection() {
         <a
           href="https://play.google.com/store/apps/details?id=com.civilezy.civilezy"
           target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Download CivilEzy on Google Play Store"
           className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl transition w-full sm:w-auto"
         >
           📱 Download on Play Store
@@ -24,6 +26,8 @@ export default function AppDownloadSection() {
         <a
           href="https://apps.apple.com/us/app/civilezy/id6749293661"
           target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Download CivilEzy on Apple App Store"
           className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-xl transition w-full sm:w-auto"
         >
           🍎 Download on App Store

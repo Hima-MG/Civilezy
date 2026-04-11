@@ -5,9 +5,7 @@ import { EXTERNAL_URLS } from "@/lib/constants";
 // ─── URL Constants ──────────────────────────────────────────────────────────
 const LMS_FREE_TEST = EXTERNAL_URLS.freeTest;
 
-// ⚠️  WA_LINK uses a placeholder number — replace with your real WhatsApp business number
-//     Format: https://wa.me/<countrycode><number>  e.g. https://wa.me/918012345678
-const WA_LINK = "https://wa.me/919876543210";
+const WA_LINK = "https://wa.me/919074557825";
 
 // ─── Stable hover handlers (defined once, not re-created per render) ─────────
 function onPrimaryEnter(e: React.MouseEvent<HTMLAnchorElement>) {

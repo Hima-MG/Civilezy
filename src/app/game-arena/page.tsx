@@ -645,10 +645,16 @@ export default function GameArenaPage() {
                 {leaderboard.map((entry, i) => {
                   const medals = ["🥇", "🥈", "🥉"];
                   const rankDisplay = i < 3 ? medals[i] : `#${i + 1}`;
+                  const isMe = player?.name?.toLowerCase() === entry.name?.toLowerCase();
                   return (
-                    <li key={`${entry.name}-${i}`} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/[0.03] transition-colors">
+                    <li
+                      key={`${entry.name}-${i}`}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isMe ? "bg-orange-500/10 ring-1 ring-orange-500/30" : "hover:bg-white/[0.03]"}`}
+                    >
                       <span className="w-7 text-center text-sm font-bold text-zinc-400">{rankDisplay}</span>
-                      <span className="flex-1 text-sm font-semibold text-white truncate">{entry.name}</span>
+                      <span className={`flex-1 text-sm font-semibold truncate ${isMe ? "text-orange-300" : "text-white"}`}>
+                        {entry.name}{isMe && " (You)"}
+                      </span>
                       {entry.level && <span className="text-xs text-zinc-400 shrink-0">{entry.level}</span>}
                       {entry.streak && entry.streak > 1 && <span className="text-xs text-orange-400/70 shrink-0">🔥{entry.streak}</span>}
                       <span className="text-sm font-bold text-orange-400 shrink-0">{(entry.totalScore ?? entry.score).toLocaleString()} pts</span>
@@ -657,7 +663,7 @@ export default function GameArenaPage() {
                 })}
               </ol>
             ) : (
-              <div className="text-zinc-500 text-sm text-center py-4">No scores yet. Be the first!</div>
+              <div className="text-zinc-500 text-sm text-center py-4">No players yet. Be the first to play!</div>
             )}
           </div>
 

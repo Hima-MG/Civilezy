@@ -18,8 +18,6 @@ interface ComparisonRow {
 }
 
 // ─── Data ───────────────────────────────────────────────────────────────────
-// NOTE: The "Price (Full Access)" row shows "₹1,999 one-time" — update this
-// to reflect current monthly pricing (₹1,800–₹2,500) before going live.
 const ROWS: ComparisonRow[] = [
   {
     feature:"Kerala PSC Pool-Based Tests",
@@ -52,7 +50,6 @@ const ROWS: ComparisonRow[] = [
     them2:"✗",  them2Cross:true,  isLast:false,
   },
   {
-    // ⚠️  Update this price to match current plans before launch
     feature:"Price (Full Access)",
     us:"From ₹1,800/mo",          usIsGold:true,
     them1:"₹5,999/yr", them1Cross:false,

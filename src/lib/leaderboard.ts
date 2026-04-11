@@ -1,6 +1,7 @@
 import {
   collection,
-  addDoc,
+  doc,
+  setDoc,
   getDocs,
   query,
   orderBy,
@@ -50,18 +51,26 @@ export interface SaveScoreParams {
   streak: number;
 }
 
+/**
+ * Upserts a player's score document.
+ * Uses the player name (lowercased, trimmed) as the document ID so each
+ * player has exactly ONE document that is updated every game.
+ */
 export async function saveScore(params: SaveScoreParams): Promise<void> {
   const trimmed = params.name.trim();
   if (!trimmed) throw new Error("Name is required");
 
+  // Derive a stable document ID from the player name
+  const docId = trimmed.toLowerCase().replace(/\s+/g, "-");
+
   const level = getLevel(params.totalScore);
-  await addDoc(collection(db, COL), {
+  await setDoc(doc(db, COL, docId), {
     name: trimmed,
     score: params.score,
     totalScore: params.totalScore,
     level: `${level.icon} ${level.label}`,
     streak: params.streak,
-    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
   });
 }
 
@@ -73,21 +82,35 @@ export interface LeaderboardEntry {
   streak?: number;
 }
 
+/**
+ * Fetches the top 20 players sorted by totalScore descending.
+ * New saves use setDoc (one doc per player), but legacy addDoc entries
+ * may still exist. We deduplicate by name, keeping the highest totalScore.
+ */
 export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
   const q = query(
     collection(db, COL),
     orderBy("totalScore", "desc"),
-    limit(10)
+    limit(50)            // fetch extra to account for legacy duplicates
   );
   const snap = await getDocs(q);
-  return snap.docs.map((doc) => {
-    const d = doc.data();
-    return {
-      name: d.name,
-      score: d.score,
-      totalScore: d.totalScore,
-      level: d.level,
-      streak: d.streak,
-    };
-  });
+
+  // Deduplicate: keep only the highest-scoring doc per player name
+  const seen = new Map<string, LeaderboardEntry>();
+  for (const d of snap.docs) {
+    const data = d.data();
+    const key = (data.name as string).toLowerCase().trim();
+    if (!seen.has(key)) {
+      seen.set(key, {
+        name: data.name,
+        score: data.score,
+        totalScore: data.totalScore,
+        level: data.level,
+        streak: data.streak,
+      });
+    }
+  }
+
+  // Already sorted desc from Firestore; dedupe preserves order; take top 20
+  return Array.from(seen.values()).slice(0, 20);
 }

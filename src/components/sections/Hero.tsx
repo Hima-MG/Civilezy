@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
-type Level       = "iti" | "dip" | "ae";
+type Level       = "iti" | "dip" | "btech";
 type AnswerState = "unanswered" | "correct" | "wrong";
 
 interface QuizData {
@@ -51,14 +51,13 @@ const QUIZ_BY_LEVEL: Record<Level, QuizData> = {
     options:      ["A. Steel percentage only", "B. Modular ratio & steel %", "C. Concrete grade only", "D. Load intensity"],
     correctIndex: 1,
   },
-  ae: {
+  btech: {
     question:     "Q. As per IS 1893, the seismic zone factor for Zone III in Kerala is:",
     options:      ["A. 0.10", "B. 0.16", "C. 0.24", "D. 0.36"],
     correctIndex: 1,
   },
 };
 
-// ⚠️  Confirm these are real numbers before launch
 const STATS = [
   { num: "5,200+",  label: "Active Students" },
   { num: "98+",     label: "Rank Holders"    },
@@ -355,7 +354,7 @@ export default function Hero() {
               <div role="group" aria-labelledby="level-selector-label" style={{ display:"flex", gap:"10px", marginBottom:"20px" }}>
                 <LevelBtn label="🔧 ITI"      isActive={activeLevel==="iti"} colorScheme="orange" onClick={() => setActiveLevel("iti")} />
                 <LevelBtn label="📐 Diploma"  isActive={activeLevel==="dip"} colorScheme="gold"   onClick={() => setActiveLevel("dip")} />
-                <LevelBtn label="🏗️ AE"       isActive={activeLevel==="ae"}  colorScheme="blue"   onClick={() => setActiveLevel("ae")}  />
+                <LevelBtn label="🏗️ Btech"       isActive={activeLevel==="btech"}  colorScheme="blue"   onClick={() => setActiveLevel("btech")}  />
               </div>
 
               {/* Quiz */}

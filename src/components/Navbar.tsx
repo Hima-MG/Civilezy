@@ -16,7 +16,7 @@ const NAV_LINKS = [
   { label: "Game Arena", href: "/game-arena" },
   
   { label: "Pricing",    href: "/pricing"    },
-  { label: "Blog",       href: "/blog"       },
+  { label: "Blog",       href: "https://learn.civilezy.in/blog" },
 ] as const;
 
 export default function Navbar() {
@@ -120,17 +120,23 @@ export default function Navbar() {
         className="mobile-menu"
       >
         <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-          {NAV_LINKS.map(({ label, href }) => (
-            <li key={href} style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-              <Link
-                href={href}
-                onClick={() => setMenuOpen(false)}
-                style={styles.mobileLink}
-              >
-                {label}
-              </Link>
-            </li>
-          ))}
+          {NAV_LINKS.map(({ label, href }) => {
+            const isExternal = href.startsWith("http");
+            const Tag = isExternal ? "a" : Link;
+            const extra = isExternal ? { target: "_blank" as const, rel: "noopener noreferrer" } : {};
+            return (
+              <li key={href} style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                <Tag
+                  href={href}
+                  onClick={() => setMenuOpen(false)}
+                  style={styles.mobileLink}
+                  {...extra}
+                >
+                  {label}
+                </Tag>
+              </li>
+            );
+          })}
         </ul>
 
         <div style={{ display: "flex", gap: "12px", padding: "16px 0 4px" }}>
@@ -173,19 +179,23 @@ export default function Navbar() {
 
 /* ─── Inline NavLink with hover ────────────────────────────────────────── */
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const isExternal = href.startsWith("http");
+  const Tag = isExternal ? "a" : Link;
+  const extra = isExternal ? { target: "_blank" as const, rel: "noopener noreferrer" } : {};
   return (
-    <Link
+    <Tag
       href={href}
       style={styles.navLinkBase}
-      onMouseEnter={(e) =>
-        ((e.currentTarget as HTMLElement).style.color = "#FF8534")
+      {...extra}
+      onMouseEnter={(e: React.MouseEvent<HTMLElement>) =>
+        (e.currentTarget.style.color = "#FF8534")
       }
-      onMouseLeave={(e) =>
-        ((e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.85)")
+      onMouseLeave={(e: React.MouseEvent<HTMLElement>) =>
+        (e.currentTarget.style.color = "rgba(255,255,255,0.85)")
       }
     >
       {children}
-    </Link>
+    </Tag>
   );
 }
 

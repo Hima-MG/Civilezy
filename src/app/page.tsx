@@ -12,6 +12,7 @@ import ComparisonSection from "@/components/sections/Comparisonsection";
 import Footer from "@/components/sections/Footer";
 import TickerSection from "@/components/sections/TickerSection";
 import AppDownloadSection from "@/components/sections/AppDownloadSection";
+import BlogSection from "@/components/sections/BlogSection";
 
 export default function Home() {
   return (
@@ -27,6 +28,7 @@ export default function Home() {
       <ComparisonSection />
       <TestimonialsSection />
       {/* <DepartmentSection /> */}
+      <BlogSection />
       <FinalCTASection />
       <Footer />
     </>

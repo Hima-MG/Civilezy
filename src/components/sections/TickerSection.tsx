@@ -4,8 +4,6 @@
 // The component itself is still stateless and renders zero interactive JS.
 
 // ─── Data ───────────────────────────────────────────────────────────────────
-// ⚠️  "KWA AE 2025 Released!" is a live announcement — update or remove
-//     once the notification window closes to keep the ticker accurate.
 const TICKER_ITEMS = [
   "🏆 Arun S. — Rank 3 KWA AE 2024",
   "⭐ Meera K. — Rank 7 PWD Overseer",
