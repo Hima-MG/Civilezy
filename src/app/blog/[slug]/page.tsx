@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
+import { EXTERNAL_URLS } from "@/lib/constants";
 
 export default function BlogDetailPage() {
-  redirect("https://learn.civilezy.in/blog");
+  redirect(`${EXTERNAL_URLS.base}/blog`);
 }

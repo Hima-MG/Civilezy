@@ -225,15 +225,6 @@ export default function PricingSection() {
           ))}
         </ul>
 
-        {/* ── Guarantee strip ── */}
-        <div style={{ maxWidth:"580px", margin:"0 auto 52px", display:"flex", alignItems:"center", justifyContent:"center", gap:"14px", background:"rgba(50,200,100,0.06)", border:"1px solid rgba(50,200,100,0.2)", borderRadius:"14px", padding:"14px 24px", flexWrap:"wrap" }}>
-          <span aria-hidden="true" style={{ fontSize:"24px", flexShrink:0 }}>🛡️</span>
-          <div style={{ textAlign:"left" }}>
-            <p style={{ fontSize:"14px", fontWeight:700, color:"#32C864", marginBottom:"2px" }}>7-Day Full Refund Guarantee</p>
-            <p style={{ fontSize:"12px", color:"rgba(255,255,255,0.5)", margin:0 }}>Not satisfied? Email us within 7 days. Full refund, no questions asked.</p>
-          </div>
-        </div>
-
         {/* ── What you get grid ── */}
         <div style={{ borderTop:"1px solid rgba(255,255,255,0.08)", paddingTop:"60px" }}>
           <div style={{ textAlign:"center", marginBottom:"40px" }}>
@@ -397,7 +388,7 @@ function AnnualCard({ course }: { course: CourseData }) {
       >
         🚀 Start Preparation
       </a>
-      <p style={{ textAlign:"center", fontSize:"12px", color:"rgba(255,255,255,0.35)", marginTop:"12px" }}>🛡️ 7-day refund guarantee · Cancel anytime</p>
+      <p style={{ textAlign:"center", fontSize:"12px", color:"rgba(255,255,255,0.35)", marginTop:"12px" }}>Cancel anytime</p>
     </div>
   );
 }

@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { EXTERNAL_URLS } from "@/lib/constants";
+
+const BLOG_URL = `${EXTERNAL_URLS.base}/blog`;
 
 type Category = "All" | "PSC Live" | "Rank Blueprint" | "Exam Decoded" | "Smart Study" | "Civil Easy";
 
@@ -288,7 +291,7 @@ export default function BlogSection() {
                     {post.date}
                   </span>
                   <a
-                    href="https://learn.civilezy.in/blog"
+                    href={BLOG_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -320,7 +323,7 @@ export default function BlogSection() {
         {/* View All CTA */}
         <div style={{ textAlign: "center" }}>
           <a
-            href="https://learn.civilezy.in/blog"
+            href={BLOG_URL}
             target="_blank"
             rel="noopener noreferrer"
             style={{

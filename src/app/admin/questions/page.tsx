@@ -14,6 +14,7 @@ import {
   type Status,
 } from "@/lib/questions";
 import { SUBJECTS_BY_DOMAIN } from "@/data/quesions";
+import CsvImport from "@/components/admin/CsvImport";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const DOMAINS: Domain[] = ["iti", "diploma", "btech"];
@@ -39,7 +40,7 @@ const EMPTY_FORM: QuestionInput = {
 export default function AdminQuestionsPage() {
   const [questions, setQuestions]   = useState<QuestionDoc[]>([]);
   const [loading, setLoading]       = useState(true);
-  const [tab, setTab]               = useState<"list" | "add" | "stats">("list");
+  const [tab, setTab]               = useState<"list" | "add" | "import" | "stats">("list");
   const [editingId, setEditingId]   = useState<string | null>(null);
   const [saving, setSaving]         = useState(false);
   const [message, setMessage]       = useState("");
@@ -210,7 +211,7 @@ export default function AdminQuestionsPage() {
 
       {/* ── Tab bar ── */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "24px", flexWrap: "wrap", alignItems: "center" }}>
-        {(["list", "add", "stats"] as const).map((t) => (
+        {(["list", "add", "import", "stats"] as const).map((t) => (
           <button
             key={t}
             onClick={() => { setTab(t); if (t === "add" && !editingId) setForm({ ...EMPTY_FORM, domain: form.domain, createdBy: adminName }); }}
@@ -221,7 +222,7 @@ export default function AdminQuestionsPage() {
               color: tab === t ? "#FF8534" : "rgba(255,255,255,0.6)",
             }}
           >
-            {t === "list" ? `📋 Questions (${questions.length})` : t === "add" ? (editingId ? "✏️ Edit Question" : "➕ Add Question") : "📊 Stats"}
+            {t === "list" ? `📋 Questions (${questions.length})` : t === "add" ? (editingId ? "✏️ Edit Question" : "➕ Add Question") : t === "import" ? "📄 CSV Import" : "📊 Stats"}
           </button>
         ))}
         <div style={{ marginLeft: "auto", fontSize: "12px", color: "rgba(255,255,255,0.35)" }}>
@@ -436,6 +437,11 @@ export default function AdminQuestionsPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* ═══════════════ CSV IMPORT TAB ═══════════════ */}
+      {tab === "import" && (
+        <CsvImport adminName={adminName} onImportDone={fetchAll} />
       )}
 
       {/* ═══════════════ STATS TAB ═══════════════ */}

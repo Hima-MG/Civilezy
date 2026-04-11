@@ -25,7 +25,7 @@ const FOOTER_NAV: Record<string, { label: string; href: string; external?: boole
   Resources: [
     { label:"Previous Year Questions", href:EXTERNAL_URLS.freeTest, external:true },
     { label:"Free Mock Test",          href:"/game-arena"                         },
-    { label:"Blog & Guides",           href:"https://learn.civilezy.in/blog", external:true },
+    { label:"Blog & Guides",           href:`${EXTERNAL_URLS.base}/blog`, external:true },
     { label:"Pricing Plans",           href:"/pricing"                            },
   ],
   Company: [

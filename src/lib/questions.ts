@@ -10,6 +10,7 @@ import {
   orderBy,
   serverTimestamp,
   Timestamp,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -160,4 +161,39 @@ export function computeStats(questions: QuestionDoc[]): {
     byDomain: Array.from(domainMap.values()),
     bySubject: Array.from(subjMap.values()).sort((a, b) => a.subject.localeCompare(b.subject)),
   };
+}
+
+// ─── Batch import (CSV bulk upload) ─────────────────────────────────────────
+
+/**
+ * Writes up to 500 questions in Firestore batches of 500 (Firestore limit).
+ * Returns the count of successfully written documents.
+ * Calls `onProgress` after each batch so the UI can show live status.
+ */
+export async function batchImportQuestions(
+  inputs: QuestionInput[],
+  onProgress?: (written: number, total: number) => void,
+): Promise<number> {
+  const BATCH_SIZE = 500;
+  let written = 0;
+
+  for (let i = 0; i < inputs.length; i += BATCH_SIZE) {
+    const chunk = inputs.slice(i, i + BATCH_SIZE);
+    const batch = writeBatch(db);
+
+    for (const input of chunk) {
+      const ref = doc(collection(db, COL));
+      batch.set(ref, {
+        ...input,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    await batch.commit();
+    written += chunk.length;
+    onProgress?.(written, inputs.length);
+  }
+
+  return written;
 }
