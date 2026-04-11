@@ -215,15 +215,21 @@ export default function GameArenaPage() {
   }, [timeLeft, gameStarted, showResult, selectedAnswer, playSound, clearTimer]);
 
   // ── Quiz engine helpers ──────────────────────────────────────────────────
-  const handleStart = () => {
-    if (!isReady) return;
-    const dataDomain = DOMAIN_MAP[selectedDomain!];
-    const pool       = getQuestions(dataDomain, selectedSubjects);
-    setQuestions(pool); setCurrentQuestionIndex(0); setSelectedAnswer(null);
-    setScore(0); setXp(0); setShowResult(false); setAnimating(false);
-    setStreakCount(0); setBestStreak(0); setTimedOut(false);
-    setShowXpBurst(false); setClickedOpt(null); setGameStarted(true);
-    setScoreSaved(false); setSaveError(""); setLeaderboard([]);
+  const [startingGame, setStartingGame] = useState(false);
+
+  const handleStart = async () => {
+    if (!isReady || startingGame) return;
+    setStartingGame(true);
+    try {
+      const dataDomain = DOMAIN_MAP[selectedDomain!];
+      const pool       = await getQuestions(dataDomain, selectedSubjects);
+      setQuestions(pool); setCurrentQuestionIndex(0); setSelectedAnswer(null);
+      setScore(0); setXp(0); setShowResult(false); setAnimating(false);
+      setStreakCount(0); setBestStreak(0); setTimedOut(false);
+      setShowXpBurst(false); setClickedOpt(null); setGameStarted(true);
+      setScoreSaved(false); setSaveError(""); setLeaderboard([]);
+    } catch { /* fallback handled inside getQuestions */ }
+    finally { setStartingGame(false); }
   };
 
   // ── Fetch leaderboard when results show ──
@@ -921,12 +927,12 @@ export default function GameArenaPage() {
         <div className="flex justify-center">
           <button
             onClick={handleStart}
-            disabled={!isReady}
+            disabled={!isReady || startingGame}
             className={`relative flex items-center gap-3 px-10 py-4 rounded-2xl text-lg font-bold tracking-wide transition-all duration-300
-              ${isReady ? "bg-gradient-to-r from-orange-500 to-amber-400 text-white shadow-xl shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-105 active:scale-100 cursor-pointer" : "bg-zinc-800 text-zinc-600 border border-zinc-700 cursor-not-allowed"}`}>
-            {isReady && <span className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-200" />}
+              ${isReady && !startingGame ? "bg-gradient-to-r from-orange-500 to-amber-400 text-white shadow-xl shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-105 active:scale-100 cursor-pointer" : "bg-zinc-800 text-zinc-600 border border-zinc-700 cursor-not-allowed"}`}>
+            {isReady && !startingGame && <span className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-200" />}
             <span className="relative">🚀</span>
-            <span className="relative">{isReady ? "Start Game" : "Complete all steps to start"}</span>
+            <span className="relative">{startingGame ? "Loading questions..." : isReady ? "Start Game" : "Complete all steps to start"}</span>
           </button>
         </div>
 

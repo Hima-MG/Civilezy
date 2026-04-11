@@ -399,32 +399,20 @@ export const QUESTIONS: Question[] = [
 // ---------------------------------------------------------------------------
 // getQuestions — builds a mixed-difficulty pool, no duplicates
 // ---------------------------------------------------------------------------
-// Pulls up to DIFFICULTY_COUNTS per difficulty tier from the combined
-// subject pool.  If a tier doesn't have enough, the shortfall is filled
-// from whatever remains (any difficulty) — never duplicating a question.
+// Tries Firestore first (published + active questions). Falls back to the
+// hardcoded QUESTIONS array if Firestore returns too few or errors out.
 // ---------------------------------------------------------------------------
-export function getQuestions(
-  domain: Domain,
-  subjects: string[],
-): Question[] {
-  // 1. Build the full candidate pool (domain + subjects)
-  const candidates = subjects.length === 0
-    ? QUESTIONS.filter(q => q.domain.includes(domain))
-    : QUESTIONS.filter(q => q.domain.includes(domain) && subjects.includes(q.subject));
+import { getPublishedQuestions, type QuestionDoc } from "@/lib/questions";
 
-  // 2. Shuffle once up-front so picks are random
+function buildPool(candidates: Question[]): Question[] {
   const shuffled = [...candidates].sort(() => Math.random() - 0.5);
-
-  // 3. Pull each difficulty tier, respecting DIFFICULTY_COUNTS
   const picked  = new Set<string>();
   const result: Question[] = [];
-
   const tiers: Difficulty[] = ["easy", "medium", "hard"];
 
   for (const tier of tiers) {
     const want = DIFFICULTY_COUNTS[tier];
     for (const q of shuffled) {
-      if (result.length >= want + result.length - result.length) { /* guard */ }
       if (q.difficulty === tier && !picked.has(q.id)) {
         result.push(q);
         picked.add(q.id);
@@ -433,7 +421,6 @@ export function getQuestions(
     }
   }
 
-  // 4. Fill shortfall from any remaining questions (no duplicates)
   const totalWant = DIFFICULTY_COUNTS.easy + DIFFICULTY_COUNTS.medium + DIFFICULTY_COUNTS.hard;
   if (result.length < totalWant) {
     for (const q of shuffled) {
@@ -444,6 +431,40 @@ export function getQuestions(
     }
   }
 
-  // 5. Final shuffle so difficulties aren't grouped together
   return result.sort(() => Math.random() - 0.5);
+}
+
+/** Convert a Firestore QuestionDoc into the local Question format */
+function docToQuestion(d: QuestionDoc): Question {
+  return {
+    id:          d.id,
+    domain:      [d.domain],
+    subject:     d.subject,
+    difficulty:  d.difficulty,
+    question:    d.question,
+    options:     d.options,
+    correct:     d.correct,
+    explanation: d.explanation,
+    xp:          d.xp,
+  };
+}
+
+export async function getQuestions(
+  domain: Domain,
+  subjects: string[],
+): Promise<Question[]> {
+  // 1. Try Firestore (published + active only)
+  try {
+    const firestoreDocs = await getPublishedQuestions(domain, subjects);
+    if (firestoreDocs.length >= 5) {
+      return buildPool(firestoreDocs.map(docToQuestion));
+    }
+  } catch { /* fall through to hardcoded */ }
+
+  // 2. Fallback: use hardcoded QUESTIONS array
+  const candidates = subjects.length === 0
+    ? QUESTIONS.filter(q => q.domain.includes(domain))
+    : QUESTIONS.filter(q => q.domain.includes(domain) && subjects.includes(q.subject));
+
+  return buildPool(candidates);
 }
