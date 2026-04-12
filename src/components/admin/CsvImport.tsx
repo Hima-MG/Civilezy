@@ -8,13 +8,20 @@ import {
   type Domain,
   type Difficulty,
 } from "@/lib/questions";
-import { SUBJECTS_BY_DOMAIN } from "@/data/quesions";
+import {
+  SUBJECTS_BY_DOMAIN,
+  ADDON_SUBJECTS,
+  getAllSubjects,
+  getDomainHierarchy,
+} from "@/data/subjectHierarchy";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface CsvRow {
   domain?: string;
+  category?: string;
   subject?: string;
   difficulty?: string;
+  level?: string;
   question?: string;
   option1?: string;
   option2?: string;
@@ -40,13 +47,43 @@ type ImportPhase = "idle" | "preview" | "importing" | "done";
 
 const VALID_DOMAINS: Domain[] = ["iti", "diploma", "btech"];
 const VALID_DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
+const VALID_LEVELS: (1 | 2 | 3)[] = [1, 2, 3];
 const DOMAIN_LABELS: Record<Domain, string> = { iti: "ITI", diploma: "Diploma", btech: "BTech" };
 const DIFF_COLORS: Record<Difficulty, string> = { easy: "#22c55e", medium: "#f59e0b", hard: "#ef4444" };
 
 const CSV_TEMPLATE =
-  "domain,subject,difficulty,question,option1,option2,option3,option4,correct,explanation,xp\n" +
-  'iti,Building Materials,medium,"Portland cement is classified into how many grades?","3 grades","4 grades","5 grades","6 grades",0,"As per IS 269, OPC comes in 33, 43, and 53 grades.",10\n' +
-  'diploma,RCC Structures,hard,"The minimum clear cover for RCC slab as per IS 456 is:","15 mm","20 mm","25 mm","30 mm",1,"IS 456 specifies 20 mm for slabs in normal exposure.",10\n';
+  "domain,category,subject,difficulty,level,question,option1,option2,option3,option4,correct,explanation,xp\n" +
+  'iti,Building & Materials,Building Materials,easy,1,"The standard size of a modular brick in India is:","190x90x90 mm","230x115x75 mm","200x100x100 mm","220x110x80 mm",0,"Standard modular brick = 190x90x90 mm as per IS 1077.",5\n' +
+  'diploma,Structures & Mechanics,Structural Engineering,medium,2,"The neutral axis depth factor in a singly reinforced beam depends on:","Steel % only","Modular ratio & steel %","Concrete grade only","Load intensity",1,"Neutral axis factor depends on modular ratio and permissible stresses.",10\n' +
+  'btech,Structural Engineering,Structural Analysis,hard,3,"Stiffness coefficient K_ij represents:","Deflection at i due to unit load at j","Force at i due to unit displacement at j","Moment at i due to unit rotation at j","Displacement at i due to unit force at j",1,"K_ij = force at coordinate i when unit displacement is imposed at j while all other coordinates are restrained.",20\n' +
+  'diploma,Water & Environment,Environmental Engineering,medium,2,"Standard BOD test is conducted at ___C for ___ days:","20C, 3 days","20C, 5 days","25C, 5 days","30C, 3 days",1,"BOD5 test standard conditions: 20C for 5 days.",10\n' +
+  'iti,Surveying,Basic Surveying,easy,1,"In chain surveying, the check line is used to:","Measure distances","Check survey accuracy","Mark the baseline","Set right angles",1,"A check line verifies the accuracy of a surveyed triangle.",5\n';
+
+// ─── Category resolution from hierarchy ─────────────────────────────────────
+
+/** Given a domain and subject, find which category it belongs to */
+function resolveCategory(domain: Domain, subject: string): string | null {
+  const hierarchy = getDomainHierarchy(domain);
+  if (!hierarchy) return null;
+
+  // Check core categories
+  for (const cat of hierarchy.categories) {
+    if (cat.subjects.some((s) => s.toLowerCase() === subject.toLowerCase())) {
+      return cat.name;
+    }
+  }
+
+  // Check addon groups — use group label as category
+  if (hierarchy.addonGroups) {
+    for (const group of hierarchy.addonGroups) {
+      if (group.subjects.some((s) => s.toLowerCase() === subject.toLowerCase())) {
+        return group.label;
+      }
+    }
+  }
+
+  return null;
+}
 
 // ─── Validation ─────────────────────────────────────────────────────────────
 
@@ -60,27 +97,62 @@ function validateRow(raw: CsvRow, rowNum: number, adminName: string): ValidatedR
 
   // Subject
   const subject = raw.subject?.trim() || "";
-  if (!subject) errors.push("Missing subject");
-  else if (domain && VALID_DOMAINS.includes(domain)) {
-    const validSubjects = SUBJECTS_BY_DOMAIN[domain];
-    if (!validSubjects.includes(subject)) {
-      // Try case-insensitive match
-      const match = validSubjects.find((s) => s.toLowerCase() === subject.toLowerCase());
-      if (!match) errors.push(`Unknown subject "${subject}" for domain "${domain}"`);
-    }
+  if (!subject) {
+    errors.push("Missing subject");
+  } else if (domain && VALID_DOMAINS.includes(domain)) {
+    const allSubjects = getAllSubjects(domain);
+    const match = allSubjects.find((s) => s.toLowerCase() === subject.toLowerCase());
+    if (!match) errors.push(`Unknown subject "${subject}" for domain "${domain}"`);
   }
 
   // Resolve subject to exact casing
   let resolvedSubject = subject;
   if (domain && VALID_DOMAINS.includes(domain) && subject) {
-    const exact = SUBJECTS_BY_DOMAIN[domain].find((s) => s.toLowerCase() === subject.toLowerCase());
+    const allSubjects = getAllSubjects(domain);
+    const exact = allSubjects.find((s) => s.toLowerCase() === subject.toLowerCase());
     if (exact) resolvedSubject = exact;
+  }
+
+  // Category — auto-resolve from hierarchy if not provided or validate if provided
+  let resolvedCategory = "";
+  const rawCategory = raw.category?.trim() || "";
+  if (domain && VALID_DOMAINS.includes(domain) && resolvedSubject) {
+    const autoCategory = resolveCategory(domain, resolvedSubject);
+    if (rawCategory) {
+      // Validate provided category matches hierarchy
+      if (autoCategory && rawCategory.toLowerCase() !== autoCategory.toLowerCase()) {
+        errors.push(`Category "${rawCategory}" doesn't match subject — expected "${autoCategory}"`);
+      }
+      resolvedCategory = autoCategory || rawCategory;
+    } else {
+      // Auto-resolve
+      if (autoCategory) {
+        resolvedCategory = autoCategory;
+      } else if (resolvedSubject) {
+        errors.push(`Cannot auto-resolve category for subject "${resolvedSubject}"`);
+      }
+    }
   }
 
   // Difficulty
   const difficulty = raw.difficulty?.trim().toLowerCase() as Difficulty;
   if (!difficulty) errors.push("Missing difficulty");
   else if (!VALID_DIFFICULTIES.includes(difficulty)) errors.push(`Invalid difficulty "${raw.difficulty}" — use easy, medium, or hard`);
+
+  // Level (optional, defaults based on difficulty)
+  let level: 1 | 2 | 3 = 1;
+  const rawLevel = raw.level?.trim();
+  if (rawLevel) {
+    const num = parseInt(rawLevel, 10);
+    if (isNaN(num) || num < 1 || num > 3) {
+      errors.push(`Invalid level "${rawLevel}" — use 1, 2, or 3`);
+    } else {
+      level = num as 1 | 2 | 3;
+    }
+  } else if (difficulty) {
+    // Auto-assign: easy→1, medium→2, hard→3
+    level = difficulty === "easy" ? 1 : difficulty === "medium" ? 2 : 3;
+  }
 
   // Question text
   const question = raw.question?.trim() || "";
@@ -138,8 +210,10 @@ function validateRow(raw: CsvRow, rowNum: number, adminName: string): ValidatedR
     rowNum,
     input: {
       domain,
+      category: resolvedCategory,
       subject: resolvedSubject,
       difficulty,
+      level,
       question,
       options: options as [string, string, string, string],
       correct,
@@ -278,21 +352,21 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
     <div style={S.card}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
         <h3 style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "20px", fontWeight: 700, color: "#fff", margin: 0 }}>
-          📄 CSV Bulk Import
+          CSV Bulk Import
         </h3>
         <button onClick={downloadTemplate} style={S.templateBtn}>
-          ⬇️ Download CSV Template
+          Download CSV Template
         </button>
       </div>
 
       {/* ── Error banner ── */}
       {importError && (
         <div style={S.errorBanner}>
-          ❌ {importError}
+          {importError}
         </div>
       )}
 
-      {/* ════════════ IDLE — Upload zone ════════════ */}
+      {/* IDLE — Upload zone */}
       {phase === "idle" && (
         <>
           <div
@@ -307,47 +381,52 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
             }}
           >
             <input ref={fileRef} type="file" accept=".csv" onChange={onFileChange} style={{ display: "none" }} />
-            <div style={{ fontSize: "36px", marginBottom: "12px" }}>📁</div>
+            <div style={{ fontSize: "36px", marginBottom: "12px" }}>CSV</div>
             <div style={{ fontSize: "15px", fontWeight: 700, color: "rgba(255,255,255,0.8)", marginBottom: "6px" }}>
               {isDragging ? "Drop your CSV here" : "Drag & drop CSV file here"}
             </div>
             <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)" }}>
-              or click to browse · .csv only
+              or click to browse - .csv only
             </div>
           </div>
 
           {/* Format guide */}
           <div style={S.formatGuide}>
             <div style={{ fontSize: "13px", fontWeight: 700, color: "rgba(255,255,255,0.7)", marginBottom: "8px" }}>
-              📋 Required CSV columns:
+              Required CSV columns:
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-              {["domain", "subject", "difficulty", "question", "option1", "option2", "option3", "option4", "correct", "explanation", "xp"].map((col) => (
-                <span key={col} style={S.colChip}>{col}</span>
+              {["domain*", "subject*", "difficulty*", "question*", "option1*", "option2*", "option3*", "option4*", "correct*"].map((col) => (
+                <span key={col} style={S.colChipRequired}>{col}</span>
+              ))}
+              {["category", "level", "explanation", "xp"].map((col) => (
+                <span key={col} style={S.colChipOptional}>{col}</span>
               ))}
             </div>
             <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", marginTop: "8px" }}>
-              <strong>correct:</strong> 0–3 (zero-based) or 1–4 (auto-converted) &nbsp;·&nbsp;
-              <strong>domain:</strong> iti / diploma / btech &nbsp;·&nbsp;
-              <strong>difficulty:</strong> easy / medium / hard
+              <strong>correct:</strong> 0-3 (zero-based) or 1-4 (auto-converted) &nbsp;-&nbsp;
+              <strong>domain:</strong> iti / diploma / btech &nbsp;-&nbsp;
+              <strong>difficulty:</strong> easy / medium / hard &nbsp;-&nbsp;
+              <strong>level:</strong> 1-3 (auto-assigned from difficulty if omitted) &nbsp;-&nbsp;
+              <strong>category:</strong> auto-resolved from subject if omitted
             </div>
           </div>
         </>
       )}
 
-      {/* ════════════ PREVIEW — Parsed results ════════════ */}
+      {/* PREVIEW — Parsed results */}
       {phase === "preview" && (
         <>
           {/* Summary bar */}
           <div style={S.summaryBar}>
             <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>📎 {fileName}</span>
+              <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>{fileName}</span>
               <StatChip color="#22c55e" label="Valid" count={validRows.length} />
               <StatChip color="#ef4444" label="Errors" count={invalidRows.length} />
               <StatChip color="rgba(255,255,255,0.5)" label="Total" count={validRows.length + invalidRows.length} />
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={reset} style={S.btnSecondary}>← Upload Different File</button>
+              <button onClick={reset} style={S.btnSecondary}>Upload Different File</button>
               <button
                 onClick={handleImport}
                 disabled={validRows.length === 0}
@@ -357,7 +436,7 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
                   cursor: validRows.length === 0 ? "not-allowed" : "pointer",
                 }}
               >
-                🚀 Import {validRows.length} Question{validRows.length !== 1 ? "s" : ""}
+                Import {validRows.length} Question{validRows.length !== 1 ? "s" : ""}
               </button>
             </div>
           </div>
@@ -366,7 +445,7 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
           {invalidRows.length > 0 && (
             <div style={{ marginBottom: "20px" }}>
               <div style={{ fontSize: "14px", fontWeight: 700, color: "#ef4444", marginBottom: "10px" }}>
-                ⚠️ {invalidRows.length} row{invalidRows.length !== 1 ? "s" : ""} with errors (will be skipped):
+                {invalidRows.length} row{invalidRows.length !== 1 ? "s" : ""} with errors (will be skipped):
               </div>
               <div style={{ maxHeight: "200px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
                 {invalidRows.map((row) => (
@@ -376,7 +455,7 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
                       {row.raw.question?.slice(0, 60) || "(empty question)"}
                     </span>
                     <span style={{ fontSize: "12px", color: "#ef4444", flexShrink: 0 }}>
-                      {row.errors.join(" · ")}
+                      {row.errors.join(" - ")}
                     </span>
                   </div>
                 ))}
@@ -388,7 +467,7 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
           {validRows.length > 0 && (
             <div>
               <div style={{ fontSize: "14px", fontWeight: 700, color: "#22c55e", marginBottom: "10px" }}>
-                ✅ {validRows.length} question{validRows.length !== 1 ? "s" : ""} ready to import:
+                {validRows.length} question{validRows.length !== 1 ? "s" : ""} ready to import:
               </div>
               <div style={{ overflowX: "auto" }}>
                 <table style={S.table}>
@@ -396,8 +475,10 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
                     <tr>
                       <th style={S.th}>#</th>
                       <th style={S.th}>Domain</th>
+                      <th style={S.th}>Category</th>
                       <th style={S.th}>Subject</th>
                       <th style={S.th}>Diff</th>
+                      <th style={S.th}>Lvl</th>
                       <th style={{ ...S.th, minWidth: "260px" }}>Question</th>
                       <th style={S.th}>Answer</th>
                       <th style={S.th}>XP</th>
@@ -412,6 +493,9 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
                             {DOMAIN_LABELS[r.input.domain]}
                           </span>
                         </td>
+                        <td style={{ ...S.td, maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>
+                          {r.input.category}
+                        </td>
                         <td style={{ ...S.td, maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {r.input.subject}
                         </td>
@@ -419,6 +503,9 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
                           <span style={{ color: DIFF_COLORS[r.input.difficulty], fontWeight: 700, fontSize: "12px" }}>
                             {r.input.difficulty}
                           </span>
+                        </td>
+                        <td style={{ ...S.td, fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>
+                          {r.input.level}
                         </td>
                         <td style={{ ...S.td, maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {r.input.question}
@@ -442,10 +529,10 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
         </>
       )}
 
-      {/* ════════════ IMPORTING — Progress ════════════ */}
+      {/* IMPORTING — Progress */}
       {phase === "importing" && (
         <div style={{ textAlign: "center", padding: "40px 20px" }}>
-          <div style={{ fontSize: "36px", marginBottom: "16px", animation: "spin 1s linear infinite" }}>⏳</div>
+          <div style={{ fontSize: "36px", marginBottom: "16px", animation: "spin 1s linear infinite" }}>...</div>
           <div style={{ fontSize: "18px", fontWeight: 700, color: "#fff", marginBottom: "8px" }}>
             Importing questions...
           </div>
@@ -470,10 +557,10 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
         </div>
       )}
 
-      {/* ════════════ DONE — Success ════════════ */}
+      {/* DONE — Success */}
       {phase === "done" && (
         <div style={{ textAlign: "center", padding: "40px 20px" }}>
-          <div style={{ fontSize: "48px", marginBottom: "16px" }}>✅</div>
+          <div style={{ fontSize: "48px", marginBottom: "16px" }}>Done</div>
           <div style={{ fontSize: "20px", fontWeight: 700, color: "#22c55e", marginBottom: "8px" }}>
             Import Complete!
           </div>
@@ -489,7 +576,7 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
             Switch to the Questions tab to review and publish them.
           </div>
           <button onClick={reset} style={S.btnPrimary}>
-            📄 Import Another File
+            Import Another File
           </button>
         </div>
       )}
@@ -530,7 +617,7 @@ const S = {
     border: "1px solid rgba(255,184,0,0.15)",
     borderRadius: "12px",
   } as React.CSSProperties,
-  colChip: {
+  colChipRequired: {
     display: "inline-block",
     padding: "2px 10px",
     borderRadius: "6px",
@@ -540,6 +627,17 @@ const S = {
     color: "#FFB800",
     background: "rgba(255,184,0,0.12)",
     border: "1px solid rgba(255,184,0,0.25)",
+  } as React.CSSProperties,
+  colChipOptional: {
+    display: "inline-block",
+    padding: "2px 10px",
+    borderRadius: "6px",
+    fontSize: "12px",
+    fontWeight: 700,
+    fontFamily: "monospace",
+    color: "rgba(255,255,255,0.5)",
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.12)",
   } as React.CSSProperties,
   summaryBar: {
     display: "flex",

@@ -24,8 +24,10 @@ export type Status     = "draft" | "published";
 export interface QuestionDoc {
   id:           string;               // Firestore doc ID
   domain:       Domain;
+  category:     string;
   subject:      string;
   difficulty:   Difficulty;
+  level:        1 | 2 | 3;
   question:     string;
   options:      [string, string, string, string];
   correct:      0 | 1 | 2 | 3;
@@ -41,8 +43,10 @@ export interface QuestionDoc {
 
 export interface QuestionInput {
   domain:       Domain;
+  category:     string;
   subject:      string;
   difficulty:   Difficulty;
+  level:        1 | 2 | 3;
   question:     string;
   options:      [string, string, string, string];
   correct:      0 | 1 | 2 | 3;
@@ -91,14 +95,18 @@ export async function getAllQuestions(): Promise<QuestionDoc[]> {
 export async function getPublishedQuestions(
   domain: Domain,
   subjects: string[],
+  difficulty?: Difficulty,
 ): Promise<QuestionDoc[]> {
   // Firestore compound query: published + active + domain
-  const q = query(
-    collection(db, COL),
+  const constraints = [
     where("status", "==", "published"),
     where("isActive", "==", true),
     where("domain", "==", domain),
-  );
+  ];
+  if (difficulty) {
+    constraints.push(where("difficulty", "==", difficulty));
+  }
+  const q = query(collection(db, COL), ...constraints);
   const snap = await getDocs(q);
   const all = snap.docs.map((d) => ({ id: d.id, ...d.data() } as QuestionDoc));
 

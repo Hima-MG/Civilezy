@@ -8,7 +8,6 @@ import {
   SUBJECTS_BY_DOMAIN,
   ADDON_SUBJECTS,
   ADDON_GROUPS,
-  DIFFICULTY_COUNTS,
   getQuestions,
   type Domain     as DataDomain,
   type Question,
@@ -82,10 +81,12 @@ const DOMAIN_SUBJECTS: Record<Domain, { core: SubjectOption[]; addon: SubjectOpt
   BTech:   buildSubjects("btech"),
 };
 
+const QUESTIONS_PER_GAME = 25;
+
 const DIFFICULTIES: DifficultyOption[] = [
-  { id:"Easy",   label:"Easy",   questions:`${DIFFICULTY_COUNTS.easy} Questions`,  desc:"Fundamental concepts & basics",  icon:"🌱", color:"emerald" },
-  { id:"Medium", label:"Medium", questions:`${DIFFICULTY_COUNTS.medium} Questions`, desc:"Application level problems",      icon:"⚡", color:"amber"   },
-  { id:"Hard",   label:"Hard",   questions:`${DIFFICULTY_COUNTS.hard} Questions`,  desc:"Exam-standard questions",         icon:"🔥", color:"rose"    },
+  { id:"Easy",   label:"Easy",   questions:`${QUESTIONS_PER_GAME} Questions`, desc:"Fundamental concepts & basics",  icon:"🌱", color:"emerald" },
+  { id:"Medium", label:"Medium", questions:`${QUESTIONS_PER_GAME} Questions`, desc:"Application level problems",      icon:"⚡", color:"amber"   },
+  { id:"Hard",   label:"Hard",   questions:`${QUESTIONS_PER_GAME} Questions`, desc:"Exam-standard questions",         icon:"🔥", color:"rose"    },
 ];
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -216,20 +217,28 @@ export default function GameArenaPage() {
 
   // ── Quiz engine helpers ──────────────────────────────────────────────────
   const [startingGame, setStartingGame] = useState(false);
+  const [fetchError, setFetchError]     = useState("");
 
   const handleStart = async () => {
     if (!isReady || startingGame) return;
     setStartingGame(true);
+    setFetchError("");
     try {
-      const dataDomain = DOMAIN_MAP[selectedDomain!];
-      const pool       = await getQuestions(dataDomain, selectedSubjects);
+      const dataDomain     = DOMAIN_MAP[selectedDomain!];
+      const dataDifficulty = selectedDifficulty!.toLowerCase() as "easy" | "medium" | "hard";
+      const pool = await getQuestions(dataDomain, selectedSubjects, dataDifficulty, 25);
       setQuestions(pool); setCurrentQuestionIndex(0); setSelectedAnswer(null);
       setScore(0); setXp(0); setShowResult(false); setAnimating(false);
       setStreakCount(0); setBestStreak(0); setTimedOut(false);
       setShowXpBurst(false); setClickedOpt(null); setGameStarted(true);
       setScoreSaved(false); setSaveError(""); setLeaderboard([]);
-    } catch { /* fallback handled inside getQuestions */ }
-    finally { setStartingGame(false); }
+    } catch (err) {
+      if (err instanceof Error && err.message === "NO_QUESTIONS") {
+        setFetchError("No questions available for your selection yet. Try different subjects or difficulty.");
+      } else {
+        setFetchError("Failed to load questions. Please check your connection and try again.");
+      }
+    } finally { setStartingGame(false); }
   };
 
   // ── Fetch leaderboard when results show ──
@@ -924,6 +933,13 @@ export default function GameArenaPage() {
           </div>
         )}
 
+        {/* Error message */}
+        {fetchError && (
+          <div className="flex items-center gap-3 bg-rose-500/10 border border-rose-500/30 rounded-xl px-5 py-3.5 mb-6 max-w-lg mx-auto">
+            <span className="text-rose-400 text-sm font-medium">{fetchError}</span>
+          </div>
+        )}
+
         <div className="flex justify-center">
           <button
             onClick={handleStart}
@@ -931,12 +947,21 @@ export default function GameArenaPage() {
             className={`relative flex items-center gap-3 px-10 py-4 rounded-2xl text-lg font-bold tracking-wide transition-all duration-300
               ${isReady && !startingGame ? "bg-gradient-to-r from-orange-500 to-amber-400 text-white shadow-xl shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-105 active:scale-100 cursor-pointer" : "bg-zinc-800 text-zinc-600 border border-zinc-700 cursor-not-allowed"}`}>
             {isReady && !startingGame && <span className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-200" />}
-            <span className="relative">🚀</span>
-            <span className="relative">{startingGame ? "Loading questions..." : isReady ? "Start Game" : "Complete all steps to start"}</span>
+            {startingGame ? (
+              <>
+                <span className="relative inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span className="relative">Loading questions...</span>
+              </>
+            ) : (
+              <>
+                <span className="relative">🚀</span>
+                <span className="relative">{isReady ? "Start Game" : "Complete all steps to start"}</span>
+              </>
+            )}
           </button>
         </div>
 
-        {!isReady && (
+        {!isReady && !fetchError && (
           <p className="text-center text-zinc-600 text-xs mt-3">
             {!selectedDomain ? "Select a domain to begin" : selectedSubjects.length === 0 ? "Pick at least one subject" : "Choose a difficulty level"}
           </p>

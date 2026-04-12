@@ -13,7 +13,7 @@ import {
   type Difficulty,
   type Status,
 } from "@/lib/questions";
-import { SUBJECTS_BY_DOMAIN } from "@/data/quesions";
+import { SUBJECTS_BY_DOMAIN } from "@/data/subjectHierarchy";
 import CsvImport from "@/components/admin/CsvImport";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -24,8 +24,10 @@ const DIFF_COLORS: Record<Difficulty, string> = { easy: "#22c55e", medium: "#f59
 
 const EMPTY_FORM: QuestionInput = {
   domain: "iti",
+  category: "",
   subject: "",
   difficulty: "medium",
+  level: 2,
   question: "",
   options: ["", "", "", ""],
   correct: 0,
@@ -160,8 +162,10 @@ export default function AdminQuestionsPage() {
   const startEdit = (q: QuestionDoc) => {
     setForm({
       domain: q.domain,
+      category: q.category || "",
       subject: q.subject,
       difficulty: q.difficulty,
+      level: q.level || 2,
       question: q.question,
       options: [...q.options],
       correct: q.correct,

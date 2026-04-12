@@ -13,7 +13,9 @@
       "WebFetch(domain:learn.civilezy.in)",
       "WebFetch(domain:civilezy.ezycourse.com)",
       "Bash(taskkill //F //IM node.exe)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx tsx:*)"
     ]
   }
 }
