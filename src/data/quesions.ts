@@ -17,100 +17,101 @@ export interface Question {
 // SUBJECTS BY DOMAIN
 // ---------------------------------------------------------------------------
 export const SUBJECTS_BY_DOMAIN: Record<Domain, string[]> = {
+
   iti: [
+
+    "Engineering Drawing & CAD",
+
     "Building Materials",
+
     "Building Construction",
-    "Surveying",
-    "Levelling & Contouring",
-    "Modern & Advanced Surveying Instruments",
-    "Engineering Drawing",
-    "AutoCAD",
-    "Building Drawing & Planning",
-    "Estimating & Costing",
-    "RCC Structures",
-    "Steel Structures",
-    "Hydraulics",
-    "Irrigation Engineering",
-    "Water Supply & Sanitation",
-    "Units, Mensuration & Applied Mechanics",
-    "Highway Engineering",
-    "Railway Engineering",
-    "Bridge Engineering",
-    "Advanced Engineering Mechanics",
-    "Tunnel Engineering",
-    "Building Planning Principles",
+
+    "Building Planning & Estimation",
+
+    "Basic Surveying",
+
+    "Advanced Surveying",
+
+    "Hydraulics & Irrigation",
+
+    "Mechanics & Mensuration",
+
+    "Transportation Engineering",
+
+    "Public Health & Sanitation",
+
+    "RCC & Steel Structures",
+
+    "Machine Drawing Elements",
+
+    "Limits, Fit & Tolerance",
+
   ],
+
   diploma: [
+
+    "Engineering Drawing & CAD",
+
     "Building Materials",
+
     "Construction Technology",
-    "Building Drawing & Planning",
-    "AutoCAD",
-    "Estimating & Costing",
-    "Valuation",
-    "RCC Structures",
-    "Steel Structures",
+
+    "Building Planning & Byelaws",
+
     "Surveying",
-    "Levelling & Contouring",
-    "Modern & Advanced Surveying Instruments",
-    "Hydraulics",
-    "Irrigation Engineering",
-    "Water Supply Engineering",
-    "Wastewater Engineering",
-    "Public Health & Sanitary Engineering",
+
     "Engineering Mechanics",
-    "Highway Engineering",
-    "Railway Engineering",
-    "Bridge Engineering",
-    "Tunnel Engineering",
-    "Theory of Structures",
-    "Geotechnical Engineering",
-    "Foundation Engineering",
-    "Advanced Environmental Engineering",
+
+    "Structural Engineering",
+
+    "Geotechnical & Foundation Engineering",
+
+    "Water Resources & Hydraulics",
+
+    "Environmental Engineering",
+
+    "Transportation Engineering",
+
+    "Estimation & Costing",
+
+    "Machine Drawing Elements",
+
+    "Limits, Fit & Tolerance",
+
   ],
+
   btech: [
+
+    "Engineering Mechanics & Solid Mechanics",
+
     "Structural Analysis",
-    "RCC Design",
-    "Steel Structures Design",
-    "Pre-stressed Concrete",
-    "Soil Mechanics",
-    "Foundation Engineering",
-    "Fluid Mechanics",
-    "Open Channel Flow & Hydraulics",
-    "Hydrology",
-    "Irrigation Engineering",
-    "Water Supply Engineering",
-    "Wastewater Engineering",
-    "Surveying & Levelling",
-    "Modern & Advanced Surveying Instruments",
+
+    "Structural Design",
+
+    "Geotechnical Engineering",
+
+    "Fluid Mechanics & Hydraulics",
+
+    "Water Resources Engineering",
+
+    "Environmental Engineering",
+
+    "Surveying & Geomatics",
+
     "Estimation, Costing & Valuation",
-    "Construction Management & CPM/PERT",
-    "Building Materials & Construction Technology",
-    "Highway Engineering",
-    "Railway Engineering",
-    "Bridge Engineering",
-    "Tunnel Engineering",
-    "Airport Engineering",
-    "Dock & Harbour Engineering",
-    "Air Pollution Control & Dispersion Modelling",
-    "Noise & Industrial Pollution Control",
-    "Solid & Hazardous Waste Management",
-    "Environmental Law & Regulations",
-    "Engineering Mathematics (AE PCB)",
-    "Advanced Water Supply Engineering",
-    "Advanced Wastewater Treatment & Reuse",
-    "Urban & Regional Planning",
-    "Basic Mechanical Engineering",
-    "Basic Chemical Engineering",
-    "Engineering Mathematics (Poly Lecturer)",
-    "Basic Electrical Engineering",
-    "Basic Electronics Engineering",
-    "Construction Management (Advanced)",
-    "Engineering Mathematics (Asst. Professor)",
-    "Plastic Analysis & Matrix Methods",
-    "Structural Dynamics",
-    "GIS & Geoinformatics",
+
+    "Construction Engineering & Management",
+
+    "Transportation Engineering",
+
+    "Urban Planning",
+
+    "Technical Mathematics",
+
   ],
+
 };
+
 
 // ---------------------------------------------------------------------------
 // ADDON SUBJECTS — flat list per domain
