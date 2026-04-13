@@ -113,24 +113,14 @@ function validateRow(raw: CsvRow, rowNum: number, adminName: string): ValidatedR
     if (exact) resolvedSubject = exact;
   }
 
-  // Category — auto-resolve from hierarchy if not provided or validate if provided
+  // Category — always auto-resolve from hierarchy (ignore CSV value)
   let resolvedCategory = "";
-  const rawCategory = raw.category?.trim() || "";
   if (domain && VALID_DOMAINS.includes(domain) && resolvedSubject) {
     const autoCategory = resolveCategory(domain, resolvedSubject);
-    if (rawCategory) {
-      // Validate provided category matches hierarchy
-      if (autoCategory && rawCategory.toLowerCase() !== autoCategory.toLowerCase()) {
-        errors.push(`Category "${rawCategory}" doesn't match subject — expected "${autoCategory}"`);
-      }
-      resolvedCategory = autoCategory || rawCategory;
+    if (autoCategory) {
+      resolvedCategory = autoCategory;
     } else {
-      // Auto-resolve
-      if (autoCategory) {
-        resolvedCategory = autoCategory;
-      } else if (resolvedSubject) {
-        errors.push(`Cannot auto-resolve category for subject "${resolvedSubject}"`);
-      }
+      errors.push(`Cannot auto-resolve category for subject "${resolvedSubject}"`);
     }
   }
 
