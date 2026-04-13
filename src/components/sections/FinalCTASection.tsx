@@ -5,7 +5,7 @@ import { EXTERNAL_URLS } from "@/lib/constants";
 // ─── URL Constants ──────────────────────────────────────────────────────────
 const LMS_FREE_TEST = EXTERNAL_URLS.freeTest;
 
-const WA_LINK = "https://wa.me/919074557825";
+const WA_LINK = EXTERNAL_URLS.telegram; 
 
 // ─── Stable hover handlers (defined once, not re-created per render) ─────────
 function onPrimaryEnter(e: React.MouseEvent<HTMLAnchorElement>) {
@@ -138,7 +138,7 @@ export default function FinalCTASection() {
             href={WA_LINK}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Join the CivilEzy WhatsApp community — opens in new tab"
+            aria-label="Join the CivilEzy Telegram community — opens in new tab"
             style={{
               background:     "transparent",
               color:          "white",
@@ -158,7 +158,7 @@ export default function FinalCTASection() {
             onMouseEnter={onSecondaryEnter}
             onMouseLeave={onSecondaryLeave}
           >
-            📱 Join WhatsApp Community
+            📱 Join Telegram Community
           </a>
         </div>
 
@@ -167,7 +167,7 @@ export default function FinalCTASection() {
           style={{ marginTop:"24px", fontSize:"13px", color:"rgba(255,255,255,0.55)" }}
           aria-label="CivilEzy trust guarantees"
         >
-          ✓ No credit card &nbsp;&nbsp;
+         
           ✓ Instant access &nbsp;&nbsp;
           ✓ Kerala PSC-specific &nbsp;&nbsp;
           ✓ Malayalam supported

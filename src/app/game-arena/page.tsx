@@ -70,9 +70,9 @@ function buildSubjects(domain: DataDomain): { core: SubjectOption[]; addon: Subj
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 const DOMAINS: DomainOption[] = [
-  { id:"ITI",     label:"ITI",     icon:"🔧", desc:"Industrial Training Institute" },
-  { id:"Diploma", label:"Diploma", icon:"📐", desc:"Diploma in Civil Engineering" },
-  { id:"BTech",   label:"BTech",   icon:"🎓", desc:"Bachelor of Technology" },
+  { id:"ITI",     label:"ITI",     icon:"🔧", desc:"Overseer Grade2 Grade3 Exams" },
+  { id:"Diploma", label:"Diploma", icon:"📐", desc:"FirstGrade Overseer,Instructor Level Exams" },
+  { id:"BTech",   label:"BTech",   icon:"🎓", desc:"AE level Exams" },
 ];
 
 const DOMAIN_SUBJECTS: Record<Domain, { core: SubjectOption[]; addon: SubjectOption[] }> = {
@@ -699,10 +699,10 @@ export default function GameArenaPage() {
 
             <ul className="space-y-2 mb-5">
               {[
-                "Real Kerala PSC mock tests — pool-mapped",
-                "Malayalam audio explanations 🎧",
-                "Smart analytics — track your weak areas",
-                "100+ department-specific papers",
+               " Real Kerala PSC mock tests — category-based",
+"Smart Interactive Lessons — Study, Revision & Exam Mode",
+"Malayalam Audio Lessons 🎧",
+"Graded quiz after each lesson — nail the topic before you move on!",
               ].map(item => (
                 <li key={item} className="flex items-start gap-2.5 text-sm text-zinc-300">
                   <span className="text-emerald-400 font-bold mt-0.5 shrink-0">✔</span>

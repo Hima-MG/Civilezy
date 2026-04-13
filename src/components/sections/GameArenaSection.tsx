@@ -16,11 +16,11 @@ interface TierDef {
 
 // ─── Static data ───────────────────────────────────────────────────────────
 const TIER_DEFS: TierDef[] = [
-  { icon:"🌱", name:"Rookie",  desc:"0 – 499 pts • Basics unlocked",       xp:"500 pts",    threshold:0     },
-  { icon:"📖", name:"Scholar", desc:"500 – 1,999 pts • Topic Tests",       xp:"2,000 pts",  threshold:500   },
-  { icon:"⚡", name:"Expert",  desc:"2,000 – 4,999 pts • Mock Tests",      xp:"5,000 pts",  threshold:2000  },
-  { icon:"🏅", name:"Master",  desc:"5,000 – 9,999 pts • Boss Rounds",     xp:"10,000 pts", threshold:5000  },
-  { icon:"🔥", name:"Legend",  desc:"10,000+ pts • Elite Access",           xp:"∞ pts",      threshold:10000 },
+  { icon:"🌱", name:"Rookie",  desc:"0 – 499 pts" ,       xp:"500 pts",    threshold:0     },
+  { icon:"📖", name:"Scholar", desc:"500 – 1,999 pts",       xp:"2,000 pts",  threshold:500   },
+  { icon:"⚡", name:"Expert",  desc:"2,000 – 4,999 pts",      xp:"5,000 pts",  threshold:2000  },
+  { icon:"🏅", name:"Master",  desc:"5,000 – 9,999 pts",     xp:"20,000 pts", threshold:5000  },
+  { icon:"🔥", name:"Legend",  desc:"10,000+ pts",           xp:"50000pts",      threshold:10000 },
 ];
 
 const AVATAR_COLORS = [

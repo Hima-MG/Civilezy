@@ -10,6 +10,7 @@ export const EXTERNAL_URLS = {
   privacy:  "https://learn.civilezy.in/en/privacy-policy-v2",
   freeTest: "https://learn.civilezy.in/en/login",
   contact:  "https://civilezy.in/en/contact-v2",
+  telegram:" https://t.me/civilezy_psc",
 } as const;
 
 // ─── Course pricing links (footer + levels section) ─────────────────────────
