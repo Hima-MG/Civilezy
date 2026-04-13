@@ -13,9 +13,8 @@ const URLS = {
 const NAV_LINKS = [
   { label: "Home",       href: "/"           },
   { label: "Game Arena", href: "/game-arena" },
-  { label: "Pricing",    href: "/pricing"    },
+  { label: "Courses",    href: "/pricing"    },
   { label: "Blog",       href: "https://learn.civilezy.in/blog" },
-  { label: "Admin",      href: "/admin/questions" },
 ] as const;
 
 export default function Navbar() {

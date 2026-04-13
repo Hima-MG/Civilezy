@@ -60,8 +60,8 @@ const QUIZ_BY_LEVEL: Record<Level, QuizData> = {
 
 const STATS = [
   { num: "5,200+",  label: "Active Students" },
-  { num: "98+",     label: "Rank Holders"    },
-  { num: "12,000+", label: "PSC Questions"   },
+  { num: "2000",     label: "Rank Holders"    },
+  { num: "50,000+", label: "PSC Questions"   },
   { num: "4.9★",    label: "Student Rating"  },
 ];
 
@@ -265,7 +265,7 @@ export default function Hero() {
             {/* Subtext */}
             <p style={{ fontSize:"17px", color:"rgba(255,255,255,0.85)", marginBottom:"28px", maxWidth:"480px", lineHeight:1.7 }}>
               The{" "}
-              <strong style={{ color:"#FF8534", fontWeight:700 }}>only Kerala PSC platform</strong>{" "}
+              <strong style={{ color:"#FF8534", fontWeight:700 }}>only Kerala CIVIL ENGINEERING PSC platform</strong>{" "}
               with pool-mapped content, Malayalam audio lessons, and a Game Arena that makes
               daily practice impossible to skip.
             </p>

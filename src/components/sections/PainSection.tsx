@@ -18,7 +18,7 @@ const PAIN_CARDS = [
   {
     icon:  "💸",
     title: "Coaching is Too Expensive",
-    desc:  "വലിയ coaching platforms ₹5,000–₹8,000 ഒറ്റത്തവണ വാങ്ങും — Kerala PSC-ന് യോജിക്കാത്ത generic content-ന്. എല്ലാവർക്കും ആ risk എടുക്കാൻ കഴിയില്ല.",
+    desc:  "വലിയ coaching platforms ₹30,000–₹50,000 ഒറ്റത്തവണ വാങ്ങും — Kerala PSC-ന് യോജിക്കാത്ത generic content-ന്. എല്ലാവർക്കും ആ risk എടുക്കാൻ കഴിയില്ല.",
   },
   {
     icon:  "📉",

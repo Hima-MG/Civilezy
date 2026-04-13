@@ -13,11 +13,20 @@ const solutions = [
     chipBorder: "rgba(255,98,0,0.25)",
     titleEn: "Smart Interactive Lessons",
     titleMl: "സ്മാർട്ട് ഇന്ററാക്ടീവ് ലെസ്സൺസ്",
-    bodyEn:
-      "Dynamic widgets and live quizzes embedded in every lesson — learning and practice happen together. A clear daily study roadmap so you always know exactly what to do next.",
-    bodyMl:
-      "ഓരോ lesson-ലും live quiz ഉണ്ട്. പഠനവും practice-ഉം ഒന്നിച്ച്. എന്ത് പഠിക്കണം, എപ്പോൾ പഠിക്കണം — daily roadmap നിങ്ങളെ guide ചെയ്യും.",
-    chip: "✓ Pool-mapped daily study plan",
+   bodyEn:
+
+
+
+"No more half-understood topics! Every topic is taught to 100% completion. Study Mode to learn it, Revision Mode to lock it in, Exam Mode to own it — our 3-mode system makes sure you walk into the exam hall fully loaded.",
+
+
+
+
+
+bodyMl:
+  "പകുതി മനസ്സിലായ ടോപ്പിക്കുകൾ ഇനി വേണ്ട! ഓരോ ടോപ്പിക്കും 100% പഠിച്ചു തീർക്കും. Study Mode-ൽ പഠിക്കുക, Revision Mode-ൽ ഉറപ്പിക്കുക, Exam Mode-ൽ തകർക്കുക — ഈ 3-മോഡ് സിസ്റ്റം നിങ്ങളെ എക്സാം ഹാളിലേക്ക് പൂർണ്ണ തയ്യാറെടുപ്പോടെ എത്തിക്കും.",
+
+chip:  "Study · Revision · Exam ",
     icon: (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
         <rect x="3" y="4" width="18" height="14" rx="3" stroke="#FF8534" strokeWidth="1.5" />
@@ -38,10 +47,10 @@ const solutions = [
     titleEn: "Malayalam Audio Lessons",
     titleMl: "മലയാളം ഓഡിയോ ലെസ്സൺസ്",
     bodyEn:
-      "Hard civil engineering concepts explained like a story — in Malayalam. No textbooks, no notes needed. Study while commuting or on a break. Anyone can learn, anytime, anywhere.",
-    bodyMl:
-      "Design, Analysis — കഥ പോലെ മലയാളത്തിൽ പഠിക്കാം. യാത്രയ്ക്കിടയിലോ, ഇടവേളയിലോ — notes ഇല്ലാതെ. കേട്ടു പഠിക്കാം — kettu padikkam!",
-    chip: "✓ Full syllabus in Malayalam audio",
+"Forget textbooks! Every tough civil engineering concept hits different when it's explained like a story — in pure Malayalam. Pop in your earphones and learn on the go — commute, lunch break, anywhere. If you understand Malayalam, you can crack PSC. Period.",
+bodyMl:
+"ടെക്സ്റ്റ്ബുക്ക് വേണ്ട, നോട്സ് വേണ്ട! കഠിനമായ Civil Engineering കോൺസെപ്റ്റുകൾ മലയാളത്തിൽ ഒരു കഥ പോലെ കേൾക്കൂ. യാത്രയിൽ, ഉച്ചഭക്ഷണ ഇടവേളയിൽ, എവിടെ വേണമെങ്കിലും പഠിക്കാം. മലയാളം അറിയാമെങ്കിൽ PSC ക്രാക്ക് ചെയ്യാം. അത്രേയുള്ളൂ!",
+  chip: "✓ Full syllabus in Malayalam audio",
     icon: (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="12" r="9" stroke="#FFB800" strokeWidth="1.5" />
@@ -62,10 +71,14 @@ const solutions = [
     titleEn: "Quiz-Based Learning & Tracking",
     titleMl: "Quiz വഴി പഠിക്കൂ, Exam-ന് Ready ആകൂ",
     bodyEn:
-      "After every lesson, practice quizzes reinforce what you learned. A live progress tracker shows exactly where you stand — so exam day holds no surprises. No more studying blind.",
-    bodyMl:
-      "ഓരോ lesson കഴിഞ്ഞും practice quiz. Progress tracker നിങ്ങളുടെ exam readiness കാണിക്കും. Exam-ന് പോകുമ്പോൾ ഇനി പേടി വേണ്ട.",
-    chip: "✓ Track progress · Exam-ready always",
+  
+"Just 10 questions. Retake until you own it — F to A, one attempt at a time. The live leaderboard doesn't lie. Your rank is waiting. Go get it!",
+
+
+bodyMl:
+  "വെറും 10 ചോദ്യങ്ങൾ. F-ൽ നിന്ന് A-ലേക്ക് — Retake ചെയ്യൂ, തകർക്കൂ. Live Leaderboard-ൽ നിങ്ങളുടെ പേര് മുകളിലേക്ക് കയറും. റാങ്ക് കാത്തിരിക്കുന്നു — പോയി നേടൂ!",
+
+chip: "✓ 10Q quizzes · Grades · Leaderboard",
     icon: (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
         <path d="M12 3l2.5 5.5L20 9.5l-4 4 1 5.5L12 16l-5 3 1-5.5-4-4 5.5-1z" stroke="#64C8FF" strokeWidth="1.4" strokeLinejoin="round" />
@@ -80,13 +93,13 @@ const solutions = [
     topBarColor: "#32C864",
     chipBg: "rgba(50,200,100,0.10)",
     chipBorder: "rgba(50,200,100,0.2)",
-    titleEn: "Affordable & Flexible Courses",
+    titleEn: "Affordable & Tailormade for You",
     titleMl: "നിങ്ങൾക്ക് ചേർന്ന Course, നിങ്ങളുടെ Budget-ൽ",
     bodyEn:
-      "Choose your course by qualification — ITI, Diploma, or AE — or by your preparation timeline. Monthly plans, no large upfront fees. Kerala PSC-specific content at a price anyone can afford.",
-    bodyMl:
-      "ITI ആണോ, Diploma ആണോ, AE ആണോ? Timeline short ആണോ? നിങ്ങൾക്ക് ചേർന്ന plan തിരഞ്ഞെടുക്കാം. Monthly payment — ഒറ്റത്തവണ വലിയ തുക വേണ്ട.",
-    chip: "✓ Monthly plans · ITI · Diploma · AE",
+"ITI, Diploma, or B.Tech — we've got your course! Short on time? Pick a timeline that fits your schedule. Pay monthly or go all-in with a one-time payment — you choose. Zero excuses, just results!   ",
+ bodyMl:
+" ITI, Diploma, അല്ലെങ്കിൽ B.Tech — നിങ്ങൾക്ക് പറ്റിയ കോഴ്സ് ഇവിടെയുണ്ട്! സമയം കുറവാണോ? നിങ്ങളുടെ schedule-നു യോജിച്ച timeline തിരഞ്ഞെടുക്കൂ. Monthly ആയി pay ചെയ്യാം, അല്ലെങ്കിൽ One-time ആയും — തീരുമാനം നിങ്ങളുടേത്. ഒഴികഴിവുകൾ വേണ്ട, റിസൾട്ട് മാത്രം!", 
+   chip: "✓ Flexible Payment Methods · ITI · Diploma · Btech",
     icon: (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="12" r="9" stroke="#32C864" strokeWidth="1.5" />

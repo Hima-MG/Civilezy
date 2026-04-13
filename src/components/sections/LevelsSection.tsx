@@ -29,48 +29,49 @@ const PRICING_LINKS: Record<DomainKey, string> = {
 // ─── Data ───────────────────────────────────────────────────────────────────
 const LEVEL_CARDS: LevelCardData[] = [
   {
-    scheme:    "orange",
-    domain:    "ITI",
-    tag:       "ITI LEVEL",
-    title:     "ITI Civil PSC",
-    desc:      "For ITI Civil Trade holders. Covers KWA Helper, PWD Mazdoor, LSGD posts and all ITI-grade civil engineering PSC pools.",
-    pools:     ["KWA-ITI","PWD-ITI","LSGD-ITI","IRD-ITI"],
-    info:      "3,200+ Questions • 45 Mock Tests • Malayalam Notes",
-    cta:       "Start ITI Prep →",
-    ariaLabel: "Start ITI Civil PSC preparation",
+   scheme:    "orange",
+domain:    "ITI",
+tag:       "ITI LEVEL",
+title:     "Civil PSC – ITI",
+desc:      "For Overseer / Draughtsman Gr 2 & 3, Tradesman, Tracer, Work Superintendent and more — across various Kerala departments.",
+pools:     ["KWA", "PWD", "LSGD", "Irrigation"],
+info:      "30,000+ Questions • 1,000+ Mock Tests • Smart Interactive Lessons • Bite-sized Video Lectures • Malayalam Audio Lessons • Smart Practice Quiz",
+cta:       "Start ITI Prep →",
+ariaLabel: "Start ITI Civil PSC preparation",
   },
   {
-    scheme:    "gold",
-    domain:    "Diploma",
-    tag:       "DIPLOMA LEVEL",
-    title:     "Diploma Civil PSC",
-    desc:      "For Diploma Civil Engineering holders. Targets Overseer, Site Supervisor, Technical Assistant posts across all Kerala departments.",
-    pools:     ["DIP-G1","KWA-DIP","PWD-DIP","KSEB-DIP"],
-    info:      "5,800+ Questions • 72 Mock Tests • Bilingual",
-    cta:       "Start Diploma Prep →",
-    ariaLabel: "Start Diploma Civil PSC preparation",
+   scheme:    "gold",
+domain:    "Diploma",
+tag:       "DIPLOMA LEVEL",
+title:     "Civil PSC – Diploma",
+desc:      "For Diploma Civil Engineering holders. Targets Overseer Gr 1, Overseer Gr 2 & 3, Junior Instructor, Site Engineer etc. across various Kerala departments.",
+pools:     ["PWD", "Irrigation", "LSGD", "KWA", "Harbour", "KSEB"],
+info:      "50,000+ Questions • 1200+ Mock Tests • Smart Interactive Lessons • Bite-sized Video Lectures • Malayalam Audio Lessons • Smart Practice Quiz",
+cta:       "Start Diploma Prep →",
+ariaLabel: "Start Diploma Civil PSC preparation",
   },
   {
     scheme:    "blue",
-    domain:    "BTech",
-    tag:       "AE / DEGREE",
-    title:     "AE / B.Tech PSC",
-    desc:      "For B.Tech Civil Engineering graduates. Targets Assistant Engineer posts in KWA, PWD, LSGD, KSEB — the most competitive PSC pool.",
-    pools:     ["AE-KWA","AE-PWD","AE-LSGD","AE-KSEB"],
-    info:      "7,400+ Questions • 95 Mock Tests • Expert Notes",
-    cta:       "Start AE Prep →",
-    ariaLabel: "Start AE / BTech Civil PSC preparation",
+domain:    "BTech",
+tag:       "B.TECH LEVEL",
+title:     "Civil PSC – B.Tech",
+desc:      "For B.Tech Civil Engineering graduates. Targets Assistant Engineer posts across various Kerala departments.",
+pools:     ["PWD", "Irrigation", "LSGD", "KWA", "PCB"],
+info:      "70,000+ Questions • 1500+ Mock Tests • Smart Interactive Lessons • Bite-sized Video Lectures • Malayalam Audio Lessons • Smart Practice Quiz • Rank Booster Lessons • AE Level Mock Tests",
+cta:       "Start B.Tech Prep →",
+ariaLabel: "Start B.Tech Civil PSC preparation",
   },
   {
     scheme:    "emerald",
-    domain:    "Surveyor",
-    tag:       "SURVEYOR",
-    title:     "Surveyor PSC",
-    desc:      "For Surveyor license holders. Covers Land Surveyor, Survey Supervisor, and all surveyor-grade Kerala PSC civil engineering pools.",
-    pools:     ["SUR-KWA","SUR-PWD","SUR-LSGD","SUR-REV"],
-    info:      "2,800+ Questions • 38 Mock Tests • Malayalam Notes",
-    cta:       "Start Surveyor Prep →",
-    ariaLabel: "Start Surveyor Civil PSC preparation",
+  
+domain:    "Surveyor",
+tag:       "SURVEYOR",
+title:     "Surveyor Course",
+desc:      "For ITI Surveyor license holders. Covers all surveyor-grade Kerala PSC civil engineering pools — Surveyor Gr II, Tradesman (Survey) and others.",
+pools:     ["KWA", "Survey & Land Records", "Tech. Education", "Groundwater Dept."],
+info:      "30,000+ Questions • 1,000+ Mock Tests • Smart Interactive Lessons • Bite-sized Video Lectures • Malayalam Audio Lessons • Smart Practice Quiz",
+cta:       "Start Surveyor Prep →",
+ariaLabel: "Start Surveyor Civil PSC preparation",
   },
 ];
 
@@ -157,13 +158,12 @@ export default function LevelsSection() {
         >
           Choose Your{" "}
           <span style={{ background:"linear-gradient(135deg,#FF6200,#FFB800)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>
-            Exam Pool
+            Course Category
           </span>
         </h2>
 
         <p style={{ fontSize:"17px", color:"rgba(255,255,255,0.85)", lineHeight:1.7, margin:0 }}>
-          Kerala PSC Civil Engineering follows a strict pool-based system.
-          We&apos;ve mapped every question to the exact pool — something no other platform does.
+          Kerala PSC Civil Engineering is category-driven — and so are we. Every lesson, every question, every mock test is mapped precisely to your course category. No guesswork, no irrelevant content. Just what you need, exactly when you need it.
         </p>
       </div>
 
