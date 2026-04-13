@@ -6,6 +6,7 @@ import {
   addQuestion,
   updateQuestion,
   deleteQuestion,
+  publishAllDrafts,
   computeStats,
   type QuestionDoc,
   type QuestionInput,
@@ -265,9 +266,27 @@ export default function AdminQuestionsPage() {
             />
           </div>
 
-          {/* Count */}
-          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.45)", marginBottom: "12px" }}>
-            Showing {filtered.length} of {questions.length} questions
+          {/* Count + Publish All */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+            <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.45)" }}>
+              Showing {filtered.length} of {questions.length} questions
+            </div>
+            {filtered.filter((q) => q.status === "draft").length > 0 && (
+              <button
+                onClick={async () => {
+                  const drafts = filtered.filter((q) => q.status === "draft");
+                  if (!confirm(`Publish ${drafts.length} draft question${drafts.length !== 1 ? "s" : ""}?`)) return;
+                  try {
+                    await publishAllDrafts(drafts.map((q) => q.id), adminName);
+                    flash(`Published ${drafts.length} question${drafts.length !== 1 ? "s" : ""}`);
+                    await fetchAll();
+                  } catch { flash("Failed to publish"); }
+                }}
+                style={{ ...S.btnPrimary, fontSize: "12px", padding: "6px 16px" }}
+              >
+                Publish All Drafts ({filtered.filter((q) => q.status === "draft").length})
+              </button>
+            )}
           </div>
 
           {/* Table */}

@@ -171,6 +171,36 @@ export function computeStats(questions: QuestionDoc[]): {
   };
 }
 
+// ─── Batch publish all drafts ───────────────────────────────────────────────
+
+export async function publishAllDrafts(
+  draftIds: string[],
+  reviewedBy: string,
+  onProgress?: (done: number, total: number) => void,
+): Promise<number> {
+  const BATCH_SIZE = 500;
+  let done = 0;
+
+  for (let i = 0; i < draftIds.length; i += BATCH_SIZE) {
+    const chunk = draftIds.slice(i, i + BATCH_SIZE);
+    const batch = writeBatch(db);
+
+    for (const id of chunk) {
+      batch.update(doc(db, COL, id), {
+        status: "published",
+        reviewedBy,
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    await batch.commit();
+    done += chunk.length;
+    onProgress?.(done, draftIds.length);
+  }
+
+  return done;
+}
+
 // ─── Batch import (CSV bulk upload) ─────────────────────────────────────────
 
 /**
