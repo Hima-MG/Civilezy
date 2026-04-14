@@ -107,8 +107,8 @@ const ROWS: ComparisonRow[] = [
     isLast: false,
   },
   {
-    feature: "Course Specific Mentorship System",
-    us: "✓ Regular sessions",
+    feature: "Mentorship System",
+    us: "✓ Course Specific",
     usIsCheck: true,
     them1: "No mentorship",
     them1Cross: false,
@@ -117,8 +117,8 @@ const ROWS: ComparisonRow[] = [
     isLast: false,
   },
   {
-    feature: "24 hr Active Community Study",
-    us: "✓ Included",
+    feature: "Study Community",
+    us: "✓ 24 hr Active",
     usIsCheck: true,
     them1: "No community",
     them1Cross: false,
