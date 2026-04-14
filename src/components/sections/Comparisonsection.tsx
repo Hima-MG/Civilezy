@@ -1,74 +1,140 @@
-"use client";
 
-// Kept as Client Component solely for row onMouseEnter/Leave hover effects.
-// If you want a pure Server Component, remove the hover handlers and use
-// a CSS :hover rule in globals.css instead.
+"use client";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface ComparisonRow {
-  feature:    string;
-  us:         string;
+  feature: string;
+  us: string;
   usIsCheck?: boolean;
-  usIsGold?:  boolean;
-  them1:      string;
+  usIsGold?: boolean;
+  them1: string;
   them1Cross: boolean;
-  them2:      string;
+  them2: string;
   them2Cross: boolean;
-  isLast:     boolean;
+  isLast: boolean;
 }
 
 // ─── Data ───────────────────────────────────────────────────────────────────
 const ROWS: ComparisonRow[] = [
   {
-    feature:"Kerala PSC Pool-Based Tests",
-    us:"✓ Exact pools",          usIsCheck:true,
-    them1:"✗",  them1Cross:true,
-    them2:"✗",  them2Cross:true,  isLast:false,
+    feature: "Kerala PSC Category-Based Tests",
+    us: "✓ Exact category",
+    usIsCheck: true,
+    them1: "Generic tests only",
+    them1Cross: false,
+    them2: "Rarely PSC-specific",
+    them2Cross: false,
+    isLast: false,
   },
   {
-    feature:"Malayalam Content",
-    us:"✓ Full support",          usIsCheck:true,
-    them1:"✗",  them1Cross:true,
-    them2:"✗",  them2Cross:true,  isLast:false,
+    feature: "Smart Interactive Lessons",
+    us: "✓ Full system",
+    usIsCheck: true,
+    them1: "Videos only",
+    them1Cross: false,
+    them2: "Classroom notes PDF",
+    them2Cross: false,
+    isLast: false,
   },
   {
-    feature:"ITI / Diploma / AE Split",
-    us:"✓ All 3 pools",           usIsCheck:true,
-    them1:"Partial", them1Cross:false,
-    them2:"✗",  them2Cross:true,  isLast:false,
+    feature: "Malayalam Audio Lessons",
+    us: "✓ Full support",
+    usIsCheck: true,
+    them1: "✗",
+    them1Cross: true,
+    them2: "✗",
+    them2Cross: true,
+    isLast: false,
   },
   {
-    feature:"Department-Specific Papers (KWA, PWD)",
-    us:"✓ All depts",             usIsCheck:true,
-    them1:"✗",  them1Cross:true,
-    them2:"✗",  them2Cross:true,  isLast:false,
+    feature: "Graded Practice Quiz per Lesson",
+    us: "✓ Every lesson",
+    usIsCheck: true,
+    them1: "✗",
+    them1Cross: true,
+    them2: "✗",
+    them2Cross: true,
+    isLast: false,
   },
   {
-    feature:"Gamified Learning (XP, Streaks)",
-    us:"✓ Full system",           usIsCheck:true,
-    them1:"Basic", them1Cross:false,
-    them2:"✗",  them2Cross:true,  isLast:false,
+    feature: "Live Leaderboard & Progress Tracking",
+    us: "✓ Full system",
+    usIsCheck: true,
+    them1: "✗",
+    them1Cross: true,
+    them2: "✗",
+    them2Cross: true,
+    isLast: false,
   },
   {
-    feature:"Price (Full Access)",
-    us:"From ₹1,800/mo",          usIsGold:true,
-    them1:"₹5,999/yr", them1Cross:false,
-    them2:"₹7,200/yr", them2Cross:false, isLast:false,
+    feature: "Daily Study Plan & Roadmap",
+    us: "✓ Exact roadmap",
+    usIsCheck: true,
+    them1: "✗",
+    them1Cross: true,
+    them2: "✗",
+    them2Cross: true,
+    isLast: false,
   },
   {
-    feature:"Weekly Live Mentorship",
-    us:"✓ Included",              usIsCheck:true,
-    them1:"Paid extra", them1Cross:false,
-    them2:"Paid extra", them2Cross:false, isLast:true,
+    feature: "ITI / Diploma / B.Tech Split",
+    us: "✓ All 3 categories",
+    usIsCheck: true,
+    them1: "One-size-fits-all",
+    them1Cross: false,
+    them2: "Rarely separated",
+    them2Cross: false,
+    isLast: false,
+  },
+  {
+    feature: "Transparent Pricing",
+    us: "✓ Always published",
+    usIsCheck: true,
+    them1: "Hidden charges",
+    them1Cross: false,
+    them2: "Fee on enquiry only",
+    them2Cross: false,
+    isLast: false,
+  },
+  {
+    feature: "Flexible Monthly Plans",
+    us: "✓ From ₹1,800/mo",
+    usIsGold: true,
+    them1: "Annual only",
+    them1Cross: false,
+    them2: "Lump sum only",
+    them2Cross: false,
+    isLast: false,
+  },
+  {
+    feature: "Coaching & Mentor Doubt Sessions",
+    us: "✓ Regular sessions",
+    usIsCheck: true,
+    them1: "No mentorship",
+    them1Cross: false,
+    them2: "Paid extra",
+    them2Cross: false,
+    isLast: false,
+  },
+  {
+    feature: "Active Community for Discussions",
+    us: "✓ Included",
+    usIsCheck: true,
+    them1: "No community",
+    them1Cross: false,
+    them2: "Closed WhatsApp group",
+    them2Cross: false,
+    isLast: true,
   },
 ];
 
-// ─── Row hover style helpers (avoids inline function creation per render) ──
-const hoverOn  = (e: React.MouseEvent<HTMLDivElement>) => {
-  (e.currentTarget as HTMLDivElement).style.background = "rgba(255,98,0,0.04)";
+// ─── Hover Helpers ──────────────────────────────────────────────────────────
+const hoverOn = (e: React.MouseEvent<HTMLDivElement>) => {
+  e.currentTarget.style.background = "rgba(255,98,0,0.04)";
 };
+
 const hoverOff = (e: React.MouseEvent<HTMLDivElement>) => {
-  (e.currentTarget as HTMLDivElement).style.background = "transparent";
+  e.currentTarget.style.background = "transparent";
 };
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -76,81 +142,113 @@ export default function ComparisonSection() {
   return (
     <section
       aria-labelledby="comparison-heading"
-      style={{ background:"#060D1A", padding:"80px 5%" }}
+      style={{ background: "#060D1A", padding: "90px 5%" }}
     >
-      {/* ── Header ─────────────────────────────────────────────── */}
-      <div style={{ textAlign:"center", maxWidth:"700px", margin:"0 auto 60px" }}>
-        <div style={styles.tag} aria-hidden="true">WHY CivilEzy</div>
+      {/* Header */}
+      <div style={{ textAlign: "center", maxWidth: "760px", margin: "0 auto 60px" }}>
+        <div style={styles.tag}>WHY CIVILEZY</div>
 
         <h2 id="comparison-heading" style={styles.heading}>
-          We&apos;re Not Just{" "}
-          <span style={styles.highlight}>Different</span>
-          {" "}— We&apos;re Built For You
+          Built Specifically For{" "}
+          <span style={styles.highlight}>Kerala PSC Aspirants</span>
         </h2>
 
         <p style={styles.sub}>
-          National platforms serve 500 million students. We serve one specific
-          student — a Kerala PSC Civil Engineering aspirant. That&apos;s our entire focus.
+          Most platforms offer generic content for everyone. CivilEzy is
+          purpose-built for Kerala PSC students with category-based preparation,
+          interactive learning, mentorship, and structured study systems
+          designed for real exam success.
         </p>
       </div>
 
-      {/* ── Table wrapper — overflow-x:auto for mobile scrollability ── */}
+      {/* Table */}
       <div
-        style={{ maxWidth:"900px", margin:"0 auto", overflowX:"auto", WebkitOverflowScrolling:"touch" }}
-        role="region"
-        aria-label="Feature comparison between CivilEzy, Online Platforms, and Others"
+        style={{
+          maxWidth: "1100px",
+          margin: "0 auto",
+          overflowX: "auto",
+          WebkitOverflowScrolling: "touch",
+        }}
       >
         <div
-          style={{ minWidth:"560px", borderRadius:"20px", overflow:"hidden", border:"1px solid rgba(255,255,255,0.08)" }}
-          role="table"
-          aria-label="Platform comparison table"
+          style={{
+            minWidth: "700px",
+            borderRadius: "20px",
+            overflow: "hidden",
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(255,255,255,0.02)",
+            backdropFilter: "blur(10px)",
+          }}
         >
-          {/* ── Table head ── */}
+          {/* Head */}
           <div
-            role="row"
             style={{
-              display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr",
-              background:"rgba(255,255,255,0.05)",
-              padding:"16px 24px",
-              fontFamily:"Rajdhani, sans-serif", fontSize:"18px", fontWeight:700,
-              borderBottom:"1px solid rgba(255,255,255,0.08)",
+              display: "grid",
+              gridTemplateColumns: "2fr 1fr 1fr 1fr",
+              padding: "18px 24px",
+              background: "rgba(255,255,255,0.05)",
+              borderBottom: "1px solid rgba(255,255,255,0.08)",
+              fontWeight: 700,
+              fontSize: "16px",
+              fontFamily: "Rajdhani, sans-serif",
             }}
           >
-            <div role="columnheader" style={{ color:"rgba(255,255,255,0.7)" }}>Feature</div>
-            <div role="columnheader" style={{ color:"#FF8534" }}>CivilEzy</div>
-            <div role="columnheader">Online Platforms</div>
-            <div role="columnheader">Others</div>
+            <div style={{ color: "rgba(255,255,255,0.65)" }}>Feature</div>
+            <div style={{ color: "#FF8534" }}>CivilEzy</div>
+            <div style={{ color: "#ffffff" }}>Online Platforms</div>
+            <div style={{ color: "#ffffff" }}>Others</div>
           </div>
 
-          {/* ── Table rows ── */}
+          {/* Rows */}
           {ROWS.map((row) => (
             <div
               key={row.feature}
-              role="row"
-              style={{
-                display:"grid", gridTemplateColumns:"2fr 1fr 1fr 1fr",
-                padding:"14px 24px",
-                borderBottom: row.isLast ? "none" : "1px solid rgba(255,255,255,0.05)",
-                fontSize:"14px", alignItems:"center",
-                transition:"background 0.2s",
-              }}
               onMouseEnter={hoverOn}
               onMouseLeave={hoverOff}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "2fr 1fr 1fr 1fr",
+                padding: "16px 24px",
+                borderBottom: row.isLast
+                  ? "none"
+                  : "1px solid rgba(255,255,255,0.05)",
+                alignItems: "center",
+                transition: "all 0.2s ease",
+                fontSize: "14px",
+              }}
             >
-              <div role="cell" style={{ color:"rgba(255,255,255,0.85)" }}>{row.feature}</div>
+              <div style={{ color: "rgba(255,255,255,0.85)" }}>{row.feature}</div>
+
               <div
-                role="cell"
                 style={{
-                  color:      row.usIsCheck ? "#32C864" : row.usIsGold ? "#FFB800" : "#FF8534",
+                  color: row.usIsCheck
+                    ? "#32C864"
+                    : row.usIsGold
+                    ? "#FFB800"
+                    : "#FF8534",
                   fontWeight: 700,
                 }}
               >
                 {row.us}
               </div>
-              <div role="cell" style={{ color: row.them1Cross ? "#FF3232" : "rgba(255,255,255,0.55)" }}>
+
+              <div
+                style={{
+                  color: row.them1Cross
+                    ? "#FF4D4D"
+                    : "rgba(255,255,255,0.55)",
+                }}
+              >
                 {row.them1}
               </div>
-              <div role="cell" style={{ color: row.them2Cross ? "#FF3232" : "rgba(255,255,255,0.55)" }}>
+
+              <div
+                style={{
+                  color: row.them2Cross
+                    ? "#FF4D4D"
+                    : "rgba(255,255,255,0.55)",
+                }}
+              >
                 {row.them2}
               </div>
             </div>
@@ -158,57 +256,52 @@ export default function ComparisonSection() {
         </div>
       </div>
 
-      {/* ── Mobile scroll hint (visible only on small screens) ── */}
-      <p
-        style={{ textAlign:"center", fontSize:"12px", color:"rgba(255,255,255,0.3)", marginTop:"12px" }}
-        aria-hidden="true"
-        className="comparison-scroll-hint"
-      >
-        ← Scroll to see full comparison →
-      </p>
-
-      <style>{`
-        .comparison-scroll-hint { display: none; }
-        @media (max-width: 640px) {
-          .comparison-scroll-hint { display: block; }
-        }
-      `}</style>
+      {/* Mobile Hint */}
+      <p style={styles.scrollHint}>← Scroll horizontally on mobile →</p>
     </section>
   );
 }
 
-// ─── Shared styles ──────────────────────────────────────────────────────────
+// ─── Shared Styles ──────────────────────────────────────────────────────────
 const styles = {
   tag: {
-    display:"inline-block",
-    background:"rgba(255,98,0,0.15)",
-    border:"1px solid rgba(255,98,0,0.3)",
-    borderRadius:"20px",
-    padding:"4px 16px",
-    fontSize:"12px",
-    fontWeight:700,
-    color:"#FF8534",
-    letterSpacing:"0.5px",
-    marginBottom:"16px",
-  } as React.CSSProperties,
+    display: "inline-block",
+    background: "rgba(255,98,0,0.15)",
+    border: "1px solid rgba(255,98,0,0.3)",
+    borderRadius: "20px",
+    padding: "5px 16px",
+    fontSize: "12px",
+    fontWeight: 700,
+    color: "#FF8534",
+    marginBottom: "18px",
+  },
+
   heading: {
-    fontFamily:"Rajdhani, sans-serif",
-    fontSize:"clamp(28px, 4vw, 44px)",
-    fontWeight:700,
-    lineHeight:1.2,
-    marginBottom:"16px",
-    color:"#ffffff",
-  } as React.CSSProperties,
+    fontFamily: "Rajdhani, sans-serif",
+    fontSize: "clamp(30px, 5vw, 48px)",
+    fontWeight: 700,
+    lineHeight: 1.15,
+    color: "#ffffff",
+    marginBottom: "18px",
+  },
+
   highlight: {
-    background:"linear-gradient(135deg, #FF6200, #FFB800)",
-    WebkitBackgroundClip:"text",
-    WebkitTextFillColor:"transparent",
-    backgroundClip:"text",
-  } as React.CSSProperties,
+    background: "linear-gradient(135deg, #FF6200, #FFB800)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+  },
+
   sub: {
-    fontSize:"17px",
-    color:"rgba(255,255,255,0.85)",
-    lineHeight:1.7,
-    margin:0,
-  } as React.CSSProperties,
+    fontSize: "17px",
+    color: "rgba(255,255,255,0.75)",
+    lineHeight: 1.8,
+    margin: 0,
+  },
+
+  scrollHint: {
+    textAlign: "center" as const,
+    fontSize: "12px",
+    color: "rgba(255,255,255,0.3)",
+    marginTop: "12px",
+  },
 } as const;

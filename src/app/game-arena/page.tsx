@@ -12,6 +12,7 @@ import {
   type Domain     as DataDomain,
   type Question,
 } from "@/data/quesions";
+import ReportIssueModal from "@/components/game/ReportIssueModal";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Domain = "ITI" | "Diploma" | "BTech";
@@ -138,6 +139,11 @@ export default function GameArenaPage() {
   const [saveError,       setSaveError]       = useState("");
   const [leaderboard,     setLeaderboard]     = useState<LeaderboardEntry[]>([]);
   const [lbLoading,       setLbLoading]       = useState(false);
+
+  // ── Report issue state ──
+  const [showReportModal,     setShowReportModal]     = useState(false);
+  const [reportedQuestionIds, setReportedQuestionIds] = useState<Set<string>>(new Set());
+  const [showReportToast,     setShowReportToast]     = useState(false);
 
   const timerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -421,6 +427,16 @@ export default function GameArenaPage() {
                   {currentQ.subject}
                 </span>
                 <span className="text-zinc-600 text-xs">{selectedDifficulty}</span>
+                <span className="flex-1" />
+                {!reportedQuestionIds.has(currentQ.id) && (
+                  <button
+                    onClick={() => setShowReportModal(true)}
+                    className="flex items-center gap-1 text-zinc-600 hover:text-orange-400 text-xs transition-colors"
+                    aria-label="Report issue with this question"
+                  >
+                    🚩 Report
+                  </button>
+                )}
               </div>
               <p className="text-white text-lg font-semibold leading-relaxed">{currentQ.question}</p>
             </div>
@@ -483,6 +499,29 @@ export default function GameArenaPage() {
             )}
           </div>
         </div>
+
+        {/* Report Issue Modal */}
+        {showReportModal && currentQ && (
+          <ReportIssueModal
+            questionId={currentQ.id}
+            questionText={currentQ.question}
+            selectedDomain={selectedDomain ?? ""}
+            selectedDifficulty={selectedDifficulty ?? ""}
+            onClose={() => setShowReportModal(false)}
+            onSubmitted={() => {
+              setReportedQuestionIds(prev => new Set(prev).add(currentQ.id));
+              setShowReportToast(true);
+              setTimeout(() => setShowReportToast(false), 3000);
+            }}
+          />
+        )}
+
+        {/* Report success toast */}
+        {showReportToast && (
+          <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-emerald-500/90 text-white px-5 py-3 rounded-xl text-sm font-semibold shadow-lg shadow-emerald-500/20 backdrop-blur-sm">
+            <span>✓</span> Thanks! Our team will review this issue.
+          </div>
+        )}
       </main>
     );
   }
@@ -768,6 +807,10 @@ export default function GameArenaPage() {
           <h1 className="text-4xl sm:text-5xl font-extrabold mb-3 tracking-tight">
             🎮{" "}
             <span className="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">Game Arena</span>
+            {" "}
+            <span className="inline-block align-middle bg-orange-500/15 border border-orange-500/40 text-orange-400 text-[11px] font-bold px-3 py-1 rounded-full shadow-[0_0_12px_rgba(255,98,0,0.3)] tracking-widest">
+              BETA
+            </span>
           </h1>
           <p className="text-zinc-400 text-lg max-w-md mx-auto">Learn PSC Civil Engineering by playing</p>
         </div>

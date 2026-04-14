@@ -61,6 +61,10 @@ h1, h2, h3, h4, h5 {
   80%  { opacity: 1; transform: translate(-50%,-50%) scale(1); }
   100% { opacity: 0; transform: translate(-50%,-80%) scale(0.9); }
 }
+@keyframes pulse {
+  0%, 100% { opacity: 1;   }
+  50%      { opacity: 0.4; }
+}
 @keyframes stickyPulse {
   0%, 100% { opacity: 1;   transform: scale(1);    }
   50%      { opacity: 0.5; transform: scale(0.75); }

@@ -92,15 +92,15 @@ export default function StickyCTA() {
               </span>
             </div>
             <div style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"18px", fontWeight:700, color:"#ffffff", lineHeight:1.2 }}>
-              98+ rank holders started here for free
+              2000+ rank holders started here for free
             </div>
             {/* Trust signals — ✓ is decorative punctuation */}
             <p style={{ fontSize:"13px", color:"rgba(255,255,255,0.45)", marginTop:"2px", margin:"2px 0 0" }}
-               aria-label="No sign-up required. Kerala PSC-specific. Free forever."
+               aria-label="sign-up Now. Kerala Civil PSC-specific. Start your demo."
             >
-              <span aria-hidden="true">✓</span> No sign-up &nbsp;·&nbsp;
-              <span aria-hidden="true">✓</span> Kerala PSC-specific &nbsp;·&nbsp;
-              <span aria-hidden="true">✓</span> Free forever
+              <span aria-hidden="true">✓</span> Sign-up Now &nbsp;·&nbsp;
+              <span aria-hidden="true">✓</span> Kerala Civil PSC-specific &nbsp;·&nbsp;
+              <span aria-hidden="true">✓</span> Start Your Demo!
             </p>
           </div>
 
