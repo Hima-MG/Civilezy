@@ -782,7 +782,7 @@ export default function GameArenaPage() {
             </div>
 
             <p className="text-xs text-zinc-600 text-center mt-3">
-              ✓ Free to start &nbsp;·&nbsp; ✓ No credit card &nbsp;·&nbsp; ✓ Kerala PSC-specific
+              ✓ Free to start &nbsp;·&nbsp;  ✓ Kerala PSC-specific
             </p>
           </div>
 

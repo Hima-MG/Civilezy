@@ -24,7 +24,7 @@ interface Stat {
 }
 
 const STATS: Stat[] = [
-  { num: "1,000+", label: "Government Job Placements" },
+  { num: "2,000+", label: "Government Job Placements" },
   { num: "5,200+", label: "Active Students" },
   // { num: "+43%",   label: "Avg Score Improvement / 30 Days" },
   { num: "4.9★",   label: "Average Student Rating" },
@@ -161,7 +161,7 @@ export default function TestimonialsSection() {
       {/* ── Conversion banner ── */}
       <div className="text-center mb-10">
         <span className="inline-block bg-gradient-to-r from-[#FF6200] to-[#FFB800] text-white text-sm sm:text-base font-bold px-6 py-2 rounded-full shadow-lg">
-          🏆 5000+ students placed in Government jobs
+          🏆 2000+ students placed in Government jobs
         </span>
       </div>
 
@@ -169,7 +169,7 @@ export default function TestimonialsSection() {
       <div style={{ textAlign: "center", maxWidth: "700px", margin: "0 auto 60px" }}>
         <div aria-hidden="true" style={styles.tag}>RANK HOLDERS SPEAK</div>
         <h2 id="testimonials-heading" style={styles.heading}>
-          5000+ Students Got{" "}
+          2000+ Students Got{" "}
           <span style={styles.highlight}>Government Jobs.</span>
         </h2>
         <p style={styles.sub}>

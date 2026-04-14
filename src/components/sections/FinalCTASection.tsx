@@ -170,7 +170,7 @@ export default function FinalCTASection() {
          
           ✓ Instant access &nbsp;&nbsp;
           ✓ Kerala PSC-specific &nbsp;&nbsp;
-          ✓ Malayalam supported
+          ✓ Malayalam Audio lessons &nbsp;&nbsp;
         </p>
       </div>
     </section>

@@ -34,7 +34,7 @@ const AVATAR_COLORS = [
 ];
 
 const RANK_COLORS = ["#FFB800", "#C0C0C0", "#CD7F32"];
-const BADGES = ["🔥 Streak Champion","⚡ Speed King","🎯 Topic Master","🌟 30-Day Legend"] as const;
+// const BADGES = ["🔥 Streak Champion","⚡ Speed King","🎯 Topic Master","🌟 30-Day Legend"] as const;
 
 // ─── Stable hover handlers (module-level) ──────────────────────────────────
 const onStatEnter  = (e: React.MouseEvent<HTMLElement>) => { (e.currentTarget as HTMLElement).style.transform="translateY(-3px)"; };
@@ -326,7 +326,7 @@ export default function GameArenaSection() {
               </ol>
 
               {/* Achievement badges */}
-              <ul
+              {/* <ul
                 role="list"
                 aria-label="Achievement badges"
                 style={{ display:"flex", flexWrap:"wrap", gap:"10px", padding:"16px 20px", borderTop:"1px solid rgba(255,255,255,0.08)", listStyle:"none", margin:0 }}
@@ -336,7 +336,7 @@ export default function GameArenaSection() {
                     {b}
                   </li>
                 ))}
-              </ul>
+              </ul> */}
             </div>
           </div>
 

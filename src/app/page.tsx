@@ -3,7 +3,7 @@ import PainSection         from "@/components/sections/PainSection";
 import SolutionSection     from "@/components/sections/SolutionSection";
 import LevelsSection       from "@/components/sections/LevelsSection";
 import GameArenaSection    from "@/components/sections/GameArenaSection";
-import QuizModesSection from "@/components/sections/QuizModesSection";
+// import QuizModesSection from "@/components/sections/QuizModesSection";
 
 import FinalCTASection from "@/components/sections/FinalCTASection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
@@ -24,7 +24,7 @@ export default function Home() {
       <SolutionSection />
       <LevelsSection />
       <GameArenaSection />
-      <QuizModesSection />
+      {/* <QuizModesSection /> */}
       <ComparisonSection />
       <TestimonialsSection />
       {/* <DepartmentSection /> */}

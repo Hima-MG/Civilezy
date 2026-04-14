@@ -16,10 +16,11 @@ interface CourseData {
   annual:        number;
   annualOrig:    number;
   popular:       boolean;
+  annualSavings: number;
   enrollMonthly: string;
   enrollAnnual:  string;
   features:      string[];
-  annualBonus:   string[];
+  // annualBonus:   string[];
   pools:         string[];
 }
 
@@ -27,46 +28,104 @@ const CHECKOUT = EXTERNAL_URLS.checkout;
 
 // ─── Course data ────────────────────────────────────────────────────────────
 const COURSES: Record<CourseKey, CourseData> = {
-  iti: {
-    label:"ITI Civil", shortLabel:"ITI", emoji:"🔧",
-    tagline:"Kerala PSC Civil Engineering ITI level preparation",
-    keyword:"ITI Civil PSC course Kerala",
-    monthly:1800, annual:15000, annualOrig:21600, popular:false,
-    enrollMonthly:CHECKOUT, enrollAnnual:CHECKOUT,
-    features:["Full ITI Civil syllabus coverage","PSC-level mock tests — pool-based","Malayalam audio explanations 🎧","Game Arena access 🎮","Daily quiz + streak system","Performance analytics dashboard"],
-    annualBonus:["Everything in Monthly","10 bonus mock tests","Priority doubt support","Exam alert notifications","Downloadable study notes PDF"],
-    pools:["KWA-ITI","PWD-ITI","LSGD-ITI","IRD-ITI"],
-  },
-  diploma: {
-    label:"Diploma Civil", shortLabel:"Diploma", emoji:"📐",
-    tagline:"Diploma Civil PSC preparation — Overseer, Technical Assistant",
-    keyword:"Diploma Civil PSC preparation Kerala",
-    monthly:2000, annual:17000, annualOrig:24000, popular:true,
-    enrollMonthly:CHECKOUT, enrollAnnual:CHECKOUT,
-    features:["Full Diploma Civil syllabus coverage","PSC-level mock tests — pool-based","Malayalam audio explanations 🎧","Game Arena — Expert mode 🎮","Department-specific papers (KWA, PWD)","Smart weak-area detection"],
-    annualBonus:["Everything in Monthly","20 bonus department mock tests","Priority doubt support + WhatsApp","KWA/PWD specific paper bundles","Rank prediction after each test"],
-    pools:["DIP-G1","KWA-DIP","PWD-DIP","KSEB-DIP"],
-  },
-  btech: {
-    label:"BTech / AE", shortLabel:"BTech/AE", emoji:"🏗️",
-    tagline:"PSC AE coaching Kerala — BTech Civil Assistant Engineer",
-    keyword:"PSC AE coaching Kerala BTech Civil",
-    monthly:2500, annual:20000, annualOrig:30000, popular:false,
-    enrollMonthly:CHECKOUT, enrollAnnual:CHECKOUT,
-    features:["Full BTech Civil AE syllabus coverage","PSC-level mock tests — AE level","Malayalam audio explanations 🎧","Game Arena — Legend mode 🎮","KWA AE + PWD AE specific papers","Rank prediction + merit list analysis"],
-    annualBonus:["Everything in Monthly","30 bonus AE-level mock tests","1-on-1 monthly doubt sessions","Expert notes with IS code mapping","Interview prep materials"],
-    pools:["AE-KWA","AE-PWD","AE-LSGD","AE-KSEB"],
-  },
-  surveyor: {
-    label:"Surveyor", shortLabel:"Surveyor", emoji:"📏",
-    tagline:"Kerala PSC Surveyor Civil Engineering preparation",
-    keyword:"Kerala PSC Surveyor Civil preparation",
-    monthly:1800, annual:15000, annualOrig:21600, popular:false,
-    enrollMonthly:CHECKOUT, enrollAnnual:CHECKOUT,
-    features:["Full Surveyor syllabus coverage","PSC-level mock tests — pool-based","Malayalam audio explanations 🎧","Game Arena access 🎮","Topography & levelling modules","Performance tracking dashboard"],
-    annualBonus:["Everything in Monthly","15 bonus mock tests","Priority doubt support","Downloadable survey tables PDF","Exam alert notifications"],
-    pools:["SURV-PWD","SURV-LSGD","SURV-KWA","SURV-IRD"],
-  },
+  iti: // ITI
+{
+  label: "Civil PSC – ITI",
+  shortLabel: "ITI",
+  emoji: "🔧",
+  tagline: "For Overseer / Draughtsman Gr 2 & 3, Tradesman, Tracer, Work Superintendent and more — across various Kerala departments.",
+  keyword: "ITI Civil PSC course Kerala",
+  monthly: 1800,
+  annual: 15000,
+  annualOrig: 21600,
+  annualSavings: 6600,
+  popular: false,
+  enrollMonthly: CHECKOUT,
+  enrollAnnual: CHECKOUT,
+  features: [
+    "Smart Interactive Lessons — Study, Revision & Exam Mode",
+    "Bite-sized Video Lectures",
+    "Malayalam Audio Lessons 🎧",
+    "Graded Quiz after every lesson",
+    "Game Arena access 🎮",
+    "Live Leaderboard & Performance Analytics",
+  ],
+  pools: ["KWA", "PWD", "LSGD", "Irrigation"],
+},
+// Diploma
+diploma:{
+  label: "Civil PSC – Diploma",
+  shortLabel: "Diploma",
+  emoji: "📐",
+  tagline: "For Overseer Gr 1, Overseer Gr 2 & 3, Junior Instructor, Site Engineer and more — across various Kerala departments.",
+  keyword: "Diploma Civil PSC course Kerala",
+  monthly: 2000,
+  annual: 17000,
+  annualOrig: 24000,
+  annualSavings: 7000,
+  popular: true,
+  enrollMonthly: CHECKOUT,
+  enrollAnnual: CHECKOUT,
+  features: [
+    "Smart Interactive Lessons — Study, Revision & Exam Mode",
+    "Bite-sized Video Lectures",
+    "Malayalam Audio Lessons 🎧",
+    "Graded Quiz after every lesson",
+    "Game Arena access 🎮",
+    "Live Leaderboard & Performance Analytics",
+  ],
+  pools: ["PWD", "Irrigation", "LSGD", "KWA", "Harbour", "KSEB"],
+},
+// B.Tech
+btech:{
+  label: "Civil PSC – B.Tech",
+  shortLabel: "B.Tech",
+  emoji: "🎓",
+  tagline: "For B.Tech Civil Engineering graduates targeting Assistant Engineer posts across various Kerala departments.",
+  keyword: "BTech AE Civil PSC course Kerala",
+  monthly: 2500,
+  annual: 20000,
+  annualOrig: 30000,
+  annualSavings: 10000,
+  popular: false,
+  enrollMonthly: CHECKOUT,
+  enrollAnnual: CHECKOUT,
+  features: [
+    "Smart Interactive Lessons — Study, Revision & Exam Mode",
+    "Bite-sized Video Lectures",
+    "Malayalam Audio Lessons 🎧",
+    "Graded Quiz after every lesson",
+    "Game Arena access 🎮",
+    "Live Leaderboard & Performance Analytics",
+    "Rank Booster Lessons — Advanced AE level concepts & insights",
+    "AE Level Mock Tests — Ultra-high difficulty, exam-ready questions",
+  ],
+  pools: ["PWD", "Irrigation", "LSGD", "KWA", "PCB"],
+},
+surveyor:
+{
+  label: "Surveyor Course",
+  shortLabel: "Surveyor",
+  emoji: "📏",
+  tagline: "For ITI Surveyor license holders. Covers Surveyor Gr II, Tradesman (Survey) and all surveyor-grade Kerala PSC pools.",
+  keyword: "Surveyor Civil PSC course Kerala",
+  monthly: 1800,
+  annual: 15000,
+  annualOrig: 21600,
+  annualSavings: 6600,
+  popular: false,
+  enrollMonthly: CHECKOUT,
+  enrollAnnual: CHECKOUT,
+  features: [
+    "Smart Interactive Lessons — Study, Revision & Exam Mode",
+    "Bite-sized Video Lectures",
+    "Malayalam Audio Lessons 🎧",
+    "Graded Quiz after every lesson",
+    "Game Arena access 🎮",
+    "Live Leaderboard & Performance Analytics",
+  ],
+  pools: ["KWA", "Survey & Land Records", "Tech. Education", "Groundwater Dept."],
+},
 };
 
 const COURSE_KEYS: CourseKey[] = ["iti","diploma","btech","surveyor"];
@@ -126,7 +185,7 @@ export default function PricingSection() {
         {/* ── Section header ── */}
         <div style={{ textAlign:"center", maxWidth:"700px", margin:"0 auto 52px" }}>
           <div aria-hidden="true" style={{ display:"inline-block", background:"rgba(255,98,0,0.15)", border:"1px solid rgba(255,98,0,0.3)", borderRadius:"20px", padding:"4px 16px", fontSize:"12px", fontWeight:700, color:"#FF8534", letterSpacing:"0.5px", marginBottom:"16px" }}>
-            LIMITED BATCH — ENROLL NOW
+            Psc Notifications are Out, Start Preparing Now!
           </div>
           <h2 id="pricing-heading" style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"clamp(28px,4vw,44px)", fontWeight:700, lineHeight:1.2, marginBottom:"16px", color:"#fff" }}>
             Course-Based Pricing.{" "}
@@ -368,14 +427,14 @@ function AnnualCard({ course }: { course: CourseData }) {
         </div>
       </div>
 
-      <ul style={{ listStyle:"none", padding:0, display:"flex", flexDirection:"column", gap:"11px", marginBottom:"28px" }}>
+      {/* <ul style={{ listStyle:"none", padding:0, display:"flex", flexDirection:"column", gap:"11px", marginBottom:"28px" }}>
         {course.annualBonus.map((f, i) => (
           <li key={f} style={{ display:"flex", alignItems:"flex-start", gap:"10px", fontSize:"14px" }}>
             <span style={{ color:i===0?"#FFB800":"#32C864", fontWeight:800, flexShrink:0, marginTop:"1px" }} aria-hidden="true">{i===0?"★":"✓"}</span>
             <span style={{ color:i===0?"rgba(255,255,255,0.6)":"rgba(255,255,255,0.9)", fontStyle:i===0?"italic":"normal" }}>{f}</span>
           </li>
         ))}
-      </ul>
+      </ul> */}
 
       <a
         href={course.enrollAnnual}

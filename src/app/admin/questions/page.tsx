@@ -16,6 +16,7 @@ import {
 } from "@/lib/questions";
 import { SUBJECTS_BY_DOMAIN } from "@/data/subjectHierarchy";
 import CsvImport from "@/components/admin/CsvImport";
+import { deleteAllQuestions } from "@/lib/admin/deleteAllQuestions";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const DOMAINS: Domain[] = ["iti", "diploma", "btech"];
@@ -55,6 +56,12 @@ export default function AdminQuestionsPage() {
   const [fDiff, setFDiff]           = useState<Difficulty | "all">("all");
   const [fStatus, setFStatus]       = useState<Status | "all">("all");
   const [fSearch, setFSearch]       = useState("");
+
+  // Delete All modal
+  const [showDeleteAll, setShowDeleteAll]       = useState(false);
+  const [deleteConfirm, setDeleteConfirm]       = useState("");
+  const [deleting, setDeleting]                 = useState(false);
+  const [deleteProgress, setDeleteProgress]     = useState("");
 
   // Form
   const [form, setForm] = useState<QuestionInput>({ ...EMPTY_FORM });
@@ -145,6 +152,27 @@ export default function AdminQuestionsPage() {
     if (!confirm("Delete this question permanently?")) return;
     try { await deleteQuestion(id); flash("Deleted"); await fetchAll(); }
     catch { flash("Failed to delete"); }
+  };
+
+  // ── Delete ALL questions ──
+  const handleDeleteAll = async () => {
+    if (deleteConfirm !== "DELETE" || deleting) return;
+    setDeleting(true);
+    setDeleteProgress(`Deleting ${questions.length} questions...`);
+    try {
+      const count = await deleteAllQuestions((done, total) => {
+        setDeleteProgress(`Deleting... ${done} / ${total}`);
+      });
+      flash(`All ${count} questions deleted successfully.`);
+      setShowDeleteAll(false);
+      setDeleteConfirm("");
+      await fetchAll();
+    } catch {
+      flash("Failed to delete questions. Please try again.");
+    } finally {
+      setDeleting(false);
+      setDeleteProgress("");
+    }
   };
 
   // ── Toggle status / active ──
@@ -266,27 +294,37 @@ export default function AdminQuestionsPage() {
             />
           </div>
 
-          {/* Count + Publish All */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+          {/* Count + Bulk Actions */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
             <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.45)" }}>
               Showing {filtered.length} of {questions.length} questions
             </div>
-            {filtered.filter((q) => q.status === "draft").length > 0 && (
-              <button
-                onClick={async () => {
-                  const drafts = filtered.filter((q) => q.status === "draft");
-                  if (!confirm(`Publish ${drafts.length} draft question${drafts.length !== 1 ? "s" : ""}?`)) return;
-                  try {
-                    await publishAllDrafts(drafts.map((q) => q.id), adminName);
-                    flash(`Published ${drafts.length} question${drafts.length !== 1 ? "s" : ""}`);
-                    await fetchAll();
-                  } catch { flash("Failed to publish"); }
-                }}
-                style={{ ...S.btnPrimary, fontSize: "12px", padding: "6px 16px" }}
-              >
-                Publish All Drafts ({filtered.filter((q) => q.status === "draft").length})
-              </button>
-            )}
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              {questions.length > 0 && (
+                <button
+                  onClick={() => { setShowDeleteAll(true); setDeleteConfirm(""); }}
+                  style={{ ...S.btnDanger, fontSize: "12px", padding: "6px 16px" }}
+                >
+                  🗑️ Delete All Questions
+                </button>
+              )}
+              {filtered.filter((q) => q.status === "draft").length > 0 && (
+                <button
+                  onClick={async () => {
+                    const drafts = filtered.filter((q) => q.status === "draft");
+                    if (!confirm(`Publish ${drafts.length} draft question${drafts.length !== 1 ? "s" : ""}?`)) return;
+                    try {
+                      await publishAllDrafts(drafts.map((q) => q.id), adminName);
+                      flash(`Published ${drafts.length} question${drafts.length !== 1 ? "s" : ""}`);
+                      await fetchAll();
+                    } catch { flash("Failed to publish"); }
+                  }}
+                  style={{ ...S.btnPrimary, fontSize: "12px", padding: "6px 16px" }}
+                >
+                  Publish All Drafts ({filtered.filter((q) => q.status === "draft").length})
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Table */}
@@ -467,6 +505,74 @@ export default function AdminQuestionsPage() {
         <CsvImport adminName={adminName} onImportDone={fetchAll} />
       )}
 
+      {/* ═══════════════ DELETE ALL CONFIRMATION MODAL ═══════════════ */}
+      {showDeleteAll && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}
+          onClick={(e) => { if (e.target === e.currentTarget && !deleting) { setShowDeleteAll(false); setDeleteConfirm(""); } }}
+        >
+          <div style={{ background: "#0F1729", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "20px", padding: "32px", maxWidth: "440px", width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}>
+            {/* Icon + Title */}
+            <div style={{ textAlign: "center", marginBottom: "20px" }}>
+              <div style={{ fontSize: "36px", marginBottom: "8px" }}>⚠️</div>
+              <h3 style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "22px", fontWeight: 700, color: "#fff", margin: "0 0 6px" }}>
+                Delete All Questions?
+              </h3>
+              <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.55)", margin: 0, lineHeight: 1.6 }}>
+                This will permanently delete <strong style={{ color: "#ef4444" }}>all {questions.length} questions</strong> from Firestore. This action cannot be undone.
+              </p>
+            </div>
+
+            {/* Confirmation input */}
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ display: "block", fontSize: "12px", fontWeight: 700, color: "rgba(255,255,255,0.5)", marginBottom: "8px", letterSpacing: "0.3px" }}>
+                Type <strong style={{ color: "#ef4444", letterSpacing: "2px" }}>DELETE</strong> to confirm
+              </label>
+              <input
+                type="text"
+                value={deleteConfirm}
+                onChange={(e) => setDeleteConfirm(e.target.value)}
+                placeholder="Type DELETE here..."
+                disabled={deleting}
+                autoFocus
+                style={{ ...S.input, borderColor: deleteConfirm === "DELETE" ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.12)", textAlign: "center", fontSize: "16px", fontWeight: 700, letterSpacing: "3px" }}
+              />
+            </div>
+
+            {/* Progress */}
+            {deleteProgress && (
+              <div style={{ textAlign: "center", marginBottom: "16px", fontSize: "13px", color: "#f59e0b", fontWeight: 600 }}>
+                <span style={{ display: "inline-block", width: "16px", height: "16px", border: "2px solid rgba(245,158,11,0.3)", borderTopColor: "#f59e0b", borderRadius: "50%", animation: "spin 0.8s linear infinite", verticalAlign: "middle", marginRight: "8px" }} />
+                {deleteProgress}
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                onClick={() => { setShowDeleteAll(false); setDeleteConfirm(""); }}
+                disabled={deleting}
+                style={{ ...S.btnSecondary, flex: 1, opacity: deleting ? 0.5 : 1 }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAll}
+                disabled={deleteConfirm !== "DELETE" || deleting}
+                style={{
+                  ...S.btnDanger,
+                  flex: 1,
+                  opacity: deleteConfirm === "DELETE" && !deleting ? 1 : 0.4,
+                  cursor: deleteConfirm === "DELETE" && !deleting ? "pointer" : "not-allowed",
+                }}
+              >
+                {deleting ? "Deleting..." : "Delete All Questions"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ═══════════════ STATS TAB ═══════════════ */}
       {tab === "stats" && (
         <>
@@ -614,5 +720,9 @@ const S = {
   btnSecondary: {
     background: "transparent", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "10px",
     padding: "10px 20px", fontSize: "14px", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+  } as React.CSSProperties,
+  btnDanger: {
+    background: "linear-gradient(135deg,#dc2626,#ef4444)", color: "#fff", border: "none", borderRadius: "10px",
+    padding: "10px 24px", fontSize: "14px", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
   } as React.CSSProperties,
 };

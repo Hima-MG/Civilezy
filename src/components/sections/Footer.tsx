@@ -16,14 +16,14 @@ const SOCIAL = [
 // Internal paths use Next.js <Link>; external use <a>.
 const FOOTER_NAV: Record<string, { label: string; href: string; external?: boolean }[]> = {
   Courses: [
-    { label:"ITI Civil PSC",     href:COURSE_LINKS.iti,      external:true },
-    { label:"Diploma Civil PSC", href:COURSE_LINKS.diploma,  external:true },
-    { label:"AE / B.Tech PSC",   href:COURSE_LINKS.btech,    external:true },
-    { label:"KWA AE Prep",       href:COURSE_LINKS.kwa,      external:true },
-    { label:"PWD Overseer",      href:COURSE_LINKS.pwd,      external:true },
+    { label:"Civil PSC-ITI",     href:COURSE_LINKS.iti,      external:true },
+    { label:" Civil PSC-Diploma", href:COURSE_LINKS.diploma,  external:true },
+    { label:"Civil PSC-Btech",   href:COURSE_LINKS.btech,    external:true },
+    { label:"Survayor Courses",       href:COURSE_LINKS.kwa,      external:true },
+    
   ],
   Resources: [
-    { label:"Previous Year Questions", href:EXTERNAL_URLS.freeTest, external:true },
+    // { label:"Previous Year Questions", href:EXTERNAL_URLS.freeTest, external:true },
     { label:"Free Mock Test",          href:"/game-arena"                         },
     { label:"Blog & Guides",           href:`${EXTERNAL_URLS.base}/blog`, external:true },
     { label:"Pricing Plans",           href:"/pricing"                            },
@@ -89,12 +89,12 @@ export default function Footer() {
             </Link>
 
             <p style={{ fontSize:"14px", color:"rgba(255,255,255,0.55)", lineHeight:1.7 }}>
-              Kerala&apos;s only dedicated Civil Engineering PSC platform. Pool-based mock tests,
-              Malayalam content, expert-built questions. From confused to confident rank holder.
+              Kerala&apos;s only dedicated Civil Engineering PSC platform. Course category-based mock tests,
+              Malayalam cAudio Lessons,Smart interactive lessond, expert-built questions. From confused to confident rank holder.
             </p>
 
             <div style={{ marginTop:"16px", display:"flex", gap:"8px", flexWrap:"wrap" }} aria-label="Platform categories">
-              {["Kerala PSC", "Civil Engineering", "ITI | Diploma | AE"].map(tag => (
+              {["Kerala PSC", "Civil Engineering", "ITI | Diploma | Btech"].map(tag => (
                 <span key={tag} style={{ background:"rgba(255,98,0,0.1)", border:"1px solid rgba(255,98,0,0.2)", borderRadius:"20px", padding:"4px 12px", fontSize:"12px", color:"#FF8534" }}>
                   {tag}
                 </span>
