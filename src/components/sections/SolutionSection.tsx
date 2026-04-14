@@ -96,10 +96,10 @@ chip: "✓ 10Q quizzes · Grades · Leaderboard",
     titleEn: "Affordable & Tailormade for You",
     titleMl: "നിങ്ങൾക്ക് ചേർന്ന Course, നിങ്ങളുടെ Budget-ൽ",
     bodyEn:
-"ITI, Diploma, or B.Tech — we've got your course! Short on time? Pick a timeline that fits your schedule. Pay monthly or go all-in with a one-time payment — you choose. Zero excuses, just results!   ",
+"Whatever your level, ITI, DIPLOMA B.TECH, there is a course for you here.! Short on time? Pick a timeline that fits your schedule. Pay monthly or go all-in with a one-time payment — you choose. Zero excuses, just results!   ",
  bodyMl:
-" ITI, Diploma, അല്ലെങ്കിൽ B.Tech — നിങ്ങൾക്ക് പറ്റിയ കോഴ്സ് ഇവിടെയുണ്ട്! സമയം കുറവാണോ? നിങ്ങളുടെ schedule-നു യോജിച്ച timeline തിരഞ്ഞെടുക്കൂ. Monthly ആയി pay ചെയ്യാം, അല്ലെങ്കിൽ One-time ആയും — തീരുമാനം നിങ്ങളുടേത്. ഒഴികഴിവുകൾ വേണ്ട, റിസൾട്ട് മാത്രം!", 
-   chip: "✓ Flexible Payment Methods · ITI · Diploma · B.Tech",
+" നിങ്ങളുടെ ലെവൽ ഏതുമാകട്ടെ ITI,DIPLOMA B.TECH നിങ്ങൾക്ക് പറ്റിയ കോഴ്‌സ് ഇവിടെയുണ്ട്! സമയം കുറവാണോ? നിങ്ങളുടെ schedule-നു യോജിച്ച timeline തിരഞ്ഞെടുക്കൂ. Monthly ആയി pay ചെയ്യാം, അല്ലെങ്കിൽ One-time ആയും — തീരുമാനം നിങ്ങളുടേത്. ഒഴികഴിവുകൾ വേണ്ട, റിസൾട്ട് മാത്രം!", 
+   chip: "✓ Flexible Payment Methods· ITI\n · Diploma · B.Tech",
     icon: (
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
         <circle cx="12" cy="12" r="9" stroke="#32C864" strokeWidth="1.5" />

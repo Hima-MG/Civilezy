@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { getReportedIssues, type ReportDoc, type ReportStatus } from "@/lib/admin/getReportedIssues";
 import { updateReportStatus } from "@/lib/admin/updateReportStatus";
 import { deleteReport } from "@/lib/admin/deleteReport";
-import type { IssueType } from "@/lib/firebase/reportGameArenaIssue";
+import type { IssueType } from "@/lib/reportGameArenaIssue";
 import ReportStatusBadge from "./ReportStatusBadge";
 
 // ---------------------------------------------------------------------------

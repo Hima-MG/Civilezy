@@ -107,7 +107,7 @@ const ROWS: ComparisonRow[] = [
     isLast: false,
   },
   {
-    feature: "Coaching & Mentor Doubt Sessions",
+    feature: "Course Specific Mentorship System",
     us: "✓ Regular sessions",
     usIsCheck: true,
     them1: "No mentorship",
@@ -117,7 +117,7 @@ const ROWS: ComparisonRow[] = [
     isLast: false,
   },
   {
-    feature: "Active Community for Discussions",
+    feature: "24 hr Active Community Study",
     us: "✓ Included",
     usIsCheck: true,
     them1: "No community",

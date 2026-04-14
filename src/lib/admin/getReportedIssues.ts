@@ -1,6 +1,6 @@
 import { collection, getDocs, query, orderBy, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { IssueType } from "@/lib/firebase/reportGameArenaIssue";
+import type { IssueType } from "@/lib/reportGameArenaIssue";
 
 // ---------------------------------------------------------------------------
 // Types

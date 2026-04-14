@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { saveScore, getLeaderboard, getLevel, getNextLevel, type LeaderboardEntry } from "@/lib/leaderboard";
+import { saveScore, getLeaderboard, getLevel, getNextLevel, updateAllPeriodLeaderboards, type LeaderboardEntry } from "@/lib/leaderboard";
 import { loadPlayer, createPlayer, recordGame, type PlayerData } from "@/lib/player";
 import {
   SUBJECTS_BY_DOMAIN,
@@ -13,6 +13,7 @@ import {
   type Question,
 } from "@/data/quesions";
 import ReportIssueModal from "@/components/game/ReportIssueModal";
+import LeaderboardTabs from "@/components/game/LeaderboardTabs";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Domain = "ITI" | "Diploma" | "BTech";
@@ -271,12 +272,18 @@ export default function GameArenaPage() {
       // Update local player data (totalScore + streak)
       const updated = recordGame(player, xp);
       setPlayer(updated);
-      // Save to Firebase
+      // Save to Firebase (all-time leaderboard)
       await saveScore({
         name: updated.name,
         score: xp,
         totalScore: updated.totalScore,
         streak: updated.streak,
+      });
+      // Update daily / weekly / monthly period leaderboards
+      await updateAllPeriodLeaderboards({
+        playerName: updated.name,
+        xpEarned: xp,
+        bestStreak,
       });
       setScoreSaved(true);
       fetchLeaderboard();
@@ -644,15 +651,14 @@ export default function GameArenaPage() {
             </button>
           </div>
 
-          {/* ── Save Score + Leaderboard ── */}
+          {/* ── Save Score ── */}
           <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-6 mb-5 backdrop-blur-sm shadow-xl shadow-black/30 text-left">
             <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-              🏆 Leaderboard
+              🏆 Save Your Score
             </h3>
 
-            {/* Save score */}
             {!scoreSaved ? (
-              <div className="mb-5">
+              <div>
                 {!player ? (
                   /* First-time: ask for name */
                   <div className="flex gap-2">
@@ -686,12 +692,25 @@ export default function GameArenaPage() {
                 {saveError && <p className="text-rose-400 text-xs mt-2">{saveError}</p>}
               </div>
             ) : (
-              <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2.5 mb-5 text-emerald-400 text-sm font-medium">
-                ✓ Score saved!
+              <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2.5 text-emerald-400 text-sm font-medium">
+                ✓ Score saved to all leaderboards!
               </div>
             )}
+          </div>
 
-            {/* Leaderboard list */}
+          {/* ── Period Leaderboards (Daily / Weekly / Monthly) ── */}
+          <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-6 mb-5 backdrop-blur-sm shadow-xl shadow-black/30 text-left">
+            <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+              🏆 Leaderboards
+            </h3>
+            <LeaderboardTabs currentPlayerName={player?.name} />
+          </div>
+
+          {/* ── All-Time Leaderboard ── */}
+          <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-6 mb-5 backdrop-blur-sm shadow-xl shadow-black/30 text-left">
+            <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+              👑 All-Time Leaderboard
+            </h3>
             {lbLoading ? (
               <div className="text-zinc-500 text-sm text-center py-4">Loading leaderboard...</div>
             ) : leaderboard.length > 0 ? (

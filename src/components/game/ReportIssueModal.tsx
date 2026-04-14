@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   reportGameArenaIssue,
   type IssueType,
-} from "@/lib/firebase/reportGameArenaIssue";
+} from "@/lib/reportGameArenaIssue";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -93,8 +93,13 @@ export default function ReportIssueModal({
 
       onSubmitted();
       onClose();
-    } catch {
-      setError("Failed to submit report. Please try again.");
+    } catch (err) {
+      console.error("[ReportIssueModal] Submit failed:", err);
+      const msg =
+        err instanceof Error && err.message.includes("permission")
+          ? "Permission denied. Firestore rules may need updating."
+          : "Failed to submit report. Please try again.";
+      setError(msg);
       setSubmitting(false);
     }
   };
