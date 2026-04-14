@@ -18,7 +18,7 @@ const FOOTER_NAV: Record<string, { label: string; href: string; external?: boole
   Courses: [
     { label:"Civil PSC-ITI",     href:COURSE_LINKS.iti,      external:true },
     { label:" Civil PSC-Diploma", href:COURSE_LINKS.diploma,  external:true },
-    { label:"Civil PSC-Btech",   href:COURSE_LINKS.btech,    external:true },
+    { label:"Civil PSC-B.Tech",   href:COURSE_LINKS.btech,    external:true },
     { label:"Survayor Courses",       href:COURSE_LINKS.kwa,      external:true },
     
   ],
@@ -94,7 +94,7 @@ export default function Footer() {
             </p>
 
             <div style={{ marginTop:"16px", display:"flex", gap:"8px", flexWrap:"wrap" }} aria-label="Platform categories">
-              {["Kerala PSC", "Civil Engineering", "ITI | Diploma | Btech"].map(tag => (
+              {["Kerala PSC", "Civil Engineering", "ITI | Diploma | B.Tech"].map(tag => (
                 <span key={tag} style={{ background:"rgba(255,98,0,0.1)", border:"1px solid rgba(255,98,0,0.2)", borderRadius:"20px", padding:"4px 12px", fontSize:"12px", color:"#FF8534" }}>
                   {tag}
                 </span>

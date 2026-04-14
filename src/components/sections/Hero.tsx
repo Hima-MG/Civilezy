@@ -266,7 +266,7 @@ export default function Hero() {
             <p style={{ fontSize:"17px", color:"rgba(255,255,255,0.85)", marginBottom:"28px", maxWidth:"480px", lineHeight:1.7 }}>
               The{" "}
               <strong style={{ color:"#FF8534", fontWeight:700 }}>only Kerala CIVIL ENGINEERING PSC platform</strong>{" "}
-              with Course based content, Malayalam audio lessons, and a Game Arena that makes
+              with Category based content, Malayalam audio lessons, and a Game Arena that makes
               daily practice impossible to skip.
             </p>
 
