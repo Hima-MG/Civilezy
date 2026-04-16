@@ -276,7 +276,7 @@ export default function PricingSection() {
           aria-label="Payment guarantees"
           style={{ display:"flex", justifyContent:"center", gap:"32px", flexWrap:"wrap", marginBottom:"28px", listStyle:"none", padding:0, margin:"0 0 28px" }}
         >
-          {["✔ Monthly plan auto-debited","✔ Annual plan — 3-month installments available","✔ Secure payment via EzyCourse LMS","✔ Cancel anytime"].map(t => (
+          {["✔ Monthly plan auto-debited","✔ Annual plan — 3-month installments available","✔ Secure payment","✔ Cancel anytime"].map(t => (
             <li key={t} style={{ display:"flex", alignItems:"center", gap:"6px", fontSize:"13px", color:"rgba(255,255,255,0.5)" }}>
               <span style={{ color:"#32C864", fontWeight:800 }} aria-hidden="true">{t[0]}</span>
               {t.slice(1)}
