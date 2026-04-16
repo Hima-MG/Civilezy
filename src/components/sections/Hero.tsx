@@ -8,6 +8,7 @@ import { EXTERNAL_URLS } from "@/lib/constants";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const LMS_FREE_TEST = EXTERNAL_URLS.demo;
+const LMS_LOGIN= EXTERNAL_URLS.login
 
 // ─── Rank System ────────────────────────────────────────────────────────────
 interface RankInfo { label: string; icon: string; color: string; }
@@ -344,7 +345,7 @@ export default function Hero() {
 
                   <div style={{ display:"flex", gap:"8px", justifyContent:"center", flexWrap:"wrap" }}>
                     <a
-                      href={LMS_FREE_TEST}
+                      href={LMS_LOGIN}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ background:"linear-gradient(135deg,#FF6200,#FF4500)", color:"white", border:"none", padding:"10px 22px", borderRadius:"10px", fontFamily:"Nunito, sans-serif", fontSize:"13px", fontWeight:800, cursor:"pointer", textDecoration:"none", display:"inline-flex", alignItems:"center", gap:"6px", boxShadow:"0 4px 16px rgba(255,98,0,0.4)" }}
