@@ -365,8 +365,12 @@ export default function GameArenaPage() {
     setTimeLeft(roundTime);
   };
 
-  // ── Load leaderboard when game ends ──
-  useEffect(() => { if (showResult) fetchLeaderboard(); }, [showResult, fetchLeaderboard]);
+  // ── Auto-save score & load leaderboard when game ends ──
+  useEffect(() => {
+    if (showResult && !scoreSaved && !savingScore) {
+      handleSaveScore();
+    }
+  }, [showResult]); // eslint-disable-line
 
   // ── Derived quiz values ──────────────────────────────────────────────────
   const currentQ   = questions[currentQuestionIndex];
@@ -720,26 +724,23 @@ export default function GameArenaPage() {
             </button>
           </div>
 
-          {/* ── Save Score ── */}
-          <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-6 mb-5 backdrop-blur-sm shadow-xl shadow-black/30 text-left">
-            <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-              🏆 Save Your Score
-            </h3>
-
-            {!scoreSaved ? (
-              <div>
-                <button
-                  onClick={handleSaveScore}
-                  disabled={savingScore}
-                  className="w-full bg-gradient-to-r from-orange-500 to-amber-400 text-white font-bold px-5 py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-100 transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100"
-                >
-                  {savingScore ? "Saving..." : `Save Score as ${displayName}`}
-                </button>
-                {saveError && <p className="text-rose-400 text-xs mt-2">{saveError}</p>}
+          {/* ── Auto-save status ── */}
+          <div className="mb-5">
+            {savingScore && (
+              <div className="flex items-center justify-center gap-2 text-zinc-400 text-sm py-2">
+                <span className="inline-block w-4 h-4 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+                Saving score...
               </div>
-            ) : (
-              <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2.5 text-emerald-400 text-sm font-medium">
+            )}
+            {scoreSaved && (
+              <div className="flex items-center justify-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2.5 text-emerald-400 text-sm font-medium">
                 ✓ Score saved to all leaderboards!
+              </div>
+            )}
+            {saveError && (
+              <div className="flex items-center justify-center gap-2 bg-rose-500/10 border border-rose-500/30 rounded-xl px-4 py-2.5 text-rose-400 text-sm font-medium">
+                {saveError}
+                <button onClick={handleSaveScore} className="underline hover:text-rose-300 ml-1">Retry</button>
               </div>
             )}
           </div>
