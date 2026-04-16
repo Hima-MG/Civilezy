@@ -24,6 +24,9 @@ function collectionName(period: LeaderboardPeriod): string {
  * Uses `onSnapshot` so the UI updates **instantly** when any player
  * finishes a game — no refresh or polling needed.
  *
+ * Orders by `totalXp` (written by both old and new code paths) so
+ * every document is included regardless of schema version.
+ *
  * Filters by current `periodKey` client-side to avoid needing a
  * Firestore composite index (`where` + `orderBy` on different fields).
  *
@@ -45,11 +48,11 @@ export function subscribeToPeriodLeaderboard(
   let rolloverTimer: ReturnType<typeof setInterval> | null = null;
 
   function startListener() {
-    // Query: ordered by leaderboardMetric desc, grab extra to account
-    // for stale entries from previous periods.
+    // Query: ordered by totalXp desc (field present on ALL docs, old & new).
+    // Over-fetch so client-side periodKey filter still yields enough results.
     const q = query(
       collection(db, collectionName(period)),
-      orderBy("leaderboardMetric", "desc"),
+      orderBy("totalXp", "desc"),
       limit(max + 20),
     );
 
@@ -63,14 +66,16 @@ export function subscribeToPeriodLeaderboard(
           const data = d.data();
           // Only include docs from the current period
           if (data.periodKey !== currentKey) continue;
+
+          const xpVal = data.totalXp ?? data.xp ?? 0;
           entries.push({
             userId: data.userId ?? d.id,
             displayName: data.displayName ?? data.name ?? "Unknown",
             score: data.score ?? 0,
-            xp: data.xp ?? data.totalXp ?? 0,
+            xp: xpVal,
             gamesPlayed: data.gamesPlayed ?? 0,
             bestStreak: data.bestStreak ?? 0,
-            leaderboardMetric: data.leaderboardMetric ?? data.xp ?? data.totalXp ?? 0,
+            leaderboardMetric: xpVal,
           });
         }
         onData(entries);
