@@ -8,11 +8,11 @@ export const EXTERNAL_URLS = {
   demo:      "https://learn.civilezy.in/free-trial-request",
   blog:      "https://learn.civilezy.in/blog",
   about:     "https://learn.civilezy.in/about",
-  contact:   "https://learn.civilezy.in/contact-us",
+  contact:   "https://learn.civilezy.in/contact/",
 
   legal: {
     privacy: "https://learn.civilezy.in/privacy-policy",
-    terms:   "https://learn.civilezy.in/terms-and-conditions",
+    terms:   "https://learn.civilezy.in/en/terms-of-use-v2",
     refund:  "https://learn.civilezy.in/refund-policy",
   },
 
