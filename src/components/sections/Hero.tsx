@@ -15,7 +15,7 @@ interface QuizData {
 import { EXTERNAL_URLS } from "@/lib/constants";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-// const LMS_FREE_TEST = EXTERNAL_URLS.freeTest;
+const LMS_FREE_TEST = EXTERNAL_URLS.demo;
 const STORAGE_KEY = "civilezy_user";
 
 // ─── Rank System ────────────────────────────────────────────────────────────
@@ -292,7 +292,7 @@ export default function Hero() {
             {/* CTA Buttons */}
             <div className="hero-ctas" style={{ display:"flex", gap:"14px", flexWrap:"wrap", marginBottom:"20px" }}>
               <a
-                // href={LMS_FREE_TEST}
+                href={LMS_FREE_TEST}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Sign up for 48 hour free demo — opens in new tab"
