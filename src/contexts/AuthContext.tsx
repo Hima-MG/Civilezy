@@ -13,6 +13,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
+  sendPasswordResetEmail,
   type User,
 } from "firebase/auth";
 import {
@@ -45,6 +46,7 @@ interface AuthContextValue {
   signup: (email: string, password: string, displayName: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateUserProfile: (data: Partial<UserProfile>) => Promise<void>;
 }
@@ -117,6 +119,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(p);
   };
 
+  // Reset password
+  const resetPassword = async (email: string) => {
+    await sendPasswordResetEmail(auth, email);
+  };
+
   // Logout
   const logout = async () => {
     await signOut(auth);
@@ -141,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, signup, login, logout, refreshProfile, updateUserProfile }}
+      value={{ user, profile, loading, signup, login, logout, resetPassword, refreshProfile, updateUserProfile }}
     >
       {children}
     </AuthContext.Provider>
