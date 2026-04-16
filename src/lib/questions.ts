@@ -85,8 +85,8 @@ export async function deleteQuestion(id: string): Promise<void> {
 
 // ─── Fetch all (admin) ─────────────────────────────────────────────────────
 
-export async function getAllQuestions(max: number = 500): Promise<QuestionDoc[]> {
-  const q = query(collection(db, COL), orderBy("createdAt", "desc"), firestoreLimit(max));
+export async function getAllQuestions(): Promise<QuestionDoc[]> {
+  const q = query(collection(db, COL), orderBy("createdAt", "desc"));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as QuestionDoc));
 }
