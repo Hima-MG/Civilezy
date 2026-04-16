@@ -83,12 +83,16 @@ const DOMAIN_SUBJECTS: Record<Domain, { core: SubjectOption[]; addon: SubjectOpt
   BTech:   buildSubjects("btech"),
 };
 
-const QUESTIONS_PER_GAME = 25;
+// ─── Quiz configuration ─────────────────────────────────────────────────────
+const QUIZ_CONFIG = {
+  questionsPerRound: 10,
+  timers: { Easy: 180, Medium: 120, Hard: 120 } as Record<Difficulty, number>,
+};
 
 const DIFFICULTIES: DifficultyOption[] = [
-  { id:"Easy",   label:"Easy",   questions:`${QUESTIONS_PER_GAME} Questions`, desc:"Fundamental concepts & basics",  icon:"🌱", color:"emerald" },
-  { id:"Medium", label:"Medium", questions:`${QUESTIONS_PER_GAME} Questions`, desc:"Application level problems",      icon:"⚡", color:"amber"   },
-  { id:"Hard",   label:"Hard",   questions:`${QUESTIONS_PER_GAME} Questions`, desc:"Exam-standard questions",         icon:"🔥", color:"rose"    },
+  { id:"Easy",   label:"Easy",   questions:`${QUIZ_CONFIG.questionsPerRound} Questions`, desc:"Fundamental concepts & basics",  icon:"🌱", color:"emerald" },
+  { id:"Medium", label:"Medium", questions:`${QUIZ_CONFIG.questionsPerRound} Questions`, desc:"Application level problems",      icon:"⚡", color:"amber"   },
+  { id:"Hard",   label:"Hard",   questions:`${QUIZ_CONFIG.questionsPerRound} Questions`, desc:"Exam-standard questions",         icon:"🔥", color:"rose"    },
 ];
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -122,7 +126,8 @@ export default function GameArenaPage() {
   const [animating,            setAnimating]            = useState(false);
 
   // ── Advanced features state ──
-  const [timeLeft,     setTimeLeft]     = useState(15);
+  const [timeLeft,     setTimeLeft]     = useState(180);
+  const roundTimeRef = useRef(180); // total seconds for the current round (for progress bar)
   const [streakCount,  setStreakCount]  = useState(0);
   const [bestStreak,   setBestStreak]   = useState(0);
   const [showXpBurst,  setShowXpBurst]  = useState(false);
@@ -210,17 +215,17 @@ export default function GameArenaPage() {
   }, []);
 
   const startTimer = useCallback(() => {
-    clearTimer(); setTimeLeft(15);
+    clearTimer();
     timerRef.current = setInterval(() => setTimeLeft(t => { if (t <= 1) { clearTimer(); return 0; } return t - 1; }), 1000);
   }, [clearTimer]);
 
-  // Auto-advance when timer hits 0
+  // End the round when the per-round timer hits 0
   useEffect(() => {
-    if (!gameStarted || showResult || selectedAnswer !== null) return;
+    if (!gameStarted || showResult) return;
     if (timeLeft === 0) {
-      playSound("timeout"); setTimedOut(true); setSelectedAnswer("__timeout__"); setStreakCount(0); clearTimer();
+      playSound("timeout"); clearTimer(); setShowResult(true);
     }
-  }, [timeLeft, gameStarted, showResult, selectedAnswer, playSound, clearTimer]);
+  }, [timeLeft, gameStarted, showResult, playSound, clearTimer]);
 
   // ── Quiz engine helpers ──────────────────────────────────────────────────
   const [startingGame, setStartingGame] = useState(false);
@@ -233,7 +238,10 @@ export default function GameArenaPage() {
     try {
       const dataDomain     = DOMAIN_MAP[selectedDomain!];
       const dataDifficulty = selectedDifficulty!.toLowerCase() as "easy" | "medium" | "hard";
-      const pool = await getQuestions(dataDomain, selectedSubjects, dataDifficulty, 25);
+      const pool = await getQuestions(dataDomain, selectedSubjects, dataDifficulty, QUIZ_CONFIG.questionsPerRound);
+      const roundTime = QUIZ_CONFIG.timers[selectedDifficulty!];
+      roundTimeRef.current = roundTime;
+      setTimeLeft(roundTime);
       setQuestions(pool); setCurrentQuestionIndex(0); setSelectedAnswer(null);
       setScore(0); setXp(0); setShowResult(false); setAnimating(false);
       setStreakCount(0); setBestStreak(0); setTimedOut(false);
@@ -293,9 +301,9 @@ export default function GameArenaPage() {
   };
 
   useEffect(() => {
-    if (gameStarted && !showResult) { setTimedOut(false); startTimer(); }
+    if (gameStarted && !showResult) { startTimer(); }
     return clearTimer;
-  }, [gameStarted, showResult, currentQuestionIndex]); // eslint-disable-line
+  }, [gameStarted, showResult]); // eslint-disable-line
 
   const handleAnswerSelect = (option: string) => {
     if (selectedAnswer !== null) return;
@@ -334,6 +342,9 @@ export default function GameArenaPage() {
     clearTimer(); setGameStarted(false); setShowResult(false); setSelectedAnswer(null);
     setCurrentQuestionIndex(0); setScore(0); setXp(0); setStreakCount(0); setBestStreak(0); setTimedOut(false);
     setScoreSaved(false); setSaveError(""); setLeaderboard([]);
+    const roundTime = selectedDifficulty ? QUIZ_CONFIG.timers[selectedDifficulty] : 180;
+    roundTimeRef.current = roundTime;
+    setTimeLeft(roundTime);
   };
 
   // ── Load leaderboard when game ends ──
@@ -346,8 +357,11 @@ export default function GameArenaPage() {
   const grade      = score / (questions.length || 1);
   const gradeLabel = grade >= 0.8 ? "🔥 Excellent! You're PSC ready" : grade >= 0.6 ? "👍 Good progress, keep practicing" : "📘 Keep learning, you'll improve";
   const gradeColor = grade >= 0.8 ? "text-emerald-400" : grade >= 0.6 ? "text-amber-400" : "text-rose-400";
-  const timerDanger = timeLeft <= 5;
-  const timerPct    = (timeLeft / 15) * 100;
+  const timerDanger = timeLeft <= 15;
+  const timerPct    = (timeLeft / roundTimeRef.current) * 100;
+  const timerMins   = Math.floor(timeLeft / 60);
+  const timerSecs   = timeLeft % 60;
+  const timerDisplay = `${timerMins}:${timerSecs.toString().padStart(2, "0")}`;
   const revealed    = selectedAnswer !== null;
   const BG = <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage:"linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)", backgroundSize:"40px 40px" }} />;
 
@@ -404,7 +418,7 @@ export default function GameArenaPage() {
             <div className="flex justify-between items-center mb-1.5">
               <span className="text-xs text-zinc-500">Question {currentQuestionIndex + 1} of {questions.length}</span>
               <span className={`text-xs font-bold tabular-nums transition-colors duration-300 ${timerDanger ? "text-rose-400 animate-pulse" : "text-zinc-400"}`}>
-                ⏱ {timeLeft}s
+                ⏱ {timerDisplay}
               </span>
             </div>
             <div className="h-1 bg-zinc-800 rounded-full overflow-hidden mb-2">
@@ -413,7 +427,7 @@ export default function GameArenaPage() {
             <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-1000 ease-linear
-                  ${timerDanger ? "bg-gradient-to-r from-rose-600 to-red-400" : timeLeft <= 10 ? "bg-gradient-to-r from-amber-500 to-yellow-400" : "bg-gradient-to-r from-emerald-500 to-teal-400"}`}
+                  ${timerDanger ? "bg-gradient-to-r from-rose-600 to-red-400" : timeLeft <= 30 ? "bg-gradient-to-r from-amber-500 to-yellow-400" : "bg-gradient-to-r from-emerald-500 to-teal-400"}`}
                 style={{ width:`${timerPct}%` }}
               />
             </div>
