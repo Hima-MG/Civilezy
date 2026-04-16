@@ -103,20 +103,17 @@ export async function updateLeaderboardPeriod(
 /**
  * Convenience: update all three period leaderboards in parallel.
  * Called once after every game save.
+ *
+ * Uses Promise.all so that ANY failure propagates to the caller —
+ * the save handler can then show the user a real error instead of
+ * silently swallowing it.
  */
 export async function updateAllPeriodLeaderboards(
   input: UpdatePeriodInput,
 ): Promise<void> {
-  const results = await Promise.allSettled([
+  await Promise.all([
     updateLeaderboardPeriod("daily", input),
     updateLeaderboardPeriod("weekly", input),
     updateLeaderboardPeriod("monthly", input),
   ]);
-
-  // Log any failures so they're visible in the browser console
-  for (const r of results) {
-    if (r.status === "rejected") {
-      console.error("[Leaderboard] Period update failed:", r.reason);
-    }
-  }
 }

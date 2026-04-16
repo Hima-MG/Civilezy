@@ -57,6 +57,7 @@ export default function LeaderboardTabs({ currentPlayerName }: LeaderboardTabsPr
   const [loading, setLoading]     = useState(true);
   const [countdown, setCountdown] = useState("");
   const [transitioning, setTransitioning] = useState(false);
+  const [firebaseError, setFirebaseError] = useState<string | null>(null);
   const prevTabRef = useRef<LeaderboardPeriod>(activeTab);
 
   // ── Smooth tab switch ──
@@ -73,11 +74,12 @@ export default function LeaderboardTabs({ currentPlayerName }: LeaderboardTabsPr
   // ── Real-time listener for active tab ──
   useEffect(() => {
     setLoading(true);
+    setFirebaseError(null);
     const unsub = subscribeToPeriodLeaderboard(
       activeTab,
       50,
-      (data) => { setEntries(data); setLoading(false); },
-      ()    => { setEntries([]);    setLoading(false); },
+      (data) => { setEntries(data); setFirebaseError(null); setLoading(false); },
+      (err) => { setEntries([]); setFirebaseError(err.message); setLoading(false); },
     );
     return unsub;
   }, [activeTab]);
@@ -162,8 +164,19 @@ export default function LeaderboardTabs({ currentPlayerName }: LeaderboardTabsPr
           </div>
         )}
 
-        {/* Empty state */}
-        {!loading && entries.length === 0 && (
+        {/* Firebase error state */}
+        {!loading && firebaseError && (
+          <div className="text-center py-8">
+            <div className="text-3xl mb-2">⚠️</div>
+            <p className="text-rose-400 text-sm font-medium">
+              Could not load leaderboard
+            </p>
+            <p className="text-zinc-600 text-xs mt-1">{firebaseError}</p>
+          </div>
+        )}
+
+        {/* Empty state (only when no error) */}
+        {!loading && !firebaseError && entries.length === 0 && (
           <div className="text-center py-8">
             <div className="text-3xl mb-2">🏟️</div>
             <p className="text-zinc-500 text-sm font-medium">

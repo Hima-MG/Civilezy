@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { getLeaderboard, getLevel, getNextLevel, type LeaderboardEntry } from "@/lib/leaderboard";
-import { subscribeToPeriodLeaderboard, msUntilReset, type LeaderboardPeriod, type PeriodLeaderboardEntry } from "@/lib/leaderboard";
+import { fetchPeriodLeaderboard, msUntilReset, type LeaderboardPeriod, type PeriodLeaderboardEntry } from "@/lib/leaderboard";
 import { loadPlayer, type PlayerData } from "@/lib/player";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -76,17 +76,16 @@ export default function GameArenaSection() {
       .finally(() => setLbLoading(false));
   }, []);
 
-  // Real-time listener for period leaderboard
+  // One-time fetch for period leaderboard (homepage doesn't need real-time)
   useEffect(() => {
     if (lbTab === "all") return;
+    let cancelled = false;
     setPeriodLoading(true);
-    const unsub = subscribeToPeriodLeaderboard(
-      lbTab,
-      20,
-      (data) => { setPeriodData(data); setPeriodLoading(false); },
-      ()    => { setPeriodData([]);    setPeriodLoading(false); },
-    );
-    return unsub;
+    fetchPeriodLeaderboard(lbTab, 20)
+      .then((data) => { if (!cancelled) setPeriodData(data); })
+      .catch(() =>    { if (!cancelled) setPeriodData([]); })
+      .finally(() =>  { if (!cancelled) setPeriodLoading(false); });
+    return () => { cancelled = true; };
   }, [lbTab]);
 
   // Countdown timer

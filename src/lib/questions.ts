@@ -8,6 +8,7 @@ import {
   query,
   where,
   orderBy,
+  limit as firestoreLimit,
   serverTimestamp,
   Timestamp,
   writeBatch,
@@ -84,8 +85,8 @@ export async function deleteQuestion(id: string): Promise<void> {
 
 // ─── Fetch all (admin) ─────────────────────────────────────────────────────
 
-export async function getAllQuestions(): Promise<QuestionDoc[]> {
-  const q = query(collection(db, COL), orderBy("createdAt", "desc"));
+export async function getAllQuestions(max: number = 500): Promise<QuestionDoc[]> {
+  const q = query(collection(db, COL), orderBy("createdAt", "desc"), firestoreLimit(max));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as QuestionDoc));
 }
@@ -98,7 +99,7 @@ export async function getPublishedQuestions(
   difficulty?: Difficulty,
 ): Promise<QuestionDoc[]> {
   // Firestore compound query: published + active + domain
-  const constraints = [
+  const constraints: ReturnType<typeof where>[] = [
     where("status", "==", "published"),
     where("isActive", "==", true),
     where("domain", "==", domain),
@@ -106,12 +107,18 @@ export async function getPublishedQuestions(
   if (difficulty) {
     constraints.push(where("difficulty", "==", difficulty));
   }
+
+  // Firestore "in" supports up to 30 values — use server-side filter when possible
+  if (subjects.length > 0 && subjects.length <= 30) {
+    constraints.push(where("subject", "in", subjects));
+  }
+
   const q = query(collection(db, COL), ...constraints);
   const snap = await getDocs(q);
   const all = snap.docs.map((d) => ({ id: d.id, ...d.data() } as QuestionDoc));
 
-  // Client-side filter by subjects if provided
-  if (subjects.length > 0) {
+  // Client-side fallback only when more than 30 subjects (Firestore "in" limit)
+  if (subjects.length > 30) {
     return all.filter((q) => subjects.includes(q.subject));
   }
   return all;

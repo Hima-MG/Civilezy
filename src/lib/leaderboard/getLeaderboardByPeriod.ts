@@ -1,12 +1,14 @@
 // ---------------------------------------------------------------------------
-// getLeaderboardByPeriod — REAL-TIME Firestore listener for period boards
+// getLeaderboardByPeriod — Firestore queries for period-based leaderboards
 // ---------------------------------------------------------------------------
 
 import {
   collection,
   query,
+  where,
   orderBy,
-  limit,
+  limit as firestoreLimit,
+  getDocs,
   onSnapshot,
   type Unsubscribe,
 } from "firebase/firestore";
@@ -19,19 +21,70 @@ function collectionName(period: LeaderboardPeriod): string {
 }
 
 /**
+ * Reads a snapshot of the entry array from Firestore docs.
+ * Handles both old (name/totalXp) and new (displayName/xp/leaderboardMetric)
+ * field names for backward compatibility.
+ */
+function docsToEntries(
+  docs: { id: string; data: () => Record<string, unknown> }[],
+): PeriodLeaderboardEntry[] {
+  return docs.map((d) => {
+    const data = d.data();
+    const xpVal = (data.totalXp as number) ?? (data.xp as number) ?? 0;
+    return {
+      userId: (data.userId as string) ?? d.id,
+      displayName: (data.displayName as string) ?? (data.name as string) ?? "Unknown",
+      score: (data.score as number) ?? 0,
+      xp: xpVal,
+      gamesPlayed: (data.gamesPlayed as number) ?? 0,
+      bestStreak: (data.bestStreak as number) ?? 0,
+      leaderboardMetric: xpVal,
+    };
+  });
+}
+
+/**
+ * Build a Firestore query that filters by periodKey server-side.
+ *
+ * Requires a composite index on (periodKey ASC, totalXp DESC) for each
+ * leaderboard_* collection. Firestore will prompt you to create it on
+ * first run — click the link in the console error.
+ *
+ * Server-side filtering means we only read documents from the current
+ * period, not the entire collection.
+ */
+function buildPeriodQuery(period: LeaderboardPeriod, max: number) {
+  const currentKey = getPeriodKey(period);
+  return query(
+    collection(db, collectionName(period)),
+    where("periodKey", "==", currentKey),
+    orderBy("totalXp", "desc"),
+    firestoreLimit(max),
+  );
+}
+
+/**
+ * One-time fetch of the leaderboard for a given period.
+ * Use this for pages that don't need live updates (e.g. homepage preview).
+ * Costs exactly 1 read per document returned (no listener overhead).
+ */
+export async function fetchPeriodLeaderboard(
+  period: LeaderboardPeriod,
+  max: number = 20,
+): Promise<PeriodLeaderboardEntry[]> {
+  const q = buildPeriodQuery(period, max);
+  const snap = await getDocs(q);
+  return docsToEntries(snap.docs);
+}
+
+/**
  * Subscribe to real-time leaderboard updates for a given period.
  *
  * Uses `onSnapshot` so the UI updates **instantly** when any player
  * finishes a game — no refresh or polling needed.
  *
- * Orders by `totalXp` (written by both old and new code paths) so
- * every document is included regardless of schema version.
- *
- * Filters by current `periodKey` client-side to avoid needing a
- * Firestore composite index (`where` + `orderBy` on different fields).
- *
- * Automatically detects period rollovers (e.g. midnight for daily) and
- * re-subscribes with the new period key.
+ * Uses server-side `where("periodKey", "==", ...)` so Firestore only
+ * sends documents from the current period — no over-fetching.
  *
  * Returns an `unsubscribe` function — call it when unmounting or
  * switching tabs.
@@ -42,69 +95,16 @@ export function subscribeToPeriodLeaderboard(
   onData: (entries: PeriodLeaderboardEntry[]) => void,
   onError?: (err: Error) => void,
 ): Unsubscribe {
-  let currentKey = getPeriodKey(period);
-  let cancelled = false;
-  let activeUnsub: Unsubscribe | null = null;
-  let rolloverTimer: ReturnType<typeof setInterval> | null = null;
+  const q = buildPeriodQuery(period, max);
 
-  function startListener() {
-    // Query: ordered by totalXp desc (field present on ALL docs, old & new).
-    // Over-fetch so client-side periodKey filter still yields enough results.
-    const q = query(
-      collection(db, collectionName(period)),
-      orderBy("totalXp", "desc"),
-      limit(max + 20),
-    );
-
-    activeUnsub = onSnapshot(
-      q,
-      (snap) => {
-        if (cancelled) return;
-        const entries: PeriodLeaderboardEntry[] = [];
-        for (const d of snap.docs) {
-          if (entries.length >= max) break;
-          const data = d.data();
-          // Only include docs from the current period
-          if (data.periodKey !== currentKey) continue;
-
-          const xpVal = data.totalXp ?? data.xp ?? 0;
-          entries.push({
-            userId: data.userId ?? d.id,
-            displayName: data.displayName ?? data.name ?? "Unknown",
-            score: data.score ?? 0,
-            xp: xpVal,
-            gamesPlayed: data.gamesPlayed ?? 0,
-            bestStreak: data.bestStreak ?? 0,
-            leaderboardMetric: xpVal,
-          });
-        }
-        onData(entries);
-      },
-      (err) => {
-        console.error(`[Leaderboard] ${period} listener error:`, err);
-        onError?.(err);
-      },
-    );
-  }
-
-  // Start the initial listener
-  startListener();
-
-  // Check every 30s if the period has rolled over (e.g. midnight, new week)
-  // and re-subscribe with the fresh key so stale data clears automatically.
-  rolloverTimer = setInterval(() => {
-    const newKey = getPeriodKey(period);
-    if (newKey !== currentKey) {
-      currentKey = newKey;
-      if (activeUnsub) activeUnsub();
-      startListener();
-    }
-  }, 30_000);
-
-  // Return a cleanup function that tears down everything
-  return () => {
-    cancelled = true;
-    if (rolloverTimer) clearInterval(rolloverTimer);
-    if (activeUnsub) activeUnsub();
-  };
+  return onSnapshot(
+    q,
+    (snap) => {
+      onData(docsToEntries(snap.docs));
+    },
+    (err) => {
+      console.error(`[Leaderboard] ${period} listener error:`, err);
+      onError?.(err);
+    },
+  );
 }
