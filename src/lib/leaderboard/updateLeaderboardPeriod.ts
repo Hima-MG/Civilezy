@@ -22,11 +22,6 @@ function collectionName(period: LeaderboardPeriod): string {
   return `leaderboard_${period}`;
 }
 
-/** Stable document ID derived from player name */
-function toDocId(name: string): string {
-  return name.trim().toLowerCase().replace(/\s+/g, "-");
-}
-
 /**
  * Upsert a player's score into one period leaderboard using a transaction
  * (atomic read-then-write, no race conditions).
@@ -35,17 +30,14 @@ function toDocId(name: string): string {
  *   a fresh document is written (auto-reset on first write of new period).
  * - Otherwise the XP / score / gamesPlayed / bestStreak are accumulated.
  *
- * Writes BOTH legacy field names (name, totalXp) and new field names
- * (userId, displayName, xp, score, leaderboardMetric, playedAt) so that
- * existing queries and new queries both work correctly.
+ * Uses Firebase Auth uid as document ID.
  */
 export async function updateLeaderboardPeriod(
   period: LeaderboardPeriod,
   input: UpdatePeriodInput,
 ): Promise<void> {
-  const docId = toDocId(input.playerName);
   const col = collectionName(period);
-  const ref = doc(db, col, docId);
+  const ref = doc(db, col, input.uid);
   const currentKey = getPeriodKey(period);
 
   await runTransaction(db, async (tx) => {
@@ -61,12 +53,10 @@ export async function updateLeaderboardPeriod(
         const newXp = prevXp + input.xpEarned;
         const newScore = prevScore + input.score;
         tx.set(ref, {
-          // Legacy fields (backward compat)
-          name: input.playerName.trim(),
+          name: input.displayName,
           totalXp: newXp,
-          // New fields
-          userId: docId,
-          displayName: input.playerName.trim(),
+          userId: input.uid,
+          displayName: input.displayName,
           score: newScore,
           xp: newXp,
           leaderboardMetric: newXp,
@@ -82,12 +72,10 @@ export async function updateLeaderboardPeriod(
 
     // New period or first entry — fresh document
     tx.set(ref, {
-      // Legacy fields (backward compat)
-      name: input.playerName.trim(),
+      name: input.displayName,
       totalXp: input.xpEarned,
-      // New fields
-      userId: docId,
-      displayName: input.playerName.trim(),
+      userId: input.uid,
+      displayName: input.displayName,
       score: input.score,
       xp: input.xpEarned,
       leaderboardMetric: input.xpEarned,

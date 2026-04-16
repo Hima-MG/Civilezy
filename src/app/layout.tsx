@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import StickyCTA from "@/components/sections/StickyCTA";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 export const metadata: Metadata = {
   title: {
@@ -53,14 +54,16 @@ export default function RootLayout({
         />
       </head>
       <body className="overflow-x-hidden">
-        <Navbar />
-        <main
-          className="overflow-x-hidden"
-          style={{ paddingTop: "70px", paddingBottom: "96px" }}
-        >
-          {children}
-        </main>
-        <StickyCTA />
+        <AuthProvider>
+          <Navbar />
+          <main
+            className="overflow-x-hidden"
+            style={{ paddingTop: "70px", paddingBottom: "96px" }}
+          >
+            {children}
+          </main>
+          <StickyCTA />
+        </AuthProvider>
       </body>
     </html>
   );

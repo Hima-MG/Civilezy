@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { saveScore, getLeaderboard, getLevel, getNextLevel, updateAllPeriodLeaderboards, type LeaderboardEntry } from "@/lib/leaderboard";
-import { loadPlayer, createPlayer, recordGame, type PlayerData } from "@/lib/player";
+import { useAuth } from "@/contexts/AuthContext";
+import AuthModal from "@/components/auth/AuthModal";
 import {
   SUBJECTS_BY_DOMAIN,
   ADDON_SUBJECTS,
@@ -95,6 +96,23 @@ const DIFFICULTIES: DifficultyOption[] = [
   { id:"Hard",   label:"Hard",   questions:`${QUIZ_CONFIG.questionsPerRound} Questions`, desc:"Exam-standard questions",         icon:"🔥", color:"rose"    },
 ];
 
+// ─── Streak helper ──────────────────────────────────────────────────────────
+function todayStr(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+function yesterdayStr(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+function computeStreak(lastPlayed: string, currentStreak: number): number {
+  const today = todayStr();
+  const yesterday = yesterdayStr();
+  if (lastPlayed === today) return currentStreak;
+  if (lastPlayed === yesterday) return currentStreak + 1;
+  return 1;
+}
+
 // ─── Sub-components ──────────────────────────────────────────────────────────
 function StepHeader({ step, title, subtitle }: { step:number; title:string; subtitle:string }) {
   return (
@@ -110,6 +128,8 @@ function StepHeader({ step, title, subtitle }: { step:number; title:string; subt
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function GameArenaPage() {
+  const { user, profile, loading: authLoading, logout, updateUserProfile } = useAuth();
+
   const [selectedDomain,     setSelectedDomain]     = useState<Domain | null>(null);
   const [selectedSubjects,   setSelectedSubjects]   = useState<string[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null);
@@ -127,7 +147,7 @@ export default function GameArenaPage() {
 
   // ── Advanced features state ──
   const [timeLeft,     setTimeLeft]     = useState(180);
-  const roundTimeRef = useRef(180); // total seconds for the current round (for progress bar)
+  const roundTimeRef = useRef(180);
   const [streakCount,  setStreakCount]  = useState(0);
   const [bestStreak,   setBestStreak]   = useState(0);
   const [showXpBurst,  setShowXpBurst]  = useState(false);
@@ -136,10 +156,7 @@ export default function GameArenaPage() {
   const [timedOut,     setTimedOut]     = useState(false);
   const [clickedOpt,   setClickedOpt]   = useState<string | null>(null);
 
-  // ── Player persistence state ──
-  const [player,          setPlayer]          = useState<PlayerData | null>(null);
-  const [playerLoaded,    setPlayerLoaded]    = useState(false);
-  const [nameInput,       setNameInput]       = useState("");
+  // ── Score saving state ──
   const [scoreSaved,      setScoreSaved]      = useState(false);
   const [savingScore,     setSavingScore]     = useState(false);
   const [saveError,       setSaveError]       = useState("");
@@ -154,13 +171,6 @@ export default function GameArenaPage() {
   const timerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
-  // ── Load player from localStorage on mount ──
-  useEffect(() => {
-    const saved = loadPlayer();
-    if (saved) setPlayer(saved);
-    setPlayerLoaded(true);
-  }, []);
-
   const handleDomainSelect = (domain: Domain) => {
     if (selectedDomain !== domain) { setSelectedSubjects([]); setShowMoreSubjects(false); }
     setSelectedDomain(domain);
@@ -172,7 +182,6 @@ export default function GameArenaPage() {
 
   // ── Sound engine (Web Audio API + file fallback) ─────────────────────────
   const playSound = useCallback((type: "correct" | "wrong" | "timeout") => {
-    // Try Audio file first, fall back to synthesised tone
     const files: Record<string, string> = { correct:"/sounds/correct.mp3", wrong:"/sounds/wrong.mp3", timeout:"/sounds/wrong.mp3" };
     try {
       const audio = new Audio(files[type]);
@@ -264,36 +273,44 @@ export default function GameArenaPage() {
     finally { setLbLoading(false); }
   }, []);
 
-  // ── Register player name (first time only) ──
-  const handleRegisterName = () => {
-    const trimmed = nameInput.trim();
-    if (!trimmed) return;
-    const p = createPlayer(trimmed);
-    setPlayer(p);
-  };
-
-  // ── Save score handler (auto-uses stored name) ──
+  // ── Save score handler (uses authenticated identity) ──
   const handleSaveScore = async () => {
-    if (!player) return;
+    if (!user || !profile) return;
     setSavingScore(true); setSaveError("");
     try {
-      // Update local player data (totalScore + streak)
-      const updated = recordGame(player, xp);
-      setPlayer(updated);
-      // Save to Firebase (all-time leaderboard)
-      await saveScore({
-        name: updated.name,
-        score: xp,
-        totalScore: updated.totalScore,
-        streak: updated.streak,
+      // Compute new streak
+      const newStreak = computeStreak(profile.lastPlayed || "", profile.streak || 0);
+      const newTotalScore = (profile.totalScore || 0) + xp;
+      const newGamesPlayed = (profile.gamesPlayed || 0) + 1;
+      const newTotalXp = (profile.totalXp || 0) + xp;
+
+      // Update Firestore user profile
+      await updateUserProfile({
+        totalScore: newTotalScore,
+        totalXp: newTotalXp,
+        gamesPlayed: newGamesPlayed,
+        streak: newStreak,
+        lastPlayed: todayStr(),
       });
+
+      // Save to Firebase all-time leaderboard
+      await saveScore({
+        uid: user.uid,
+        displayName: profile.displayName,
+        score: xp,
+        totalScore: newTotalScore,
+        streak: newStreak,
+      });
+
       // Update daily / weekly / monthly period leaderboards
       await updateAllPeriodLeaderboards({
-        playerName: updated.name,
+        uid: user.uid,
+        displayName: profile.displayName,
         score,
         xpEarned: xp,
         bestStreak,
       });
+
       setScoreSaved(true);
       fetchLeaderboard();
     } catch {
@@ -365,6 +382,42 @@ export default function GameArenaPage() {
   const timerDisplay = `${timerMins}:${timerSecs.toString().padStart(2, "0")}`;
   const revealed    = selectedAnswer !== null;
   const BG = <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage:"linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)", backgroundSize:"40px 40px" }} />;
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUTH LOADING STATE
+  // ═══════════════════════════════════════════════════════════════════════════
+  if (authLoading) {
+    return (
+      <main className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <span className="inline-block w-8 h-8 border-2 border-orange-500/30 border-t-orange-500 rounded-full animate-spin" />
+          <p className="text-zinc-400 text-sm">Loading...</p>
+        </div>
+      </main>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AUTH GATE — show modal if not logged in
+  // ═══════════════════════════════════════════════════════════════════════════
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-zinc-950 text-white">
+        {BG}
+        <div className="relative z-10 max-w-3xl mx-auto px-4 py-12 text-center">
+          <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded-full px-4 py-1.5 mb-5">
+            <span className="text-orange-400 text-xs font-semibold tracking-widest uppercase">Quiz Mode</span>
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-extrabold mb-3 tracking-tight">
+            🎮{" "}
+            <span className="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">Game Arena</span>
+          </h1>
+          <p className="text-zinc-400 text-lg max-w-md mx-auto mb-6">Sign in to start playing and track your progress</p>
+        </div>
+        <AuthModal />
+      </main>
+    );
+  }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // QUIZ SCREEN
@@ -554,6 +607,7 @@ export default function GameArenaPage() {
   if (gameStarted && showResult) {
     const medal       = score === questions.length ? "🥇" : score >= questions.length * 0.7 ? "🥈" : "🥉";
     const accuracyPct = Math.round((score / questions.length) * 100);
+    const displayName = profile?.displayName || user.displayName || "Player";
 
     return (
       <main className="min-h-screen bg-zinc-950 text-white">
@@ -605,10 +659,10 @@ export default function GameArenaPage() {
 
           {/* Player stats + Level badge */}
           {(() => {
-            const totalScore = player ? player.totalScore + (scoreSaved ? 0 : xp) : xp;
+            const totalScore = (profile?.totalScore ?? 0) + (scoreSaved ? 0 : xp);
             const lvl = getLevel(totalScore);
             const next = getNextLevel(totalScore);
-            const streak = player?.streak ?? 0;
+            const streak = profile?.streak ?? 0;
             return (
               <div className={`${lvl.bgColor} border ${lvl.borderColor} rounded-2xl p-5 mb-5 shadow-lg ${lvl.glowColor}`}>
                 {/* Level + name */}
@@ -616,7 +670,7 @@ export default function GameArenaPage() {
                   <span className="text-2xl">{lvl.icon}</span>
                   <span className={`text-lg font-extrabold ${lvl.color}`}>{lvl.label}</span>
                 </div>
-                {player && <p className="text-zinc-300 text-sm font-semibold mb-3">{player.name}</p>}
+                <p className="text-zinc-300 text-sm font-semibold mb-3">{displayName}</p>
 
                 {/* Stats row */}
                 <div className="grid grid-cols-3 gap-3 mb-3">
@@ -674,36 +728,13 @@ export default function GameArenaPage() {
 
             {!scoreSaved ? (
               <div>
-                {!player ? (
-                  /* First-time: ask for name */
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={nameInput}
-                      onChange={(e) => setNameInput(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleRegisterName(); }}
-                      placeholder="Enter your name to save"
-                      maxLength={30}
-                      className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/30 transition-all"
-                    />
-                    <button
-                      onClick={handleRegisterName}
-                      disabled={!nameInput.trim()}
-                      className="bg-gradient-to-r from-orange-500 to-amber-400 text-white font-bold px-5 py-2.5 rounded-xl text-sm hover:scale-105 active:scale-100 transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100 whitespace-nowrap"
-                    >
-                      Set Name
-                    </button>
-                  </div>
-                ) : (
-                  /* Returning player: one-click save */
-                  <button
-                    onClick={handleSaveScore}
-                    disabled={savingScore}
-                    className="w-full bg-gradient-to-r from-orange-500 to-amber-400 text-white font-bold px-5 py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-100 transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100"
-                  >
-                    {savingScore ? "Saving..." : `Save Score as ${player.name}`}
-                  </button>
-                )}
+                <button
+                  onClick={handleSaveScore}
+                  disabled={savingScore}
+                  className="w-full bg-gradient-to-r from-orange-500 to-amber-400 text-white font-bold px-5 py-3 rounded-xl text-sm hover:scale-[1.02] active:scale-100 transition-all duration-200 disabled:opacity-50 disabled:hover:scale-100"
+                >
+                  {savingScore ? "Saving..." : `Save Score as ${displayName}`}
+                </button>
                 {saveError && <p className="text-rose-400 text-xs mt-2">{saveError}</p>}
               </div>
             ) : (
@@ -718,7 +749,7 @@ export default function GameArenaPage() {
             <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
               🏆 Leaderboards
             </h3>
-            <LeaderboardTabs currentPlayerName={player?.name} />
+            <LeaderboardTabs currentPlayerName={displayName} />
           </div>
 
           {/* ── All-Time Leaderboard ── */}
@@ -733,7 +764,7 @@ export default function GameArenaPage() {
                 {leaderboard.map((entry, i) => {
                   const medals = ["🥇", "🥈", "🥉"];
                   const rankDisplay = i < 3 ? medals[i] : `#${i + 1}`;
-                  const isMe = player?.name?.toLowerCase() === entry.name?.toLowerCase();
+                  const isMe = entry.name?.toLowerCase() === displayName.toLowerCase();
                   return (
                     <li
                       key={`${entry.name}-${i}`}
@@ -826,7 +857,7 @@ export default function GameArenaPage() {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // SETUP SCREEN (unchanged)
+  // SETUP SCREEN
   // ═══════════════════════════════════════════════════════════════════════════
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
@@ -847,6 +878,20 @@ export default function GameArenaPage() {
             </span>
           </h1>
           <p className="text-zinc-400 text-lg max-w-md mx-auto">Learn PSC Civil Engineering by playing</p>
+
+          {/* Logged-in user bar */}
+          <div className="mt-4 inline-flex items-center gap-3 bg-zinc-800/60 border border-zinc-700/50 rounded-full px-4 py-2">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center text-xs font-bold text-white">
+              {(profile?.displayName || user.displayName || "U").charAt(0).toUpperCase()}
+            </div>
+            <span className="text-sm text-zinc-300 font-semibold">{profile?.displayName || user.displayName}</span>
+            <button
+              onClick={logout}
+              className="text-xs text-zinc-500 hover:text-rose-400 transition-colors font-medium ml-1"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         {/* ── Progress indicators ── */}

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { getLeaderboard, getLevel, getNextLevel, type LeaderboardEntry } from "@/lib/leaderboard";
 import { fetchPeriodLeaderboard, msUntilReset, type LeaderboardPeriod, type PeriodLeaderboardEntry } from "@/lib/leaderboard";
-import { loadPlayer, type PlayerData } from "@/lib/player";
+import { useAuth } from "@/contexts/AuthContext";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface TierDef {
@@ -57,9 +57,9 @@ function getActiveTierIdx(totalScore: number): number {
 // ─── Component ─────────────────────────────────────────────────────────────
 export default function GameArenaSection() {
   const router = useRouter();
+  const { profile } = useAuth();
   const [lbData, setLbData]       = useState<LeaderboardEntry[]>([]);
   const [lbLoading, setLbLoading] = useState(true);
-  const [player, setPlayer]       = useState<PlayerData | null>(null);
 
   // Period leaderboard state
   const [lbTab, setLbTab] = useState<LeaderboardPeriod | "all">("daily");
@@ -67,9 +67,8 @@ export default function GameArenaSection() {
   const [periodLoading, setPeriodLoading] = useState(false);
   const [countdown, setCountdown] = useState("");
 
-  // Load player + all-time leaderboard on mount
+  // Load all-time leaderboard on mount
   useEffect(() => {
-    setPlayer(loadPlayer());
     getLeaderboard()
       .then(setLbData)
       .catch(() => {})
@@ -103,16 +102,9 @@ export default function GameArenaSection() {
     return () => clearInterval(id);
   }, [lbTab]);
 
-  // Re-read player data when tab regains focus (user may have just played a game)
-  useEffect(() => {
-    const onFocus = () => setPlayer(loadPlayer());
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
-  }, []);
-
   // ── Derived player values (memoized) ──
-  const totalScore   = player?.totalScore ?? 0;
-  const streak       = player?.streak ?? 0;
+  const totalScore   = profile?.totalScore ?? 0;
+  const streak       = profile?.streak ?? 0;
   const activeTierIdx = useMemo(() => getActiveTierIdx(totalScore), [totalScore]);
   const level        = useMemo(() => getLevel(totalScore), [totalScore]);
   const nextLevel    = useMemo(() => getNextLevel(totalScore), [totalScore]);
@@ -198,7 +190,7 @@ export default function GameArenaSection() {
               id="journey-label"
               style={{ fontSize:"15px", fontWeight:700, color:"rgba(255,255,255,0.55)", letterSpacing:"0.5px", marginBottom:"16px" }}
             >
-              {player ? `${player.name.toUpperCase()}'S JOURNEY` : "YOUR JOURNEY"}
+              {profile ? `${profile.displayName.toUpperCase()}'S JOURNEY` : "YOUR JOURNEY"}
             </p>
 
             {/* Tier list */}
@@ -403,7 +395,7 @@ export default function GameArenaSection() {
                     const initials = entryName.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase();
                     const rankColor = i < 3 ? RANK_COLORS[i] : "rgba(255,255,255,0.55)";
                     const isFirst = i === 0;
-                    const isMe = player?.name?.toLowerCase() === entryName?.toLowerCase();
+                    const isMe = profile?.displayName?.toLowerCase() === entryName?.toLowerCase();
 
                     // Get display score — period entries use leaderboardMetric, all-time uses totalScore
                     const displayScore = isAllTime

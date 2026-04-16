@@ -19,6 +19,7 @@ export interface GameArenaReportInput {
   issueType: IssueType;
   description: string;
   userName: string | null;
+  userId: string | null;
 }
 
 // ---------------------------------------------------------------------------

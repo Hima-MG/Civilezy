@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type Level       = "iti" | "dip" | "btech";
@@ -16,8 +17,6 @@ import { EXTERNAL_URLS } from "@/lib/constants";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const LMS_FREE_TEST = EXTERNAL_URLS.demo;
-const STORAGE_KEY = "civilezy_user";
-
 // ─── Rank System ────────────────────────────────────────────────────────────
 interface RankInfo {
   label: string;
@@ -32,12 +31,6 @@ function getRank(score: number): RankInfo {
   return                     { label: "Beginner",       icon: "🟢", color: "#32C864" };
 }
 
-// ─── Player data from localStorage ──────────────────────────────────────────
-interface PlayerData {
-  name:       string;
-  totalScore: number;
-  streak:     number;
-}
 
 // ─── Quiz data ───────────────────────────────────────────────────────────────
 const QUIZ_BY_LEVEL: Record<Level, QuizData> = {
@@ -109,6 +102,7 @@ const INITIAL_STATES: AnswerState[] = ["unanswered","unanswered","unanswered","u
 
 // ─── Hero Component ──────────────────────────────────────────────────────────
 export default function Hero() {
+  const { profile } = useAuth();
   const [activeLevel,  setActiveLevel]  = useState<Level>("iti");
   const [answered,     setAnswered]     = useState(false);
   const [answerStates, setAnswerStates] = useState<AnswerState[]>(INITIAL_STATES);
@@ -119,28 +113,18 @@ export default function Hero() {
   const [streak,       setStreak]       = useState(0);
   const [onlineUsers,  setOnlineUsers]  = useState(0);
 
-  // ── Hydration guard + load player from localStorage ──
+  // ── Hydration guard + load player from auth profile ──
   useEffect(() => {
     setMounted(true);
 
-    // Load player data
-    let score = Math.floor(Math.random() * (1500 - 100) + 100); // fallback
-    let playerStreak = 0;
-
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as PlayerData;
-        if (parsed && typeof parsed.totalScore === "number") {
-          score = parsed.totalScore;
-          playerStreak = parsed.streak ?? 0;
-        }
-      }
-    } catch { /* no player data */ }
-
-    setTotalScore(score);
-    setStreak(playerStreak);
-  }, []);
+    if (profile) {
+      setTotalScore(profile.totalScore ?? 0);
+      setStreak(profile.streak ?? 0);
+    } else {
+      setTotalScore(Math.floor(Math.random() * (1500 - 100) + 100));
+      setStreak(0);
+    }
+  }, [profile]);
 
   // ── Derived rank (safe: returns Beginner for 0 during SSR) ──
   const rank = useMemo(() => getRank(totalScore), [totalScore]);

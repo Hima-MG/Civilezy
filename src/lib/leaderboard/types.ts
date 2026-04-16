@@ -33,7 +33,8 @@ export interface PeriodLeaderboardEntry {
 
 /** Data needed to update a user's period leaderboard */
 export interface UpdatePeriodInput {
-  playerName: string;
+  uid: string;
+  displayName: string;
   score: number;
   xpEarned: number;
   bestStreak: number;

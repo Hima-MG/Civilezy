@@ -5,6 +5,7 @@ import {
   reportGameArenaIssue,
   type IssueType,
 } from "@/lib/reportGameArenaIssue";
+import { useAuth } from "@/contexts/AuthContext";
 
 // ---------------------------------------------------------------------------
 // Props
@@ -37,6 +38,7 @@ export default function ReportIssueModal({
   onClose,
   onSubmitted,
 }: ReportIssueModalProps) {
+  const { user, profile } = useAuth();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [issueType, setIssueType] = useState<IssueType>("wrong_answer");
   const [description, setDescription] = useState("");
@@ -69,18 +71,6 @@ export default function ReportIssueModal({
     setError("");
 
     try {
-      // Load player name from localStorage if available
-      let userName: string | null = null;
-      try {
-        const raw = localStorage.getItem("civilezy_user");
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed?.name) userName = parsed.name;
-        }
-      } catch {
-        /* no player data */
-      }
-
       await reportGameArenaIssue({
         questionId,
         questionText,
@@ -88,7 +78,8 @@ export default function ReportIssueModal({
         selectedDifficulty,
         issueType,
         description: description.trim(),
-        userName,
+        userName: profile?.displayName || user?.displayName || null,
+        userId: user?.uid || null,
       });
 
       onSubmitted();

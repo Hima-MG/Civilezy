@@ -45,7 +45,8 @@ export function getNextLevel(score: number): Level | null {
 
 // ─── Firestore operations ───────────────────────────────────────────────────
 export interface SaveScoreParams {
-  name: string;
+  uid: string;
+  displayName: string;
   score: number;
   totalScore: number;
   streak: number;
@@ -53,19 +54,15 @@ export interface SaveScoreParams {
 
 /**
  * Upserts a player's score document.
- * Uses the player name (lowercased, trimmed) as the document ID so each
+ * Uses the Firebase Auth uid as the document ID so each
  * player has exactly ONE document that is updated every game.
  */
 export async function saveScore(params: SaveScoreParams): Promise<void> {
-  const trimmed = params.name.trim();
-  if (!trimmed) throw new Error("Name is required");
-
-  // Derive a stable document ID from the player name
-  const docId = trimmed.toLowerCase().replace(/\s+/g, "-");
+  if (!params.uid) throw new Error("User ID is required");
 
   const level = getLevel(params.totalScore);
-  await setDoc(doc(db, COL, docId), {
-    name: trimmed,
+  await setDoc(doc(db, COL, params.uid), {
+    name: params.displayName,
     score: params.score,
     totalScore: params.totalScore,
     level: `${level.icon} ${level.label}`,
