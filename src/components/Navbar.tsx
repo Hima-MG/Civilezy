@@ -89,6 +89,14 @@ export default function Navbar() {
             rel="noopener noreferrer"
             className="nav-login"
             style={styles.loginLink}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px) scale(1.04)";
+              e.currentTarget.style.boxShadow = "0 8px 28px rgba(255,98,0,0.55)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0) scale(1)";
+              e.currentTarget.style.boxShadow = "0 4px 18px rgba(255,98,0,0.35)";
+            }}
           >
             Login
           </a>
@@ -233,12 +241,18 @@ const styles = {
   } as React.CSSProperties,
 
   loginLink: {
-    color:          "rgba(255,255,255,0.65)",
+    background:     "linear-gradient(135deg, #FF8534, #FF6A00)",
+    color:          "white",
     textDecoration: "none",
     fontSize:       "14px",
-    fontWeight:     600,
-    transition:     "color 0.2s",
+    fontWeight:     700,
+    padding:        "9px 24px",
+    borderRadius:   "50px",
+    boxShadow:      "0 4px 18px rgba(255,98,0,0.35)",
+    transition:     "transform 0.25s ease, box-shadow 0.25s ease",
     whiteSpace:     "nowrap",
+    display:        "inline-block",
+    fontFamily:     "Nunito, sans-serif",
   } as React.CSSProperties,
 
   hamburger: {
@@ -276,9 +290,9 @@ const styles = {
   mobileSecondaryBtn: {
     flex:           1,
     textAlign:      "center",
-    background:     "transparent",
+    background:     "linear-gradient(135deg, #FF8534, #FF6A00)",
     color:          "white",
-    border:         "2px solid rgba(255,255,255,0.25)",
+    border:         "none",
     padding:        "12px 0",
     borderRadius:   "50px",
     fontFamily:     "Nunito, sans-serif",
@@ -286,7 +300,8 @@ const styles = {
     fontWeight:     700,
     textDecoration: "none",
     display:        "block",
-    transition:     "border-color 0.2s",
+    boxShadow:      "0 4px 18px rgba(255,98,0,0.35)",
+    transition:     "transform 0.25s ease, box-shadow 0.25s ease",
   } as React.CSSProperties,
 
   mobilePrimaryBtn: {

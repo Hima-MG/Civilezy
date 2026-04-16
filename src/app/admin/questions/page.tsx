@@ -22,7 +22,7 @@ import { deleteAllQuestions } from "@/lib/admin/deleteAllQuestions";
 // ─── Constants ──────────────────────────────────────────────────────────────
 const DOMAINS: Domain[] = ["iti", "diploma", "btech"];
 const DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
-const DOMAIN_LABELS: Record<Domain, string> = { iti: "ITI", diploma: "Diploma", btech: "BTech" };
+const DOMAIN_LABELS: Record<Domain, string> = { iti: "ITI", diploma: "Diploma", btech: "B.Tech" };
 const DIFF_COLORS: Record<Difficulty, string> = { easy: "#22c55e", medium: "#f59e0b", hard: "#ef4444" };
 
 const EMPTY_FORM: QuestionInput = {

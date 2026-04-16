@@ -164,7 +164,7 @@ export const SUBJECT_HIERARCHY: DomainHierarchy[] = [
   // ═══════════════════════════════════════════════════════════════════════════
   {
     domain: "btech",
-    label: "BTech",
+    label: "B.Tech",
     categories: [
       {
         name: "Structural Engineering",

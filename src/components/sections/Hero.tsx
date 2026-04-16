@@ -1,15 +1,21 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import MiniArenaPreview from "@/components/game/MiniArenaPreview";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type Level       = "iti" | "dip" | "btech";
+type AnswerState = "unanswered" | "correct" | "wrong";
+
+interface QuizData {
+  question:     string;
+  options:      string[];
+  correctIndex: number;
+}
 
 import { EXTERNAL_URLS } from "@/lib/constants";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const LMS_FREE_TEST = EXTERNAL_URLS.demo;
+// const LMS_FREE_TEST = EXTERNAL_URLS.freeTest;
 const STORAGE_KEY = "civilezy_user";
 
 // ─── Rank System ────────────────────────────────────────────────────────────
@@ -33,6 +39,24 @@ interface PlayerData {
   streak:     number;
 }
 
+// ─── Quiz data ───────────────────────────────────────────────────────────────
+const QUIZ_BY_LEVEL: Record<Level, QuizData> = {
+  iti: {
+    question:     "Q. The minimum reinforcement in a RCC slab as per IS 456 is:",
+    options:      ["A. 0.10% of bD", "B. 0.12% of bD (HYSD)", "C. 0.15% of bD", "D. 0.20% of bD"],
+    correctIndex: 1,
+  },
+  dip: {
+    question:     "Q. In a singly reinforced beam, the neutral axis depth factor 'n' depends on:",
+    options:      ["A. Steel percentage only", "B. Modular ratio & steel %", "C. Concrete grade only", "D. Load intensity"],
+    correctIndex: 1,
+  },
+  btech: {
+    question:     "Q. As per IS 1893, the seismic zone factor for Zone III in Kerala is:",
+    options:      ["A. 0.10", "B. 0.16", "C. 0.24", "D. 0.36"],
+    correctIndex: 1,
+  },
+};
 
 const STATS = [
   { num: "5,200+",  label: "Active Students" },
@@ -69,6 +93,11 @@ const LEVEL_SCHEMES = {
   blue:   { background:"rgba(100,200,255,0.1)",  color:"#64C8FF", border:"1px solid rgba(100,200,255,0.3)", activeBox:"0 4px 15px rgba(100,200,255,0.3)"  },
 } as const;
 
+const ANSWER_STYLES: Record<AnswerState, React.CSSProperties> = {
+  unanswered: { background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", color:"rgba(255,255,255,0.85)" },
+  correct:    { background:"rgba(50,200,100,0.2)",   border:"1px solid #32C864",               color:"#32C864"                },
+  wrong:      { background:"rgba(255,50,50,0.2)",    border:"1px solid #FF3232",               color:"#FF6464"                },
+};
 
 const STREAK_STYLES: Record<"done"|"today"|"miss", React.CSSProperties> = {
   done:  { background:"#FF6200",                color:"white" },
@@ -76,10 +105,14 @@ const STREAK_STYLES: Record<"done"|"today"|"miss", React.CSSProperties> = {
   miss:  { background:"rgba(255,255,255,0.05)", color:"rgba(255,255,255,0.55)" },
 };
 
+const INITIAL_STATES: AnswerState[] = ["unanswered","unanswered","unanswered","unanswered"];
 
 // ─── Hero Component ──────────────────────────────────────────────────────────
 export default function Hero() {
   const [activeLevel,  setActiveLevel]  = useState<Level>("iti");
+  const [answered,     setAnswered]     = useState(false);
+  const [answerStates, setAnswerStates] = useState<AnswerState[]>(INITIAL_STATES);
+  const [xpPop,        setXpPop]        = useState<string | null>(null);
   const [xpWidth,      setXpWidth]      = useState("0%");
   const [mounted,      setMounted]      = useState(false);
   const [totalScore,   setTotalScore]   = useState(0);
@@ -166,6 +199,34 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, []);
 
+  // Reset quiz when level changes
+  useEffect(() => {
+    setAnswered(false);
+    setAnswerStates(INITIAL_STATES);
+  }, [activeLevel]);
+
+  const handleAnswer = useCallback((index: number) => {
+    if (answered) return;
+    setAnswered(true);
+
+    const correct = QUIZ_BY_LEVEL[activeLevel].correctIndex;
+    const next    = [...INITIAL_STATES] as AnswerState[];
+
+    if (index === correct) {
+      next[index] = "correct";
+      setXpPop("+10 XP 🔥");
+    } else {
+      next[index]   = "wrong";
+      next[correct] = "correct";
+      setXpPop("Try Again! 💡");
+    }
+
+    setAnswerStates(next);
+    setTimeout(() => setXpPop(null), 2000);
+    setTimeout(() => { setAnswerStates(INITIAL_STATES); setAnswered(false); }, 2500);
+  }, [answered, activeLevel]);
+
+  const quiz = QUIZ_BY_LEVEL[activeLevel];
 
   return (
     <>
@@ -231,7 +292,7 @@ export default function Hero() {
             {/* CTA Buttons */}
             <div className="hero-ctas" style={{ display:"flex", gap:"14px", flexWrap:"wrap", marginBottom:"20px" }}>
               <a
-                href={LMS_FREE_TEST}
+                // href={LMS_FREE_TEST}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Sign up for 48 hour free demo — opens in new tab"
@@ -293,11 +354,30 @@ export default function Hero() {
               <div role="group" aria-labelledby="level-selector-label" style={{ display:"flex", gap:"10px", marginBottom:"20px" }}>
                 <LevelBtn label="🔧 ITI"      isActive={activeLevel==="iti"} colorScheme="orange" onClick={() => setActiveLevel("iti")} />
                 <LevelBtn label="📐 Diploma"  isActive={activeLevel==="dip"} colorScheme="gold"   onClick={() => setActiveLevel("dip")} />
-                <LevelBtn label="🏗️ Btech"       isActive={activeLevel==="btech"}  colorScheme="blue"   onClick={() => setActiveLevel("btech")}  />
+                <LevelBtn label="🏗️ B.Tech"       isActive={activeLevel==="btech"}  colorScheme="blue"   onClick={() => setActiveLevel("btech")}  />
               </div>
 
-              {/* Quiz — fetches real questions from Firebase */}
-              <MiniArenaPreview level={activeLevel} />
+              {/* Quiz */}
+              <div role="region" aria-label="Sample quiz question" style={{ background:"rgba(0,0,0,0.3)", borderRadius:"14px", padding:"16px", marginBottom:"16px" }}>
+                <p style={{ fontSize:"14px", fontWeight:600, marginBottom:"12px", lineHeight:1.5, color:"#fff" }}>
+                  {quiz.question}
+                </p>
+                <div
+                  style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"8px" }}
+                  role="group"
+                  aria-label="Answer options"
+                >
+                  {quiz.options.map((opt, i) => (
+                    <QuizOption
+                      key={`${activeLevel}-${i}`}
+                      label={opt}
+                      state={answerStates[i]}
+                      disabled={answered}
+                      onClick={() => handleAnswer(i)}
+                    />
+                  ))}
+                </div>
+              </div>
 
               {/* XP bar */}
               <div style={{ display:"flex", alignItems:"center", gap:"10px", marginTop:"12px" }}>
@@ -347,6 +427,17 @@ export default function Hero() {
         </div>
       </section>
 
+      {/* XP pop-up toast — role="status" announces to screen readers without interrupting */}
+      {xpPop && (
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          style={{ position:"fixed", top:"50%", left:"50%", transform:"translate(-50%,-50%)", background:"linear-gradient(135deg,#FF6200,#FF8534)", color:"white", padding:"12px 24px", borderRadius:"30px", fontFamily:"Rajdhani, sans-serif", fontSize:"22px", fontWeight:700, zIndex:9999, pointerEvents:"none", animation:"xpPopUp 2s ease forwards", whiteSpace:"nowrap" }}
+        >
+          {xpPop}
+        </div>
+      )}
     </>
   );
 }
@@ -367,7 +458,37 @@ function LevelBtn({ label, isActive, colorScheme, onClick }: { label:string; isA
   );
 }
 
+// Stable option hover handlers (outside component — no closure needed)
+const onOptEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
+  if ((e.currentTarget as HTMLButtonElement).disabled) return;
+  e.currentTarget.style.background   = "rgba(255,98,0,0.2)";
+  e.currentTarget.style.borderColor  = "#FF6200";
+};
+const onOptLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
+  if ((e.currentTarget as HTMLButtonElement).disabled) return;
+  e.currentTarget.style.background   = "rgba(255,255,255,0.06)";
+  e.currentTarget.style.borderColor  = "rgba(255,255,255,0.1)";
+};
 
+function QuizOption({ label, state, disabled, onClick }: { label:string; state:AnswerState; disabled:boolean; onClick:()=>void }) {
+  const s = ANSWER_STYLES[state];
+  const isCorrect = state === "correct";
+  const isWrong   = state === "wrong";
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      aria-pressed={isCorrect || isWrong ? true : undefined}
+      aria-label={`${label}${isCorrect?" — correct":isWrong?" — incorrect":""}`}
+      style={{ ...s, borderRadius:"8px", padding:"8px 12px", fontSize:"12px", cursor:disabled?"default":"pointer", transition:"all 0.2s", textAlign:"center", fontFamily:"Nunito, sans-serif", fontWeight:500, lineHeight:1.4 }}
+      onMouseEnter={state==="unanswered" ? onOptEnter : undefined}
+      onMouseLeave={state==="unanswered" ? onOptLeave : undefined}
+    >
+      {isCorrect ? `✓ ${label}` : label}
+    </button>
+  );
+}
 
 function StreakDay({ letter, state }: { letter:string; state:"done"|"today"|"miss" }) {
   return (

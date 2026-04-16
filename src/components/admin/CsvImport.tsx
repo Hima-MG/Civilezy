@@ -48,7 +48,7 @@ type ImportPhase = "idle" | "preview" | "importing" | "done";
 const VALID_DOMAINS: Domain[] = ["iti", "diploma", "btech"];
 const VALID_DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
 const VALID_LEVELS: (1 | 2 | 3)[] = [1, 2, 3];
-const DOMAIN_LABELS: Record<Domain, string> = { iti: "ITI", diploma: "Diploma", btech: "BTech" };
+const DOMAIN_LABELS: Record<Domain, string> = { iti: "ITI", diploma: "Diploma", btech: "B.Tech" };
 const DIFF_COLORS: Record<Difficulty, string> = { easy: "#22c55e", medium: "#f59e0b", hard: "#ef4444" };
 
 const CSV_TEMPLATE =

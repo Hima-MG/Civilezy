@@ -80,7 +80,7 @@ btech:{
   shortLabel: "B.Tech",
   emoji: "🎓",
   tagline: "For B.Tech Civil Engineering graduates targeting Assistant Engineer posts across various Kerala departments.",
-  keyword: "BTech AE Civil PSC course Kerala",
+  keyword: "B.Tech AE Civil PSC course Kerala",
   monthly: 2500,
   annual: 20000,
   annualOrig: 30000,

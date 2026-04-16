@@ -74,7 +74,7 @@ function buildSubjects(domain: DataDomain): { core: SubjectOption[]; addon: Subj
 const DOMAINS: DomainOption[] = [
   { id:"ITI",     label:"ITI",     icon:"🔧", desc:"Overseer Grade2 Grade3 Exams" },
   { id:"Diploma", label:"Diploma", icon:"📐", desc:"FirstGrade Overseer,Instructor Level Exams" },
-  { id:"BTech",   label:"BTech",   icon:"🎓", desc:"AE level Exams" },
+  { id:"BTech",   label:"B.Tech",  icon:"🎓", desc:"AE level Exams" },
 ];
 
 const DOMAIN_SUBJECTS: Record<Domain, { core: SubjectOption[]; addon: SubjectOption[] }> = {
