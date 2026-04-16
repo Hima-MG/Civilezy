@@ -290,6 +290,7 @@ export default function GameArenaPage() {
       // Update daily / weekly / monthly period leaderboards
       await updateAllPeriodLeaderboards({
         playerName: updated.name,
+        score,
         xpEarned: xp,
         bestStreak,
       });

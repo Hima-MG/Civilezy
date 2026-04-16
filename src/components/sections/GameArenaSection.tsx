@@ -397,15 +397,19 @@ export default function GameArenaSection() {
 
                   return rows.map((entry, i) => {
                     const avatar = AVATAR_COLORS[i % AVATAR_COLORS.length];
-                    const initials = entry.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+                    // Get name from either entry type
+                    const entryName = isAllTime
+                      ? (entry as LeaderboardEntry).name
+                      : (entry as PeriodLeaderboardEntry).displayName;
+                    const initials = entryName.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase();
                     const rankColor = i < 3 ? RANK_COLORS[i] : "rgba(255,255,255,0.55)";
                     const isFirst = i === 0;
-                    const isMe = player?.name?.toLowerCase() === entry.name?.toLowerCase();
+                    const isMe = player?.name?.toLowerCase() === entryName?.toLowerCase();
 
-                    // Get display score — period entries use totalXp, all-time uses totalScore
+                    // Get display score — period entries use leaderboardMetric, all-time uses totalScore
                     const displayScore = isAllTime
                       ? ((entry as LeaderboardEntry).totalScore ?? (entry as LeaderboardEntry).score)
-                      : (entry as PeriodLeaderboardEntry).totalXp;
+                      : (entry as PeriodLeaderboardEntry).leaderboardMetric;
 
                     // Medal for top 3
                     const medals = ["🥇", "🥈", "🥉"];
@@ -413,7 +417,7 @@ export default function GameArenaSection() {
 
                     return (
                       <li
-                        key={`${entry.name}-${i}`}
+                        key={`${entryName}-${i}`}
                         style={{
                           display:"flex", alignItems:"center", gap:"14px", padding:"10px 20px",
                           background: isMe ? "rgba(255,98,0,0.12)" : isFirst ? "rgba(255,184,0,0.08)" : "",
@@ -433,7 +437,7 @@ export default function GameArenaSection() {
                         </div>
                         <div style={{ flex:1 }}>
                           <div style={{ fontSize:"14px", fontWeight:700, color: isMe ? "#FF8534" : "#fff" }}>
-                            {entry.name}{isMe ? " (You)" : ""}
+                            {entryName}{isMe ? " (You)" : ""}
                           </div>
                           {/* Show level for all-time, games+streak for period */}
                           {isAllTime ? (

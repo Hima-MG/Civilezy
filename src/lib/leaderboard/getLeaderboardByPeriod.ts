@@ -27,6 +27,9 @@ function collectionName(period: LeaderboardPeriod): string {
  * Filters by current `periodKey` client-side to avoid needing a
  * Firestore composite index (`where` + `orderBy` on different fields).
  *
+ * Automatically detects period rollovers (e.g. midnight for daily) and
+ * re-subscribes with the new period key.
+ *
  * Returns an `unsubscribe` function — call it when unmounting or
  * switching tabs.
  */
@@ -36,37 +39,67 @@ export function subscribeToPeriodLeaderboard(
   onData: (entries: PeriodLeaderboardEntry[]) => void,
   onError?: (err: Error) => void,
 ): Unsubscribe {
-  const currentKey = getPeriodKey(period);
+  let currentKey = getPeriodKey(period);
+  let cancelled = false;
+  let activeUnsub: Unsubscribe | null = null;
+  let rolloverTimer: ReturnType<typeof setInterval> | null = null;
 
-  // Query: ordered by totalXp desc, grab more than needed so client-side
-  // filter for periodKey still yields enough results.
-  const q = query(
-    collection(db, collectionName(period)),
-    orderBy("totalXp", "desc"),
-    limit(max + 20), // over-fetch to account for stale entries
-  );
+  function startListener() {
+    // Query: ordered by leaderboardMetric desc, grab extra to account
+    // for stale entries from previous periods.
+    const q = query(
+      collection(db, collectionName(period)),
+      orderBy("leaderboardMetric", "desc"),
+      limit(max + 20),
+    );
 
-  return onSnapshot(
-    q,
-    (snap) => {
-      const entries: PeriodLeaderboardEntry[] = [];
-      for (const d of snap.docs) {
-        if (entries.length >= max) break;
-        const data = d.data();
-        // Only include docs from the current period
-        if (data.periodKey !== currentKey) continue;
-        entries.push({
-          name: data.name ?? "Unknown",
-          totalXp: data.totalXp ?? 0,
-          gamesPlayed: data.gamesPlayed ?? 0,
-          bestStreak: data.bestStreak ?? 0,
-        });
-      }
-      onData(entries);
-    },
-    (err) => {
-      console.error(`[Leaderboard] ${period} listener error:`, err);
-      onError?.(err);
-    },
-  );
+    activeUnsub = onSnapshot(
+      q,
+      (snap) => {
+        if (cancelled) return;
+        const entries: PeriodLeaderboardEntry[] = [];
+        for (const d of snap.docs) {
+          if (entries.length >= max) break;
+          const data = d.data();
+          // Only include docs from the current period
+          if (data.periodKey !== currentKey) continue;
+          entries.push({
+            userId: data.userId ?? d.id,
+            displayName: data.displayName ?? data.name ?? "Unknown",
+            score: data.score ?? 0,
+            xp: data.xp ?? data.totalXp ?? 0,
+            gamesPlayed: data.gamesPlayed ?? 0,
+            bestStreak: data.bestStreak ?? 0,
+            leaderboardMetric: data.leaderboardMetric ?? data.xp ?? data.totalXp ?? 0,
+          });
+        }
+        onData(entries);
+      },
+      (err) => {
+        console.error(`[Leaderboard] ${period} listener error:`, err);
+        onError?.(err);
+      },
+    );
+  }
+
+  // Start the initial listener
+  startListener();
+
+  // Check every 30s if the period has rolled over (e.g. midnight, new week)
+  // and re-subscribe with the fresh key so stale data clears automatically.
+  rolloverTimer = setInterval(() => {
+    const newKey = getPeriodKey(period);
+    if (newKey !== currentKey) {
+      currentKey = newKey;
+      if (activeUnsub) activeUnsub();
+      startListener();
+    }
+  }, 30_000);
+
+  // Return a cleanup function that tears down everything
+  return () => {
+    cancelled = true;
+    if (rolloverTimer) clearInterval(rolloverTimer);
+    if (activeUnsub) activeUnsub();
+  };
 }

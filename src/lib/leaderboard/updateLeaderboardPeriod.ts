@@ -33,7 +33,7 @@ function toDocId(name: string): string {
  *
  * - If no document exists OR the existing doc has a stale `periodKey`,
  *   a fresh document is written (auto-reset on first write of new period).
- * - Otherwise the XP / gamesPlayed / bestStreak are accumulated.
+ * - Otherwise the XP / score / gamesPlayed / bestStreak are accumulated.
  */
 export async function updateLeaderboardPeriod(
   period: LeaderboardPeriod,
@@ -51,12 +51,18 @@ export async function updateLeaderboardPeriod(
       const existing = snap.data() as LeaderboardDoc;
 
       if (existing.periodKey === currentKey) {
-        // Same period — accumulate XP
+        // Same period — accumulate
+        const newXp = (existing.xp ?? 0) + input.xpEarned;
+        const newScore = (existing.score ?? 0) + input.score;
         tx.set(ref, {
-          name: input.playerName.trim(),
-          totalXp: (existing.totalXp ?? 0) + input.xpEarned,
+          userId: docId,
+          displayName: input.playerName.trim(),
+          score: newScore,
+          xp: newXp,
           gamesPlayed: (existing.gamesPlayed ?? 0) + 1,
           bestStreak: Math.max(existing.bestStreak ?? 0, input.bestStreak),
+          leaderboardMetric: newXp,
+          playedAt: serverTimestamp(),
           periodKey: currentKey,
           updatedAt: serverTimestamp(),
         });
@@ -66,10 +72,14 @@ export async function updateLeaderboardPeriod(
 
     // New period or first entry — fresh document
     tx.set(ref, {
-      name: input.playerName.trim(),
-      totalXp: input.xpEarned,
+      userId: docId,
+      displayName: input.playerName.trim(),
+      score: input.score,
+      xp: input.xpEarned,
       gamesPlayed: 1,
       bestStreak: input.bestStreak,
+      leaderboardMetric: input.xpEarned,
+      playedAt: serverTimestamp(),
       periodKey: currentKey,
       updatedAt: serverTimestamp(),
     });
