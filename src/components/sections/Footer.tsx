@@ -18,7 +18,7 @@ const FOOTER_NAV: Record<string, { label: string; href: string; external?: boole
     { label:"Surveyor Courses",   href:EXTERNAL_URLS.checkout.surveyor, external:true },
   ],
   Resources: [
-    { label:"Free Mock Test",          href:"/game-arena"                         },
+    // { label:"Free Mock Test",          href:"/game-arena"                         },
     { label:"Blog & Guides",           href:EXTERNAL_URLS.blog, external:true },
     { label:"Pricing Plans",           href:"/pricing"                            },
   ],
