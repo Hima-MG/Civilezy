@@ -9,8 +9,6 @@ import {
   type Difficulty,
 } from "@/lib/questions";
 import {
-  SUBJECTS_BY_DOMAIN,
-  ADDON_SUBJECTS,
   getAllSubjects,
   getDomainHierarchy,
 } from "@/data/subjectHierarchy";
@@ -43,11 +41,21 @@ interface InvalidRow {
   errors: string[];
 }
 
-type ImportPhase = "idle" | "preview" | "importing" | "done";
+/** Parsed state for a single CSV file */
+interface ParsedFile {
+  id: string;
+  name: string;
+  validRows: ValidatedRow[];
+  invalidRows: InvalidRow[];
+  status: "parsed" | "importing" | "done" | "error";
+  written: number;
+  error?: string;
+}
+
+type OverallPhase = "idle" | "preview" | "importing" | "done";
 
 const VALID_DOMAINS: Domain[] = ["iti", "diploma", "btech"];
 const VALID_DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
-const VALID_LEVELS: (1 | 2 | 3)[] = [1, 2, 3];
 const DOMAIN_LABELS: Record<Domain, string> = { iti: "ITI", diploma: "Diploma", btech: "B.Tech" };
 const DIFF_COLORS: Record<Difficulty, string> = { easy: "#22c55e", medium: "#f59e0b", hard: "#ef4444" };
 
@@ -61,19 +69,16 @@ const CSV_TEMPLATE =
 
 // ─── Category resolution from hierarchy ─────────────────────────────────────
 
-/** Given a domain and subject, find which category it belongs to */
 function resolveCategory(domain: Domain, subject: string): string | null {
   const hierarchy = getDomainHierarchy(domain);
   if (!hierarchy) return null;
 
-  // Check core categories
   for (const cat of hierarchy.categories) {
     if (cat.subjects.some((s) => s.toLowerCase() === subject.toLowerCase())) {
       return cat.name;
     }
   }
 
-  // Check addon groups — use group label as category
   if (hierarchy.addonGroups) {
     for (const group of hierarchy.addonGroups) {
       if (group.subjects.some((s) => s.toLowerCase() === subject.toLowerCase())) {
@@ -90,12 +95,10 @@ function resolveCategory(domain: Domain, subject: string): string | null {
 function validateRow(raw: CsvRow, rowNum: number, adminName: string): ValidatedRow | InvalidRow {
   const errors: string[] = [];
 
-  // Domain
   const domain = raw.domain?.trim().toLowerCase() as Domain;
   if (!domain) errors.push("Missing domain");
   else if (!VALID_DOMAINS.includes(domain)) errors.push(`Invalid domain "${raw.domain}" — use iti, diploma, or btech`);
 
-  // Subject
   const subject = raw.subject?.trim() || "";
   if (!subject) {
     errors.push("Missing subject");
@@ -105,7 +108,6 @@ function validateRow(raw: CsvRow, rowNum: number, adminName: string): ValidatedR
     if (!match) errors.push(`Unknown subject "${subject}" for domain "${domain}"`);
   }
 
-  // Resolve subject to exact casing
   let resolvedSubject = subject;
   if (domain && VALID_DOMAINS.includes(domain) && subject) {
     const allSubjects = getAllSubjects(domain);
@@ -113,7 +115,6 @@ function validateRow(raw: CsvRow, rowNum: number, adminName: string): ValidatedR
     if (exact) resolvedSubject = exact;
   }
 
-  // Category — always auto-resolve from hierarchy (ignore CSV value)
   let resolvedCategory = "";
   if (domain && VALID_DOMAINS.includes(domain) && resolvedSubject) {
     const autoCategory = resolveCategory(domain, resolvedSubject);
@@ -124,12 +125,10 @@ function validateRow(raw: CsvRow, rowNum: number, adminName: string): ValidatedR
     }
   }
 
-  // Difficulty
   const difficulty = raw.difficulty?.trim().toLowerCase() as Difficulty;
   if (!difficulty) errors.push("Missing difficulty");
   else if (!VALID_DIFFICULTIES.includes(difficulty)) errors.push(`Invalid difficulty "${raw.difficulty}" — use easy, medium, or hard`);
 
-  // Level (optional, defaults based on difficulty)
   let level: 1 | 2 | 3 = 1;
   const rawLevel = raw.level?.trim();
   if (rawLevel) {
@@ -140,15 +139,12 @@ function validateRow(raw: CsvRow, rowNum: number, adminName: string): ValidatedR
       level = num as 1 | 2 | 3;
     }
   } else if (difficulty) {
-    // Auto-assign: easy→1, medium→2, hard→3
     level = difficulty === "easy" ? 1 : difficulty === "medium" ? 2 : 3;
   }
 
-  // Question text
   const question = raw.question?.trim() || "";
   if (!question) errors.push("Missing question text");
 
-  // Options
   const options: string[] = [
     raw.option1?.trim() || "",
     raw.option2?.trim() || "",
@@ -158,7 +154,6 @@ function validateRow(raw: CsvRow, rowNum: number, adminName: string): ValidatedR
   const emptyOpts = options.filter((o) => !o).length;
   if (emptyOpts > 0) errors.push(`${emptyOpts} empty option(s)`);
 
-  // Correct answer index
   let correct: 0 | 1 | 2 | 3 = 0;
   const rawCorrect = raw.correct?.trim();
   if (rawCorrect === undefined || rawCorrect === "") {
@@ -170,14 +165,12 @@ function validateRow(raw: CsvRow, rowNum: number, adminName: string): ValidatedR
     } else if (num >= 0 && num <= 3) {
       correct = num as 0 | 1 | 2 | 3;
     } else if (num >= 1 && num <= 4) {
-      // Accept 1-based and convert
       correct = (num - 1) as 0 | 1 | 2 | 3;
     } else {
       errors.push(`correct must be 0–3 (or 1–4), got "${rawCorrect}"`);
     }
   }
 
-  // XP
   const xpRaw = raw.xp?.trim();
   let xp = 10;
   if (xpRaw) {
@@ -189,7 +182,6 @@ function validateRow(raw: CsvRow, rowNum: number, adminName: string): ValidatedR
     }
   }
 
-  // Explanation (optional but encouraged)
   const explanation = raw.explanation?.trim() || "";
 
   if (errors.length > 0) {
@@ -220,6 +212,40 @@ function isValid(result: ValidatedRow | InvalidRow): result is ValidatedRow {
   return "input" in result;
 }
 
+// ─── Parse a single file into a ParsedFile ──────────────────────────────────
+
+function parseFile(file: File, adminName: string): Promise<ParsedFile> {
+  return new Promise((resolve, reject) => {
+    Papa.parse<CsvRow>(file, {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: (h) => h.trim().toLowerCase().replace(/\s+/g, ""),
+      complete(results) {
+        const valid: ValidatedRow[] = [];
+        const invalid: InvalidRow[] = [];
+
+        results.data.forEach((row, i) => {
+          const result = validateRow(row, i + 2, adminName);
+          if (isValid(result)) valid.push(result);
+          else invalid.push(result);
+        });
+
+        resolve({
+          id: `${file.name}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          name: file.name,
+          validRows: valid,
+          invalidRows: invalid,
+          status: "parsed",
+          written: 0,
+        });
+      },
+      error(err) {
+        reject(new Error(`CSV parse error in ${file.name}: ${err.message}`));
+      },
+    });
+  });
+}
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 interface Props {
@@ -230,50 +256,42 @@ interface Props {
 export default function CsvImport({ adminName, onImportDone }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [fileName, setFileName] = useState("");
-  const [phase, setPhase] = useState<ImportPhase>("idle");
+  const [phase, setPhase] = useState<OverallPhase>("idle");
+  const [files, setFiles] = useState<ParsedFile[]>([]);
+  const [parseError, setParseError] = useState("");
+  const [expandedFile, setExpandedFile] = useState<string | null>(null);
 
-  // Parsed data
-  const [validRows, setValidRows] = useState<ValidatedRow[]>([]);
-  const [invalidRows, setInvalidRows] = useState<InvalidRow[]>([]);
-
-  // Import progress
-  const [progress, setProgress] = useState({ written: 0, total: 0 });
-  const [importError, setImportError] = useState("");
-
-  // ── Parse CSV ──
-  const processFile = useCallback(
-    (file: File) => {
-      if (!file.name.endsWith(".csv")) {
-        setImportError("Only .csv files are accepted.");
+  // ── Process multiple files ──
+  const processFiles = useCallback(
+    async (fileList: FileList | File[]) => {
+      const csvFiles = Array.from(fileList).filter((f) => f.name.endsWith(".csv"));
+      if (csvFiles.length === 0) {
+        setParseError("No .csv files found. Only .csv files are accepted.");
         return;
       }
 
-      setFileName(file.name);
-      setImportError("");
+      setParseError("");
+      const parsed: ParsedFile[] = [];
 
-      Papa.parse<CsvRow>(file, {
-        header: true,
-        skipEmptyLines: true,
-        transformHeader: (h) => h.trim().toLowerCase().replace(/\s+/g, ""),
-        complete(results) {
-          const valid: ValidatedRow[] = [];
-          const invalid: InvalidRow[] = [];
-
-          results.data.forEach((row, i) => {
-            const result = validateRow(row, i + 2, adminName); // +2 for 1-based + header
-            if (isValid(result)) valid.push(result);
-            else invalid.push(result);
+      for (const file of csvFiles) {
+        try {
+          const result = await parseFile(file, adminName);
+          parsed.push(result);
+        } catch (err) {
+          parsed.push({
+            id: `${file.name}-err`,
+            name: file.name,
+            validRows: [],
+            invalidRows: [],
+            status: "error",
+            written: 0,
+            error: err instanceof Error ? err.message : "Parse failed",
           });
+        }
+      }
 
-          setValidRows(valid);
-          setInvalidRows(invalid);
-          setPhase("preview");
-        },
-        error(err) {
-          setImportError(`CSV parse error: ${err.message}`);
-        },
-      });
+      setFiles(parsed);
+      setPhase("preview");
     },
     [adminName],
   );
@@ -284,43 +302,64 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) processFile(file);
+    processFiles(e.dataTransfer.files);
   };
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) processFile(file);
-    e.target.value = ""; // reset so same file can be re-selected
+    const fl = e.target.files;
+    if (fl && fl.length > 0) processFiles(fl);
+    e.target.value = "";
   };
 
-  // ── Import to Firestore ──
-  const handleImport = async () => {
-    if (validRows.length === 0) return;
-    setPhase("importing");
-    setProgress({ written: 0, total: validRows.length });
-    setImportError("");
+  // ── Remove a single file from the list ──
+  const removeFile = (id: string) => {
+    setFiles((prev) => {
+      const next = prev.filter((f) => f.id !== id);
+      if (next.length === 0) setPhase("idle");
+      return next;
+    });
+  };
 
-    try {
-      await batchImportQuestions(
-        validRows.map((r) => r.input),
-        (written, total) => setProgress({ written, total }),
-      );
-      setPhase("done");
-      onImportDone();
-    } catch (err) {
-      setImportError(`Import failed: ${err instanceof Error ? err.message : "Unknown error"}`);
-      setPhase("preview"); // Allow retry
+  // ── Import all files sequentially ──
+  const handleImportAll = async () => {
+    const importable = files.filter((f) => f.validRows.length > 0 && f.status === "parsed");
+    if (importable.length === 0) return;
+
+    setPhase("importing");
+
+    for (const pf of importable) {
+      // Mark as importing
+      setFiles((prev) => prev.map((f) => f.id === pf.id ? { ...f, status: "importing" as const } : f));
+
+      try {
+        const count = await batchImportQuestions(
+          pf.validRows.map((r) => r.input),
+          (written) => {
+            setFiles((prev) => prev.map((f) => f.id === pf.id ? { ...f, written } : f));
+          },
+        );
+        setFiles((prev) => prev.map((f) => f.id === pf.id ? { ...f, status: "done" as const, written: count } : f));
+      } catch (err) {
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === pf.id
+              ? { ...f, status: "error" as const, error: err instanceof Error ? err.message : "Write failed" }
+              : f,
+          ),
+        );
+        // Continue to next file — don't stop the whole batch
+      }
     }
+
+    setPhase("done");
+    onImportDone();
   };
 
   // ── Reset ──
   const reset = () => {
     setPhase("idle");
-    setFileName("");
-    setValidRows([]);
-    setInvalidRows([]);
-    setProgress({ written: 0, total: 0 });
-    setImportError("");
+    setFiles([]);
+    setParseError("");
+    setExpandedFile(null);
   };
 
   // ── Download template ──
@@ -333,6 +372,15 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  // ── Aggregate stats ──
+  const totalValid = files.reduce((sum, f) => sum + f.validRows.length, 0);
+  const totalInvalid = files.reduce((sum, f) => sum + f.invalidRows.length, 0);
+  const totalWritten = files.reduce((sum, f) => sum + f.written, 0);
+  const filesWithErrors = files.filter((f) => f.status === "error").length;
+  const filesDone = files.filter((f) => f.status === "done").length;
+  const filesImporting = files.filter((f) => f.status === "importing").length;
+  const importableCount = files.filter((f) => f.validRows.length > 0 && f.status === "parsed").length;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER
@@ -350,13 +398,11 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
       </div>
 
       {/* ── Error banner ── */}
-      {importError && (
-        <div style={S.errorBanner}>
-          {importError}
-        </div>
+      {parseError && (
+        <div style={S.errorBanner}>{parseError}</div>
       )}
 
-      {/* IDLE — Upload zone */}
+      {/* ═══ IDLE — Upload zone ═══ */}
       {phase === "idle" && (
         <>
           <div
@@ -370,13 +416,13 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
               background: isDragging ? "rgba(255,98,0,0.08)" : "rgba(255,255,255,0.02)",
             }}
           >
-            <input ref={fileRef} type="file" accept=".csv" onChange={onFileChange} style={{ display: "none" }} />
+            <input ref={fileRef} type="file" accept=".csv" multiple onChange={onFileChange} style={{ display: "none" }} />
             <div style={{ fontSize: "36px", marginBottom: "12px" }}>CSV</div>
             <div style={{ fontSize: "15px", fontWeight: 700, color: "rgba(255,255,255,0.8)", marginBottom: "6px" }}>
-              {isDragging ? "Drop your CSV here" : "Drag & drop CSV file here"}
+              {isDragging ? "Drop your CSV files here" : "Drag & drop one or more CSV files"}
             </div>
             <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)" }}>
-              or click to browse - .csv only
+              or click to browse — select multiple .csv files
             </div>
           </div>
 
@@ -404,182 +450,262 @@ export default function CsvImport({ adminName, onImportDone }: Props) {
         </>
       )}
 
-      {/* PREVIEW — Parsed results */}
+      {/* ═══ PREVIEW — Parsed files summary ═══ */}
       {phase === "preview" && (
         <>
-          {/* Summary bar */}
+          {/* Aggregate summary bar */}
           <div style={S.summaryBar}>
             <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>{fileName}</span>
-              <StatChip color="#22c55e" label="Valid" count={validRows.length} />
-              <StatChip color="#ef4444" label="Errors" count={invalidRows.length} />
-              <StatChip color="rgba(255,255,255,0.5)" label="Total" count={validRows.length + invalidRows.length} />
+              <StatChip color="rgba(255,255,255,0.5)" label={files.length === 1 ? "file" : "files"} count={files.length} />
+              <StatChip color="#22c55e" label="valid" count={totalValid} />
+              <StatChip color="#ef4444" label="errors" count={totalInvalid} />
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
-              <button onClick={reset} style={S.btnSecondary}>Upload Different File</button>
+              <button onClick={reset} style={S.btnSecondary}>Start Over</button>
               <button
-                onClick={handleImport}
-                disabled={validRows.length === 0}
+                onClick={handleImportAll}
+                disabled={importableCount === 0}
                 style={{
                   ...S.btnPrimary,
-                  opacity: validRows.length === 0 ? 0.4 : 1,
-                  cursor: validRows.length === 0 ? "not-allowed" : "pointer",
+                  opacity: importableCount === 0 ? 0.4 : 1,
+                  cursor: importableCount === 0 ? "not-allowed" : "pointer",
                 }}
               >
-                Import {validRows.length} Question{validRows.length !== 1 ? "s" : ""}
+                Import {totalValid} Question{totalValid !== 1 ? "s" : ""} from {importableCount} file{importableCount !== 1 ? "s" : ""}
               </button>
             </div>
           </div>
 
-          {/* Invalid rows */}
-          {invalidRows.length > 0 && (
-            <div style={{ marginBottom: "20px" }}>
-              <div style={{ fontSize: "14px", fontWeight: 700, color: "#ef4444", marginBottom: "10px" }}>
-                {invalidRows.length} row{invalidRows.length !== 1 ? "s" : ""} with errors (will be skipped):
-              </div>
-              <div style={{ maxHeight: "200px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
-                {invalidRows.map((row) => (
-                  <div key={row.rowNum} style={S.errorRow}>
-                    <span style={{ fontWeight: 700, color: "#ef4444", fontSize: "12px", flexShrink: 0 }}>Row {row.rowNum}</span>
-                    <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
-                      {row.raw.question?.slice(0, 60) || "(empty question)"}
+          {/* Per-file cards */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {files.map((pf) => {
+              const isExpanded = expandedFile === pf.id;
+              return (
+                <div key={pf.id} style={S.fileCard}>
+                  {/* File header */}
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}
+                    onClick={() => setExpandedFile(isExpanded ? null : pf.id)}
+                  >
+                    <span style={{ fontSize: "18px" }}>
+                      {pf.status === "error" ? "X" : pf.validRows.length > 0 ? "CSV" : "!"}
                     </span>
-                    <span style={{ fontSize: "12px", color: "#ef4444", flexShrink: 0 }}>
-                      {row.errors.join(" - ")}
-                    </span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff" }}>{pf.name}</div>
+                      <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
+                        {pf.status === "error" ? (
+                          <span style={{ color: "#ef4444" }}>{pf.error}</span>
+                        ) : (
+                          <>
+                            <span style={{ color: "#22c55e" }}>{pf.validRows.length} valid</span>
+                            {pf.invalidRows.length > 0 && (
+                              <span style={{ color: "#ef4444", marginLeft: "8px" }}>{pf.invalidRows.length} errors</span>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removeFile(pf.id); }}
+                      style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: "18px", padding: "4px 8px" }}
+                      title="Remove file"
+                    >
+                      x
+                    </button>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {/* Valid rows preview table */}
-          {validRows.length > 0 && (
-            <div>
-              <div style={{ fontSize: "14px", fontWeight: 700, color: "#22c55e", marginBottom: "10px" }}>
-                {validRows.length} question{validRows.length !== 1 ? "s" : ""} ready to import:
-              </div>
-              <div style={{ overflowX: "auto" }}>
-                <table style={S.table}>
-                  <thead>
-                    <tr>
-                      <th style={S.th}>#</th>
-                      <th style={S.th}>Domain</th>
-                      <th style={S.th}>Category</th>
-                      <th style={S.th}>Subject</th>
-                      <th style={S.th}>Diff</th>
-                      <th style={S.th}>Lvl</th>
-                      <th style={{ ...S.th, minWidth: "260px" }}>Question</th>
-                      <th style={S.th}>Answer</th>
-                      <th style={S.th}>XP</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {validRows.slice(0, 50).map((r) => (
-                      <tr key={r.rowNum}>
-                        <td style={S.td}>{r.rowNum}</td>
-                        <td style={S.td}>
-                          <span style={{ color: "#FF8534", fontWeight: 700, fontSize: "12px" }}>
-                            {DOMAIN_LABELS[r.input.domain]}
-                          </span>
-                        </td>
-                        <td style={{ ...S.td, maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>
-                          {r.input.category}
-                        </td>
-                        <td style={{ ...S.td, maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {r.input.subject}
-                        </td>
-                        <td style={S.td}>
-                          <span style={{ color: DIFF_COLORS[r.input.difficulty], fontWeight: 700, fontSize: "12px" }}>
-                            {r.input.difficulty}
-                          </span>
-                        </td>
-                        <td style={{ ...S.td, fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>
-                          {r.input.level}
-                        </td>
-                        <td style={{ ...S.td, maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {r.input.question}
-                        </td>
-                        <td style={{ ...S.td, fontSize: "12px", color: "#22c55e" }}>
-                          {r.input.options[r.input.correct]}
-                        </td>
-                        <td style={S.td}>{r.input.xp}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {validRows.length > 50 && (
-                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", textAlign: "center", padding: "10px" }}>
-                    Showing first 50 of {validRows.length} rows
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+                  {/* Expanded detail */}
+                  {isExpanded && (
+                    <div style={{ marginTop: "12px", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "12px" }}>
+                      {/* Invalid rows */}
+                      {pf.invalidRows.length > 0 && (
+                        <div style={{ marginBottom: "12px" }}>
+                          <div style={{ fontSize: "12px", fontWeight: 700, color: "#ef4444", marginBottom: "6px" }}>
+                            {pf.invalidRows.length} row{pf.invalidRows.length !== 1 ? "s" : ""} with errors:
+                          </div>
+                          <div style={{ maxHeight: "150px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "4px" }}>
+                            {pf.invalidRows.map((row) => (
+                              <div key={row.rowNum} style={S.errorRow}>
+                                <span style={{ fontWeight: 700, color: "#ef4444", fontSize: "11px", flexShrink: 0 }}>Row {row.rowNum}</span>
+                                <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                                  {row.raw.question?.slice(0, 50) || "(empty)"}
+                                </span>
+                                <span style={{ fontSize: "11px", color: "#ef4444", flexShrink: 0 }}>{row.errors.join(" | ")}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Valid rows preview */}
+                      {pf.validRows.length > 0 && (
+                        <div>
+                          <div style={{ fontSize: "12px", fontWeight: 700, color: "#22c55e", marginBottom: "6px" }}>
+                            {pf.validRows.length} question{pf.validRows.length !== 1 ? "s" : ""} ready:
+                          </div>
+                          <div style={{ overflowX: "auto" }}>
+                            <table style={S.table}>
+                              <thead>
+                                <tr>
+                                  <th style={S.th}>#</th>
+                                  <th style={S.th}>Domain</th>
+                                  <th style={S.th}>Category</th>
+                                  <th style={S.th}>Subject</th>
+                                  <th style={S.th}>Diff</th>
+                                  <th style={{ ...S.th, minWidth: "200px" }}>Question</th>
+                                  <th style={S.th}>Answer</th>
+                                  <th style={S.th}>XP</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {pf.validRows.slice(0, 30).map((r) => (
+                                  <tr key={r.rowNum}>
+                                    <td style={S.td}>{r.rowNum}</td>
+                                    <td style={S.td}><span style={{ color: "#FF8534", fontWeight: 700, fontSize: "12px" }}>{DOMAIN_LABELS[r.input.domain]}</span></td>
+                                    <td style={{ ...S.td, maxWidth: "100px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>{r.input.category}</td>
+                                    <td style={{ ...S.td, maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.input.subject}</td>
+                                    <td style={S.td}><span style={{ color: DIFF_COLORS[r.input.difficulty], fontWeight: 700, fontSize: "12px" }}>{r.input.difficulty}</span></td>
+                                    <td style={{ ...S.td, maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.input.question}</td>
+                                    <td style={{ ...S.td, fontSize: "12px", color: "#22c55e" }}>{r.input.options[r.input.correct]}</td>
+                                    <td style={S.td}>{r.input.xp}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            {pf.validRows.length > 30 && (
+                              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", textAlign: "center", padding: "8px" }}>
+                                Showing first 30 of {pf.validRows.length} rows
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </>
       )}
 
-      {/* IMPORTING — Progress */}
+      {/* ═══ IMPORTING — Progress ═══ */}
       {phase === "importing" && (
-        <div style={{ textAlign: "center", padding: "40px 20px" }}>
-          <div style={{ fontSize: "36px", marginBottom: "16px", animation: "spin 1s linear infinite" }}>...</div>
-          <div style={{ fontSize: "18px", fontWeight: 700, color: "#fff", marginBottom: "8px" }}>
-            Importing questions...
-          </div>
-          <div style={{ fontSize: "14px", color: "rgba(255,255,255,0.6)", marginBottom: "20px" }}>
-            {progress.written} of {progress.total} written to Firestore
+        <div>
+          <div style={{ textAlign: "center", marginBottom: "24px" }}>
+            <div style={{ fontSize: "18px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>
+              Importing questions...
+            </div>
+            <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>
+              {totalWritten} of {totalValid} written — {filesDone} of {files.length} files complete
+            </div>
           </div>
 
-          {/* Progress bar */}
-          <div style={{ maxWidth: "400px", margin: "0 auto", height: "8px", background: "rgba(255,255,255,0.1)", borderRadius: "10px", overflow: "hidden" }}>
+          {/* Overall progress bar */}
+          <div style={{ maxWidth: "500px", margin: "0 auto 24px", height: "8px", background: "rgba(255,255,255,0.1)", borderRadius: "10px", overflow: "hidden" }}>
             <div
               style={{
                 height: "100%",
                 background: "linear-gradient(90deg, #FF6200, #FFB800)",
                 borderRadius: "10px",
-                width: progress.total > 0 ? `${(progress.written / progress.total) * 100}%` : "0%",
+                width: totalValid > 0 ? `${(totalWritten / totalValid) * 100}%` : "0%",
                 transition: "width 0.3s ease",
               }}
             />
           </div>
 
-          <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+          {/* Per-file status */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {files.map((pf) => (
+              <div key={pf.id} style={{ ...S.fileStatusRow, borderLeftColor: pf.status === "done" ? "#22c55e" : pf.status === "error" ? "#ef4444" : pf.status === "importing" ? "#FF6200" : "rgba(255,255,255,0.1)" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: "#fff" }}>{pf.name}</div>
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
+                    {pf.status === "done" && <span style={{ color: "#22c55e" }}>{pf.written} imported</span>}
+                    {pf.status === "importing" && <span style={{ color: "#FF6200" }}>{pf.written} / {pf.validRows.length} writing...</span>}
+                    {pf.status === "error" && <span style={{ color: "#ef4444" }}>{pf.error}</span>}
+                    {pf.status === "parsed" && <span>Waiting... ({pf.validRows.length} questions)</span>}
+                  </div>
+                </div>
+                <StatusBadge status={pf.status} />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* DONE — Success */}
+      {/* ═══ DONE — Summary ═══ */}
       {phase === "done" && (
-        <div style={{ textAlign: "center", padding: "40px 20px" }}>
-          <div style={{ fontSize: "48px", marginBottom: "16px" }}>Done</div>
-          <div style={{ fontSize: "20px", fontWeight: 700, color: "#22c55e", marginBottom: "8px" }}>
-            Import Complete!
-          </div>
-          <div style={{ fontSize: "15px", color: "rgba(255,255,255,0.7)", marginBottom: "8px" }}>
-            <strong>{progress.written}</strong> question{progress.written !== 1 ? "s" : ""} added to Firestore as <strong style={{ color: "#f59e0b" }}>drafts</strong>.
-          </div>
-          {invalidRows.length > 0 && (
-            <div style={{ fontSize: "13px", color: "#ef4444", marginBottom: "8px" }}>
-              {invalidRows.length} row{invalidRows.length !== 1 ? "s" : ""} skipped due to errors.
+        <div>
+          <div style={{ textAlign: "center", marginBottom: "24px" }}>
+            <div style={{ fontSize: "48px", marginBottom: "8px" }}>Done</div>
+            <div style={{ fontSize: "20px", fontWeight: 700, color: "#22c55e", marginBottom: "4px" }}>
+              Import Complete!
             </div>
-          )}
-          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", marginBottom: "24px" }}>
-            Switch to the Questions tab to review and publish them.
+            <div style={{ fontSize: "14px", color: "rgba(255,255,255,0.6)", marginBottom: "4px" }}>
+              <strong>{totalWritten}</strong> question{totalWritten !== 1 ? "s" : ""} added as <strong style={{ color: "#f59e0b" }}>drafts</strong> from {filesDone} file{filesDone !== 1 ? "s" : ""}.
+            </div>
+            {filesWithErrors > 0 && (
+              <div style={{ fontSize: "13px", color: "#ef4444" }}>
+                {filesWithErrors} file{filesWithErrors !== 1 ? "s" : ""} had errors.
+              </div>
+            )}
           </div>
-          <button onClick={reset} style={S.btnPrimary}>
-            Import Another File
-          </button>
+
+          {/* Per-file results */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
+            {files.map((pf) => (
+              <div key={pf.id} style={{ ...S.fileStatusRow, borderLeftColor: pf.status === "done" ? "#22c55e" : "#ef4444" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: "#fff" }}>{pf.name}</div>
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
+                    {pf.status === "done" ? (
+                      <>
+                        <span style={{ color: "#22c55e" }}>{pf.written} imported</span>
+                        {pf.invalidRows.length > 0 && (
+                          <span style={{ color: "#ef4444", marginLeft: "8px" }}>{pf.invalidRows.length} rows skipped</span>
+                        )}
+                      </>
+                    ) : (
+                      <span style={{ color: "#ef4444" }}>{pf.error || "Failed"}</span>
+                    )}
+                  </div>
+                </div>
+                <StatusBadge status={pf.status} />
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign: "center", display: "flex", gap: "10px", justifyContent: "center" }}>
+            <button onClick={reset} style={S.btnPrimary}>Import More Files</button>
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-// ─── Tiny sub-components ────────────────────────────────────────────────────
+// ─── Sub-components ─────────────────────────────────────────────────────────
 
 function StatChip({ color, label, count }: { color: string; label: string; count: number }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", background: `${color}15`, border: `1px solid ${color}30`, borderRadius: "8px", padding: "3px 10px", fontSize: "12px", fontWeight: 700, color }}>
       {count} {label}
+    </span>
+  );
+}
+
+function StatusBadge({ status }: { status: ParsedFile["status"] }) {
+  const config = {
+    parsed:    { label: "Pending",    color: "rgba(255,255,255,0.5)", bg: "rgba(255,255,255,0.06)" },
+    importing: { label: "Writing...", color: "#FF6200",               bg: "rgba(255,98,0,0.12)" },
+    done:      { label: "Done",       color: "#22c55e",               bg: "rgba(34,197,94,0.12)" },
+    error:     { label: "Failed",     color: "#ef4444",               bg: "rgba(239,68,68,0.12)" },
+  }[status];
+
+  return (
+    <span style={{ fontSize: "11px", fontWeight: 700, color: config.color, background: config.bg, padding: "3px 10px", borderRadius: "6px" }}>
+      {config.label}
     </span>
   );
 }
@@ -654,11 +780,26 @@ const S = {
     display: "flex",
     alignItems: "center",
     gap: "10px",
-    padding: "8px 12px",
+    padding: "6px 10px",
     background: "rgba(239,68,68,0.06)",
     border: "1px solid rgba(239,68,68,0.15)",
+    borderRadius: "6px",
+    fontSize: "12px",
+  } as React.CSSProperties,
+  fileCard: {
+    padding: "14px 18px",
+    background: "rgba(255,255,255,0.03)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: "12px",
+  } as React.CSSProperties,
+  fileStatusRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    padding: "12px 16px",
+    background: "rgba(255,255,255,0.03)",
+    borderLeft: "3px solid",
     borderRadius: "8px",
-    fontSize: "13px",
   } as React.CSSProperties,
   table: {
     width: "100%",
@@ -667,7 +808,7 @@ const S = {
   } as React.CSSProperties,
   th: {
     textAlign: "left",
-    padding: "8px 10px",
+    padding: "6px 8px",
     fontSize: "11px",
     fontWeight: 700,
     color: "rgba(255,255,255,0.4)",
@@ -677,10 +818,10 @@ const S = {
     whiteSpace: "nowrap",
   } as React.CSSProperties,
   td: {
-    padding: "8px 10px",
+    padding: "6px 8px",
     color: "rgba(255,255,255,0.75)",
     borderBottom: "1px solid rgba(255,255,255,0.04)",
-    fontSize: "13px",
+    fontSize: "12px",
   } as React.CSSProperties,
   templateBtn: {
     background: "rgba(100,200,255,0.1)",
