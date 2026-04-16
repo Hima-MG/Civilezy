@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { EXTERNAL_URLS } from "@/lib/constants";
 
-const LMS_FREE_TEST = EXTERNAL_URLS.freeTest;
+const LMS_FREE_TEST = EXTERNAL_URLS.demo;
 
 // ─── Stable hover handlers (module-level, never recreated) ───────────────────
 const onSecondaryEnter = (e: React.MouseEvent<HTMLButtonElement>) => {

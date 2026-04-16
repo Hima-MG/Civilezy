@@ -24,8 +24,6 @@ interface CourseData {
   pools:         string[];
 }
 
-const CHECKOUT = EXTERNAL_URLS.checkout;
-
 // ─── Course data ────────────────────────────────────────────────────────────
 const COURSES: Record<CourseKey, CourseData> = {
   iti: // ITI
@@ -40,8 +38,8 @@ const COURSES: Record<CourseKey, CourseData> = {
   annualOrig: 21600,
   annualSavings: 6600,
   popular: false,
-  enrollMonthly: CHECKOUT,
-  enrollAnnual: CHECKOUT,
+  enrollMonthly: EXTERNAL_URLS.checkout.iti,
+  enrollAnnual: EXTERNAL_URLS.checkout.iti,
   features: [
     "Smart Interactive Lessons — Study, Revision & Exam Mode",
     "Bite-sized Video Lectures",
@@ -64,8 +62,8 @@ diploma:{
   annualOrig: 24000,
   annualSavings: 7000,
   popular: true,
-  enrollMonthly: CHECKOUT,
-  enrollAnnual: CHECKOUT,
+  enrollMonthly: EXTERNAL_URLS.checkout.diploma,
+  enrollAnnual: EXTERNAL_URLS.checkout.diploma,
   features: [
     "Smart Interactive Lessons — Study, Revision & Exam Mode",
     "Bite-sized Video Lectures",
@@ -88,8 +86,8 @@ btech:{
   annualOrig: 30000,
   annualSavings: 10000,
   popular: false,
-  enrollMonthly: CHECKOUT,
-  enrollAnnual: CHECKOUT,
+  enrollMonthly: EXTERNAL_URLS.checkout.btech,
+  enrollAnnual: EXTERNAL_URLS.checkout.btech,
   features: [
     "Smart Interactive Lessons — Study, Revision & Exam Mode",
     "Bite-sized Video Lectures",
@@ -114,8 +112,8 @@ surveyor:
   annualOrig: 21600,
   annualSavings: 6600,
   popular: false,
-  enrollMonthly: CHECKOUT,
-  enrollAnnual: CHECKOUT,
+  enrollMonthly: EXTERNAL_URLS.checkout.surveyor,
+  enrollAnnual: EXTERNAL_URLS.checkout.surveyor,
   features: [
     "Smart Interactive Lessons — Study, Revision & Exam Mode",
     "Bite-sized Video Lectures",

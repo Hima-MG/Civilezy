@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { EXTERNAL_URLS } from "@/lib/constants";
 
-const BLOG_URL = `${EXTERNAL_URLS.base}/blog`;
+const BLOG_URL = EXTERNAL_URLS.blog;
 
 type Category = "All" | "PSC Live" | "Rank Blueprint" | "Exam Decoded" | "Smart Study" | "Civil Easy";
 

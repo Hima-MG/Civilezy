@@ -273,7 +273,7 @@ export default function MiniArenaPreview({ level }: MiniArenaPreviewProps) {
                 Retry Quiz
               </button>
               <a
-                href={EXTERNAL_URLS.freeTest}
+                href={EXTERNAL_URLS.demo}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ background: "rgba(255,98,0,0.2)", border: "1px solid rgba(255,98,0,0.4)", color: "#FF8534", borderRadius: "10px", padding: "10px 20px", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Nunito, sans-serif", textDecoration: "none" }}

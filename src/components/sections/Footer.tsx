@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { EXTERNAL_URLS, COURSE_LINKS } from "@/lib/constants";
+import { EXTERNAL_URLS } from "@/lib/constants";
 
 // ─── URL Constants ──────────────────────────────────────────────────────────
-const WA_LINK = "https://wa.me/919074557825";
+const WA_LINK = EXTERNAL_URLS.social.whatsapp;
 
 const SOCIAL = [
   { label: "Chat on WhatsApp", emoji: "💬", href: WA_LINK },
@@ -16,24 +16,22 @@ const SOCIAL = [
 // Internal paths use Next.js <Link>; external use <a>.
 const FOOTER_NAV: Record<string, { label: string; href: string; external?: boolean }[]> = {
   Courses: [
-    { label:"Civil PSC-ITI",     href:COURSE_LINKS.iti,      external:true },
-    { label:" Civil PSC-Diploma", href:COURSE_LINKS.diploma,  external:true },
-    { label:"Civil PSC-B.Tech",   href:COURSE_LINKS.btech,    external:true },
-    { label:"Survayor Courses",       href:COURSE_LINKS.kwa,      external:true },
-    
+    { label:"Civil PSC-ITI",      href:EXTERNAL_URLS.checkout.iti,      external:true },
+    { label:"Civil PSC-Diploma",  href:EXTERNAL_URLS.checkout.diploma,  external:true },
+    { label:"Civil PSC-B.Tech",   href:EXTERNAL_URLS.checkout.btech,    external:true },
+    { label:"Surveyor Courses",   href:EXTERNAL_URLS.checkout.surveyor, external:true },
   ],
   Resources: [
-    // { label:"Previous Year Questions", href:EXTERNAL_URLS.freeTest, external:true },
     { label:"Free Mock Test",          href:"/game-arena"                         },
-    { label:"Blog & Guides",           href:`${EXTERNAL_URLS.base}/blog`, external:true },
+    { label:"Blog & Guides",           href:EXTERNAL_URLS.blog, external:true },
     { label:"Pricing Plans",           href:"/pricing"                            },
   ],
   Company: [
-    { label:"About Us",         href:EXTERNAL_URLS.about,   external:true },
-    { label:"Contact",          href:EXTERNAL_URLS.contact, external:true },
-    { label:"WhatsApp Support", href:WA_LINK,               external:true },
-    { label:"Privacy Policy",   href:EXTERNAL_URLS.privacy, external:true },
-    { label:"Terms of Use",     href:EXTERNAL_URLS.terms,   external:true },
+    { label:"About Us",         href:EXTERNAL_URLS.about,         external:true },
+    { label:"Contact",          href:EXTERNAL_URLS.contact,       external:true },
+    { label:"WhatsApp Support", href:WA_LINK,                     external:true },
+    { label:"Privacy Policy",   href:EXTERNAL_URLS.legal.privacy, external:true },
+    { label:"Terms of Use",     href:EXTERNAL_URLS.legal.terms,   external:true },
   ],
 };
 

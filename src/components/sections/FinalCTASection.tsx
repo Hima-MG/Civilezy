@@ -3,9 +3,9 @@
 import { EXTERNAL_URLS } from "@/lib/constants";
 
 // ─── URL Constants ──────────────────────────────────────────────────────────
-const LMS_FREE_TEST = EXTERNAL_URLS.freeTest;
+const LMS_FREE_TEST = EXTERNAL_URLS.demo;
 
-const WA_LINK = EXTERNAL_URLS.telegram; 
+const TELEGRAM_LINK = EXTERNAL_URLS.social.telegram;
 
 // ─── Stable hover handlers (defined once, not re-created per render) ─────────
 function onPrimaryEnter(e: React.MouseEvent<HTMLAnchorElement>) {
@@ -135,7 +135,7 @@ export default function FinalCTASection() {
           </a>
 
           <a
-            href={WA_LINK}
+            href={TELEGRAM_LINK}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Join the CivilEzy Telegram community — opens in new tab"

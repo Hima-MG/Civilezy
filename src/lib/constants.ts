@@ -1,26 +1,37 @@
-// ─── External LMS (EzyCourse) URLs ──────────────────────────────────────────
+// ─── External LMS URLs ──────────────────────────────────────────────────────
 // All links that leave civilezy.in point here. Never hardcode these in
 // individual components — always import from this file.
 export const EXTERNAL_URLS = {
-  base:     "https://learn.civilezy.in",
-  login:    "https://learn.civilezy.in/en/login",
-  checkout: "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
-  about:    "https://learn.civilezy.in/en/about-v2",
-  terms:    "https://learn.civilezy.in/en/terms-of-use-v2",
-  privacy:  "https://learn.civilezy.in/en/privacy-policy-v2",
-  freeTest: "https://learn.civilezy.in/en/login",
-  contact:  "https://civilezy.in/en/contact-v2",
-  telegram:" https://t.me/civilezy_psc",
-} as const;
+  login:     "https://learn.civilezy.in/login",
+  signup:    "https://learn.civilezy.in/register",
+  dashboard: "https://learn.civilezy.in/dashboard",
+  demo:      "https://learn.civilezy.in/free-trial-request",
+  blog:      "https://learn.civilezy.in/blog",
+  about:     "https://learn.civilezy.in/about",
+  contact:   "https://learn.civilezy.in/contact-us",
 
-// ─── Course pricing links (footer + levels section) ─────────────────────────
-export const COURSE_LINKS: Record<string, string> = {
-  iti:      "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
-  diploma:  "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
-  btech:    "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
-  kwa:      "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
-  pwd:      "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
-  surveyor: "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
+  legal: {
+    privacy: "https://learn.civilezy.in/privacy-policy",
+    terms:   "https://learn.civilezy.in/terms-and-conditions",
+    refund:  "https://learn.civilezy.in/refund-policy",
+  },
+
+  checkout: {
+    iti:      "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
+    diploma:  "https://learn.civilezy.in/en/checkout/?product_id=5041&price_id=271680&product_type=membership",
+    btech:    "https://learn.civilezy.in/en/checkout/?product_id=5042&price_id=271509&product_type=membership",
+    surveyor: "https://learn.civilezy.in/en/checkout/?product_id=4733&price_id=271684&product_type=membership",
+  },
+
+  social: {
+    telegram:  "https://t.me/civilezy_psc",
+    whatsapp:  "https://wa.me/919074557825",
+  },
+
+  apps: {
+    playStore: "https://play.google.com/store/apps/details?id=com.civilezy.civilezy",
+    appStore:  "https://apps.apple.com/us/app/civilezy/id6749293661",
+  },
 } as const;
 
 // ─── Site metadata ───────────────────────────────────────────────────────────

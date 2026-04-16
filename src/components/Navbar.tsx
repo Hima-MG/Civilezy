@@ -7,14 +7,14 @@ import { EXTERNAL_URLS } from "@/lib/constants";
 
 const URLS = {
   LMS_LOGIN:     EXTERNAL_URLS.login,
-  LMS_ENROLL:    EXTERNAL_URLS.checkout,
+  LMS_ENROLL:    EXTERNAL_URLS.signup,
 } as const;
 
 const NAV_LINKS = [
   { label: "Home",       href: "/"           },
   { label: "Game Arena", href: "/game-arena" },
   { label: "Courses",    href: "/pricing"    },
-  { label: "Blog",       href: "https://learn.civilezy.in/blog" },
+  { label: "Blog",       href: EXTERNAL_URLS.blog },
 ] as const;
 
 export default function Navbar() {

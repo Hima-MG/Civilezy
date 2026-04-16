@@ -1,6 +1,8 @@
 
 "use client";
 
+import { EXTERNAL_URLS } from "@/lib/constants";
+
 export default function AppDownloadSection() {
   return (
     <section className="py-12 sm:py-16 lg:py-20 px-[5%] text-center">
@@ -14,7 +16,7 @@ export default function AppDownloadSection() {
 
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <a
-          href="https://play.google.com/store/apps/details?id=com.civilezy.civilezy"
+          href={EXTERNAL_URLS.apps.playStore}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Download CivilEzy on Google Play Store"
@@ -24,7 +26,7 @@ export default function AppDownloadSection() {
         </a>
 
         <a
-          href="https://apps.apple.com/us/app/civilezy/id6749293661"
+          href={EXTERNAL_URLS.apps.appStore}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Download CivilEzy on Apple App Store"

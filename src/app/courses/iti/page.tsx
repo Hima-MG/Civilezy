@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { COURSE_LINKS } from "@/lib/constants";
+import { EXTERNAL_URLS } from "@/lib/constants";
 
 export default function ITICoursePage() {
-  redirect(COURSE_LINKS.iti);
+  redirect(EXTERNAL_URLS.checkout.iti);
 }

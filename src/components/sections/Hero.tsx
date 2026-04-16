@@ -9,7 +9,7 @@ type Level       = "iti" | "dip" | "btech";
 import { EXTERNAL_URLS } from "@/lib/constants";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const LMS_FREE_TEST = EXTERNAL_URLS.freeTest;
+const LMS_FREE_TEST = EXTERNAL_URLS.demo;
 const STORAGE_KEY = "civilezy_user";
 
 // ─── Rank System ────────────────────────────────────────────────────────────

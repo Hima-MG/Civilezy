@@ -18,12 +18,14 @@ interface LevelCardData {
   ariaLabel: string;
 }
 
+import { EXTERNAL_URLS } from "@/lib/constants";
+
 // ─── Pricing links ──────────────────────────────────────────────────────────
 const PRICING_LINKS: Record<DomainKey, string> = {
-  ITI:      "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
-  Diploma:  "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
-  BTech:    "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
-  Surveyor: "https://learn.civilezy.in/en/checkout/?product_id=4987&price_id=271682&product_type=membership",
+  ITI:      EXTERNAL_URLS.checkout.iti,
+  Diploma:  EXTERNAL_URLS.checkout.diploma,
+  BTech:    EXTERNAL_URLS.checkout.btech,
+  Surveyor: EXTERNAL_URLS.checkout.surveyor,
 };
 
 // ─── Data ───────────────────────────────────────────────────────────────────
