@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -56,6 +57,15 @@ export interface QuestionInput {
   status:       Status;
   isActive:     boolean;
   createdBy:    string;
+}
+
+// ─── Fetch single (admin edit) ──────────────────────────────────────────────
+
+export async function getQuestionById(id: string): Promise<QuestionDoc> {
+  if (!id) throw new Error("getQuestionById: id is empty");
+  const snap = await getDoc(doc(db, COL, id));
+  if (!snap.exists()) throw new Error(`Question "${id}" not found`);
+  return { id: snap.id, ...snap.data() } as QuestionDoc;
 }
 
 // ─── CRUD ───────────────────────────────────────────────────────────────────
