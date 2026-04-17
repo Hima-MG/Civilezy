@@ -26,7 +26,7 @@ export const HERO_DOMAINS: HeroDomainConfig[] = [
     id: "iti",
     label: "ITI",
     icon: "🔧",
-    seoSubtitle: "Try real Kerala PSC Civil Engineering questions for ITI Overseer candidates",
+    seoSubtitle: "Try CiviiEzy Civil Engineering Questions for ITI Overseer candidates",
     questions: [
       {
         question: "The minimum reinforcement in a RCC slab as per IS 456 is:",
@@ -59,7 +59,7 @@ export const HERO_DOMAINS: HeroDomainConfig[] = [
     id: "diploma",
     label: "Diploma",
     icon: "📐",
-    seoSubtitle: "Try real Kerala PSC Civil Engineering questions for Diploma / First Grade Overseer exam",
+    seoSubtitle: "Try CiviiEzy Civil Engineering Questions for Diploma / First Grade Overseer exam",
     questions: [
       {
         question: "In a singly reinforced beam, the neutral axis depth factor depends on:",
@@ -92,7 +92,7 @@ export const HERO_DOMAINS: HeroDomainConfig[] = [
     id: "btech",
     label: "B.Tech",
     icon: "🎓",
-    seoSubtitle: "Try real Kerala PSC Civil Engineering questions for B.Tech / AE level exam",
+    seoSubtitle: "Try CiviiEzy Civil Engineering Questions for B.Tech / AE level exam",
     questions: [
       {
         question: "As per IS 1893, the seismic zone factor (Z) for Zone III in Kerala is:",
@@ -125,7 +125,7 @@ export const HERO_DOMAINS: HeroDomainConfig[] = [
     id: "surveyor",
     label: "Surveyor",
     icon: "🗺️",
-    seoSubtitle: "Try real Kerala PSC Civil Engineering questions for Surveyor Grade exam",
+    seoSubtitle: "Try CiviiEzy Civil Engineering Questions for Surveyor Grade exam",
     questions: [
       {
         question: "The instrument used for measuring horizontal and vertical angles is:",
