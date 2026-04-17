@@ -196,7 +196,7 @@ export default function Hero() {
     <>
       <section
         aria-labelledby="hero-heading"
-        style={{ minHeight: "100vh", padding: "100px 5% 60px", position: "relative", overflow: "hidden", display: "flex", alignItems: "center" }}
+        style={{ minHeight: "100vh", padding: "40px 5% 60px", position: "relative", overflow: "hidden", display: "flex", alignItems: "center" }}
         className="hero-section-pad"
       >
         {/* Decorative backgrounds */}
