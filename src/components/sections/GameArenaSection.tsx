@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useMemo } from "react";
-import { getLeaderboard, getLevel, getNextLevel, type LeaderboardEntry } from "@/lib/leaderboard";
-import { fetchPeriodLeaderboard, msUntilReset, type LeaderboardPeriod, type PeriodLeaderboardEntry } from "@/lib/leaderboard";
+import { getLevel, getNextLevel } from "@/lib/leaderboard";
 import { useAuth } from "@/contexts/AuthContext";
+import LeaderboardTabs from "@/components/game/LeaderboardTabs";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface TierDef {
@@ -24,26 +24,11 @@ const TIER_DEFS: TierDef[] = [
   { icon:"🔥", name:"Legend",  desc:"∞+ pts",           xp:"∞",      threshold:10000000 },
 ];
 
-const AVATAR_COLORS = [
-  { bg:"rgba(255,184,0,0.2)",    c:"#FFB800" },
-  { bg:"rgba(100,200,255,0.15)", c:"#64C8FF" },
-  { bg:"rgba(255,98,0,0.15)",    c:"#FF8534" },
-  { bg:"rgba(50,200,100,0.15)",  c:"#32C864" },
-  { bg:"rgba(200,100,255,0.15)", c:"#C864FF" },
-  { bg:"rgba(255,100,150,0.15)", c:"#FF6496" },
-  { bg:"rgba(255,255,255,0.06)", c:"rgba(255,255,255,0.55)" },
-];
-
-const RANK_COLORS = ["#FFB800", "#C0C0C0", "#CD7F32"];
-// const BADGES = ["🔥 Streak Champion","⚡ Speed King","🎯 Topic Master","🌟 30-Day Legend"] as const;
-
 // ─── Stable hover handlers (module-level) ──────────────────────────────────
 const onStatEnter  = (e: React.MouseEvent<HTMLElement>) => { (e.currentTarget as HTMLElement).style.transform="translateY(-3px)"; };
 const onStatLeave  = (e: React.MouseEvent<HTMLElement>) => { (e.currentTarget as HTMLElement).style.transform="translateY(0)"; };
 const onBtnEnter   = (e: React.MouseEvent<HTMLButtonElement>) => { (e.currentTarget as HTMLElement).style.transform="translateY(-3px)"; (e.currentTarget as HTMLElement).style.boxShadow="0 12px 40px rgba(255,98,0,0.6)"; };
 const onBtnLeave   = (e: React.MouseEvent<HTMLButtonElement>) => { (e.currentTarget as HTMLElement).style.transform="translateY(0)";    (e.currentTarget as HTMLElement).style.boxShadow="0 6px 30px rgba(255,98,0,0.45)"; };
-const onLbEnter    = (e: React.MouseEvent<HTMLElement>) => { (e.currentTarget as HTMLElement).style.background="rgba(255,255,255,0.03)"; };
-const onLbLeave    = (e: React.MouseEvent<HTMLElement>) => { (e.currentTarget as HTMLElement).style.background=""; };
 
 // ─── Helper: which tier index is active for a given totalScore ─────────────
 function getActiveTierIdx(totalScore: number): number {
@@ -57,50 +42,7 @@ function getActiveTierIdx(totalScore: number): number {
 // ─── Component ─────────────────────────────────────────────────────────────
 export default function GameArenaSection() {
   const router = useRouter();
-  const { profile } = useAuth();
-  const [lbData, setLbData]       = useState<LeaderboardEntry[]>([]);
-  const [lbLoading, setLbLoading] = useState(true);
-
-  // Period leaderboard state
-  const [lbTab, setLbTab] = useState<LeaderboardPeriod | "all">("daily");
-  const [periodData, setPeriodData] = useState<PeriodLeaderboardEntry[]>([]);
-  const [periodLoading, setPeriodLoading] = useState(false);
-  const [countdown, setCountdown] = useState("");
-
-  // Load all-time leaderboard on mount
-  useEffect(() => {
-    getLeaderboard()
-      .then(setLbData)
-      .catch(() => {})
-      .finally(() => setLbLoading(false));
-  }, []);
-
-  // One-time fetch for period leaderboard (homepage doesn't need real-time)
-  useEffect(() => {
-    if (lbTab === "all") return;
-    let cancelled = false;
-    setPeriodLoading(true);
-    fetchPeriodLeaderboard(lbTab, 20)
-      .then((data) => { if (!cancelled) setPeriodData(data); })
-      .catch(() =>    { if (!cancelled) setPeriodData([]); })
-      .finally(() =>  { if (!cancelled) setPeriodLoading(false); });
-    return () => { cancelled = true; };
-  }, [lbTab]);
-
-  // Countdown timer
-  useEffect(() => {
-    if (lbTab === "all") { setCountdown(""); return; }
-    const tick = () => {
-      const ms = msUntilReset(lbTab);
-      if (ms <= 0) { setCountdown("Resetting..."); return; }
-      const sec = Math.floor(ms / 1000);
-      const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60);
-      setCountdown(d > 0 ? `${d}d ${h}h` : h > 0 ? `${h}h ${m}m` : `${m}m`);
-    };
-    tick();
-    const id = setInterval(tick, 30_000);
-    return () => clearInterval(id);
-  }, [lbTab]);
+  const { profile, user } = useAuth();
 
   // ── Derived player values (memoized) ──
   const totalScore   = profile?.totalScore ?? 0;
@@ -291,166 +233,17 @@ export default function GameArenaSection() {
 
           {/* RIGHT — Leaderboard */}
           <div>
-            <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:"20px", overflow:"hidden" }}>
-
-              {/* Leaderboard header */}
-              <div style={{ background:"linear-gradient(90deg,rgba(255,98,0,0.2),rgba(255,184,0,0.1))", padding:"16px 20px", display:"flex", alignItems:"center", gap:"10px", borderBottom:"1px solid rgba(255,255,255,0.1)" }}>
-                <span aria-hidden="true" style={{ fontSize:"22px" }}>🏆</span>
-                <h3 style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"20px", fontWeight:700, margin:0 }}>
+            <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:"20px", overflow:"hidden", padding:"20px" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"16px" }}>
+                <span style={{ fontSize:"22px" }}>🏆</span>
+                <h3 style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"20px", fontWeight:700, margin:0, color:"#fff" }}>
                   CivilEzy Leaderboard
                 </h3>
-                <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:"6px", fontSize:"11px", color:"rgba(255,255,255,0.5)" }}>
-                  {lbTab !== "all" && (
-                    <>
-                      <span style={{ display:"inline-block", width:"6px", height:"6px", borderRadius:"50%", background:"#22c55e", animation:"pulse 2s ease-in-out infinite" }} />
-                      <span style={{ color:"#22c55e", fontWeight:700, fontSize:"10px", letterSpacing:"0.5px" }}>LIVE</span>
-                      <span style={{ color:"rgba(255,255,255,0.2)" }}>·</span>
-                    </>
-                  )}
-                  {countdown && (
-                    <span>Resets in <span style={{ color:"rgba(255,255,255,0.8)", fontWeight:700 }}>{countdown}</span></span>
-                  )}
-                  {lbTab === "all" && (
-                    <span style={{ fontSize:"12px", color:"rgba(255,255,255,0.55)" }}>All Time</span>
-                  )}
-                </div>
               </div>
-
-              {/* Period tab switcher */}
-              <div style={{ display:"flex", gap:"0", borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
-                {([
-                  { id: "daily" as const,   label: "📅 Daily" },
-                  { id: "weekly" as const,  label: "📆 Weekly" },
-                  { id: "monthly" as const, label: "🗓️ Monthly" },
-                  { id: "all" as const,     label: "👑 All Time" },
-                ] as const).map((tab) => {
-                  const active = tab.id === lbTab;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setLbTab(tab.id)}
-                      style={{
-                        flex: 1,
-                        padding: "10px 6px",
-                        fontSize: "12px",
-                        fontWeight: active ? 800 : 600,
-                        color: active ? "#FF8534" : "rgba(255,255,255,0.45)",
-                        background: active ? "rgba(255,98,0,0.1)" : "transparent",
-                        border: "none",
-                        borderBottom: active ? "2px solid #FF6200" : "2px solid transparent",
-                        cursor: "pointer",
-                        transition: "all 0.2s",
-                        fontFamily: "Nunito, sans-serif",
-                      }}
-                    >
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Monthly rewards teaser */}
-              {lbTab === "monthly" && (
-                <div style={{ padding:"8px 20px", background:"rgba(255,184,0,0.06)", borderBottom:"1px solid rgba(255,255,255,0.06)", display:"flex", alignItems:"center", gap:"6px" }}>
-                  <span style={{ fontSize:"12px" }}>🎖️</span>
-                  <span style={{ fontSize:"11px", fontWeight:700, color:"#FFB800" }}>Top Monthly Players Get Special Badge</span>
-                </div>
-              )}
-
-              {/* Leaderboard rows */}
-              <ol
-                aria-label="Kerala PSC leaderboard — top ranked students"
-                style={{ listStyle:"none", padding:"8px 0", margin:0 }}
-              >
-                {/* Loading state */}
-                {(lbTab === "all" ? lbLoading : periodLoading) ? (
-                  <li style={{ padding:"20px", textAlign:"center", fontSize:"14px", color:"rgba(255,255,255,0.45)" }}>
-                    Loading leaderboard...
-                  </li>
-                ) : (() => {
-                  // Pick the right data source based on active tab
-                  const isAllTime = lbTab === "all";
-                  const rows = isAllTime ? lbData : periodData;
-
-                  if (rows.length === 0) {
-                    return (
-                      <li style={{ padding:"30px 20px", textAlign:"center" }}>
-                        <div style={{ fontSize:"32px", marginBottom:"8px" }}>🏟️</div>
-                        <div style={{ fontSize:"14px", fontWeight:600, color:"rgba(255,255,255,0.5)", marginBottom:"4px" }}>
-                          {isAllTime ? "No scores yet." : `No players this ${lbTab === "daily" ? "day" : lbTab === "weekly" ? "week" : "month"}.`}
-                        </div>
-                        <div style={{ fontSize:"12px", color:"rgba(255,255,255,0.3)" }}>
-                          Play a game to claim the top spot!
-                        </div>
-                      </li>
-                    );
-                  }
-
-                  return rows.map((entry, i) => {
-                    const avatar = AVATAR_COLORS[i % AVATAR_COLORS.length];
-                    // Get name from either entry type
-                    const entryName = isAllTime
-                      ? (entry as LeaderboardEntry).name
-                      : (entry as PeriodLeaderboardEntry).displayName;
-                    const initials = entryName.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase();
-                    const rankColor = i < 3 ? RANK_COLORS[i] : "rgba(255,255,255,0.55)";
-                    const isFirst = i === 0;
-                    const isMe = profile?.displayName?.toLowerCase() === entryName?.toLowerCase();
-
-                    // Get display score — period entries use leaderboardMetric, all-time uses totalScore
-                    const displayScore = isAllTime
-                      ? ((entry as LeaderboardEntry).totalScore ?? (entry as LeaderboardEntry).score)
-                      : (entry as PeriodLeaderboardEntry).leaderboardMetric;
-
-                    // Medal for top 3
-                    const medals = ["🥇", "🥈", "🥉"];
-                    const rankDisplay = i < 3 ? medals[i] : `#${i + 1}`;
-
-                    return (
-                      <li
-                        key={`${entryName}-${i}`}
-                        style={{
-                          display:"flex", alignItems:"center", gap:"14px", padding:"10px 20px",
-                          background: isMe ? "rgba(255,98,0,0.12)" : isFirst ? "rgba(255,184,0,0.08)" : "",
-                          border: isMe ? "1px solid rgba(255,98,0,0.3)" : "1px solid transparent",
-                          borderRadius: isMe ? "10px" : "0",
-                          transition:"background 0.2s",
-                        }}
-                        onMouseEnter={onLbEnter}
-                        onMouseLeave={onLbLeave}
-                      >
-                        <div style={{ width:"28px", textAlign:"center", fontFamily:"Rajdhani, sans-serif", fontSize: i < 3 ? "18px" : "16px", fontWeight:700, color:rankColor }}>{rankDisplay}</div>
-                        <div
-                          aria-hidden="true"
-                          style={{ width:"36px", height:"36px", borderRadius:"50%", background: isMe ? "rgba(255,98,0,0.35)" : avatar.bg, color: isMe ? "#fff" : avatar.c, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"14px", fontWeight:700, flexShrink:0 }}
-                        >
-                          {initials}
-                        </div>
-                        <div style={{ flex:1 }}>
-                          <div style={{ fontSize:"14px", fontWeight:700, color: isMe ? "#FF8534" : "#fff" }}>
-                            {entryName}{isMe ? " (You)" : ""}
-                          </div>
-                          {/* Show level for all-time, games+streak for period */}
-                          {isAllTime ? (
-                            (entry as LeaderboardEntry).level && <div style={{ fontSize:"11px", color:"rgba(255,255,255,0.55)" }}>{(entry as LeaderboardEntry).level}</div>
-                          ) : (
-                            <div style={{ fontSize:"11px", color:"rgba(255,255,255,0.45)", display:"flex", gap:"8px" }}>
-                              <span>{(entry as PeriodLeaderboardEntry).gamesPlayed} game{(entry as PeriodLeaderboardEntry).gamesPlayed !== 1 ? "s" : ""}</span>
-                              {(entry as PeriodLeaderboardEntry).bestStreak > 1 && (
-                                <span style={{ color:"rgba(255,152,0,0.7)" }}>🔥 {(entry as PeriodLeaderboardEntry).bestStreak} streak</span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        <div style={{ fontSize:"14px", fontWeight:700, color:"#FF8534" }}>
-                          {displayScore.toLocaleString()}
-                          <span style={{ fontSize:"10px", color:"rgba(255,255,255,0.4)", marginLeft:"2px" }}>{isAllTime ? "pts" : "xp"}</span>
-                        </div>
-                      </li>
-                    );
-                  });
-                })()}
-              </ol>
+              <LeaderboardTabs
+                currentPlayerName={profile?.displayName ?? undefined}
+                currentUserId={user?.uid ?? undefined}
+              />
             </div>
           </div>
 
