@@ -665,7 +665,7 @@ function EditQuestionModal({ report, onClose, onSaved }: EditModalProps) {
 
               {report.status === "resolved" && (
                 <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", textAlign: "center", margin: 0 }}>
-                  This report is already resolved. "Save & Resolve" is disabled.
+                  This report is already resolved. &ldquo;Save &amp; Resolve&rdquo; is disabled.
                 </p>
               )}
             </>
