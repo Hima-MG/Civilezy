@@ -297,7 +297,7 @@ export default function GameArenaSection() {
               <div style={{ background:"linear-gradient(90deg,rgba(255,98,0,0.2),rgba(255,184,0,0.1))", padding:"16px 20px", display:"flex", alignItems:"center", gap:"10px", borderBottom:"1px solid rgba(255,255,255,0.1)" }}>
                 <span aria-hidden="true" style={{ fontSize:"22px" }}>🏆</span>
                 <h3 style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"20px", fontWeight:700, margin:0 }}>
-                  Kerala PSC Global Leaderboard
+                  CivilEzy Leaderboard
                 </h3>
                 <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:"6px", fontSize:"11px", color:"rgba(255,255,255,0.5)" }}>
                   {lbTab !== "all" && (
