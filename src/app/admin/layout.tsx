@@ -1,16 +1,24 @@
 "use client";
 
 import { useState, useEffect, type ReactNode } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const ADMIN_KEY = "civilezy_admin_auth";
 // Simple passphrase — only blocks accidental access; Firestore rules handle real security
 const PASSPHRASE = "civilezy2026admin";
+
+const NAV_ITEMS = [
+  { href: "/admin/questions",     label: "Questions",     icon: "📚" },
+  { href: "/admin/announcements", label: "Announcements", icon: "📣" },
+] as const;
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const [authed, setAuthed] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(true);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -69,7 +77,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       <header style={{
         background: "rgba(255,255,255,0.04)",
         borderBottom: "1px solid rgba(255,98,0,0.2)",
-        padding: "12px 24px",
+        padding: "0 24px",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -77,19 +85,51 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         top: 0,
         zIndex: 50,
         backdropFilter: "blur(12px)",
+        minHeight: "56px",
+        gap: "16px",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontSize: "20px" }}>⚙️</span>
-          <span style={{ fontFamily: "Rajdhani, sans-serif", fontWeight: 700, fontSize: "18px", color: "#FF8534" }}>
-            CivilEzy Admin
-          </span>
-          <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", background: "rgba(255,98,0,0.15)", padding: "2px 10px", borderRadius: "20px", fontWeight: 600 }}>
-            Question Manager
-          </span>
+        {/* Brand + nav */}
+        <div style={{ display: "flex", alignItems: "center", gap: "20px", flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+            <span style={{ fontSize: "18px" }}>⚙️</span>
+            <span style={{ fontFamily: "Rajdhani, sans-serif", fontWeight: 700, fontSize: "17px", color: "#FF8534" }}>
+              CivilEzy Admin
+            </span>
+          </div>
+          {/* Section nav */}
+          <nav style={{ display: "flex", gap: "4px" }}>
+            {NAV_ITEMS.map(({ href, label, icon }) => {
+              const active = pathname.startsWith(href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    padding: "5px 12px",
+                    borderRadius: "8px",
+                    textDecoration: "none",
+                    color: active ? "#FF8534" : "rgba(255,255,255,0.55)",
+                    background: active ? "rgba(255,98,0,0.15)" : "transparent",
+                    border: `1px solid ${active ? "rgba(255,98,0,0.3)" : "transparent"}`,
+                    transition: "all 0.2s",
+                    fontFamily: "Nunito, sans-serif",
+                  }}
+                >
+                  <span>{icon}</span>
+                  <span>{label}</span>
+                </Link>
+              );
+            })}
+          </nav>
         </div>
         <button
           onClick={() => { sessionStorage.removeItem(ADMIN_KEY); setAuthed(false); }}
-          style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "6px 14px", cursor: "pointer" }}
+          style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "6px 14px", cursor: "pointer", flexShrink: 0 }}
         >
           Logout
         </button>

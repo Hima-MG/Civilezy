@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { EXTERNAL_URLS } from "@/lib/constants";
+import { useAnnouncementBar } from "@/contexts/AnnouncementContext";
 
 const URLS = {
   LMS_LOGIN:     EXTERNAL_URLS.login,
@@ -20,6 +21,7 @@ const NAV_LINKS = [
 export default function Navbar() {
   const [menuOpen,  setMenuOpen]  = useState(false);
   const [scrolled,  setScrolled]  = useState(false);
+  const { barHeight } = useAnnouncementBar();
 
   // Add shadow on scroll
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function Navbar() {
       <nav
         style={{
           position:       "fixed",
-          top:            0,
+          top:            barHeight,
           left:           0,
           right:          0,
           zIndex:         1000,
@@ -119,6 +121,7 @@ export default function Navbar() {
       <div
         style={{
           ...styles.mobileMenu,
+          top:       70 + barHeight,
           maxHeight: menuOpen ? "400px" : "0",
           opacity:   menuOpen ? 1 : 0,
           pointerEvents: menuOpen ? "auto" : "none",
@@ -266,7 +269,7 @@ const styles = {
 
   mobileMenu: {
     position:       "fixed",
-    top:            "70px",
+    top:            "70px", // overridden inline with barHeight
     left:           0,
     right:          0,
     zIndex:         999,
