@@ -305,7 +305,7 @@ export default function Hero() {
 
               {/* SEO heading — visible, keyword-rich */}
               <h2 id="psc-challenge-heading" style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"18px", fontWeight:700, color:"#fff", margin:"0 0 4px", lineHeight:1.3 }}>
-                Kerala PSC Civil Engineering Challenge
+                Evaluate YourSelf!
               </h2>
               <p style={{ fontSize:"13px", color:"rgba(255,255,255,0.55)", marginBottom:"14px", lineHeight:1.5 }}>
                 {domainConfig.seoSubtitle}
