@@ -2,7 +2,7 @@
 // All links that leave civilezy.in point here. Never hardcode these in
 // individual components — always import from this file.
 export const EXTERNAL_URLS = {
-  login:     "https://learn.civilezy.in/login",
+  login:     "https://learn.civilezy.in/en/signup",
   signup:    "https://learn.civilezy.in/register",
   dashboard: "https://learn.civilezy.in/dashboard",
   demo:      "https://learn.civilezy.in/free-trial-request",
