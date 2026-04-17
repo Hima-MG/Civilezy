@@ -27,4 +27,5 @@ export {
   subscribeToPeriodLeaderboard,
   fetchNextLeaderboardPage,
   fetchPeriodLeaderboard,
+  fetchUserRankInPeriod,
 } from "./getLeaderboardByPeriod";

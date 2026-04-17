@@ -750,7 +750,7 @@ export default function GameArenaPage() {
             <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
               🏆 Leaderboards
             </h3>
-            <LeaderboardTabs currentPlayerName={displayName} />
+            <LeaderboardTabs currentPlayerName={displayName} currentUserId={user.uid} />
           </div>
 
           {/* ── All-Time Leaderboard ── */}

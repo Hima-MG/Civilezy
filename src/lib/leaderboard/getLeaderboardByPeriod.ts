@@ -10,7 +10,10 @@ import {
   limit as firestoreLimit,
   startAfter,
   getDocs,
+  getDoc,
+  doc,
   onSnapshot,
+  getCountFromServer,
   type QueryDocumentSnapshot,
   type Unsubscribe,
 } from "firebase/firestore";
@@ -136,6 +139,47 @@ export async function fetchNextLeaderboardPage(
     lastDoc: snap.docs[snap.docs.length - 1] ?? null,
     hasMore: snap.docs.length >= pageSize,
   };
+}
+
+// ---------------------------------------------------------------------------
+// User rank lookup — counts entries with higher XP to determine rank
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the current user's 1-based rank in a period leaderboard.
+ *
+ * Strategy:
+ *   1. Fetch the user's own leaderboard doc to read their totalXp.
+ *   2. Count how many docs in the same period have a higher totalXp.
+ *   3. Rank = count + 1.
+ *
+ * Returns null if the user has no entry for the current period.
+ */
+export async function fetchUserRankInPeriod(
+  period: LeaderboardPeriod,
+  userId: string,
+): Promise<number | null> {
+  if (!userId) return null;
+
+  const currentKey = getPeriodKey(period);
+  const col = collectionName(period);
+
+  // 1. Get the user's own doc (userId == docId by convention in updateLeaderboardPeriod)
+  const userDocRef = doc(db, col, userId);
+  const userSnap = await getDoc(userDocRef);
+
+  if (!userSnap.exists()) return null;
+
+  const userXp: number = (userSnap.data().totalXp as number) ?? 0;
+
+  // 2. Count how many users in the same period have strictly more XP
+  const aboveQuery = query(
+    collection(db, col),
+    where("periodKey", "==", currentKey),
+    where("totalXp", ">", userXp),
+  );
+  const countSnap = await getCountFromServer(aboveQuery);
+  return countSnap.data().count + 1;
 }
 
 // ---------------------------------------------------------------------------

@@ -5,6 +5,7 @@ import type { QueryDocumentSnapshot } from "firebase/firestore";
 import {
   subscribeToPeriodLeaderboard,
   fetchNextLeaderboardPage,
+  fetchUserRankInPeriod,
   msUntilReset,
   type LeaderboardPeriod,
   type PeriodLeaderboardEntry,
@@ -21,9 +22,9 @@ const TABS: { id: LeaderboardPeriod; label: string; icon: string }[] = [
 ];
 
 const RANK_BADGES = [
-  { emoji: "🥇", ring: "ring-yellow-500/40",  glow: "shadow-[0_0_14px_rgba(234,179,8,0.22)]",   text: "text-yellow-400", bg: "bg-yellow-500/10"  },
-  { emoji: "🥈", ring: "ring-zinc-400/30",    glow: "shadow-[0_0_10px_rgba(161,161,170,0.15)]", text: "text-zinc-300",  bg: "bg-zinc-400/8"    },
-  { emoji: "🥉", ring: "ring-amber-600/30",   glow: "shadow-[0_0_10px_rgba(217,119,6,0.15)]",  text: "text-amber-500", bg: "bg-amber-600/8"   },
+  { emoji: "🥇", ring: "ring-yellow-500/40",  glow: "shadow-[0_0_18px_rgba(234,179,8,0.30)]",   text: "text-yellow-400", bg: "bg-yellow-500/10"  },
+  { emoji: "🥈", ring: "ring-zinc-400/30",    glow: "shadow-[0_0_10px_rgba(161,161,170,0.15)]", text: "text-zinc-300",   bg: "bg-zinc-400/8"    },
+  { emoji: "🥉", ring: "ring-amber-600/30",   glow: "shadow-[0_0_10px_rgba(217,119,6,0.15)]",   text: "text-amber-500",  bg: "bg-amber-600/8"   },
 ];
 
 // Deterministic avatar colour from display name
@@ -73,13 +74,162 @@ function SkeletonRow({ delay }: { delay: number }) {
   );
 }
 
+// ─── Podium sub-component ─────────────────────────────────────────────────────
+
+interface PodiumProps {
+  entries: PeriodLeaderboardEntry[];
+  playerKey: string;
+}
+
+function Podium({ entries, playerKey }: PodiumProps) {
+  if (entries.length < 3) return null;
+
+  const [first, second, third] = entries;
+
+  const PodiumCard = ({
+    entry,
+    rank,
+    isCenter,
+  }: {
+    entry: PeriodLeaderboardEntry;
+    rank: 1 | 2 | 3;
+    isCenter: boolean;
+  }) => {
+    const badge   = RANK_BADGES[rank - 1];
+    const name    = entry.displayName || "Unknown";
+    const isMe    = !!playerKey && name.toLowerCase().trim() === playerKey;
+    const color   = isMe ? "#FF8534" : avatarColor(name);
+    const avatarSize = isCenter ? 52 : 40;
+
+    const podiumHeights = { 1: "h-16", 2: "h-10", 3: "h-8" };
+    const podiumColors  = {
+      1: "bg-gradient-to-t from-yellow-600/40 to-yellow-500/20 border-yellow-500/30",
+      2: "bg-gradient-to-t from-zinc-500/30 to-zinc-400/10 border-zinc-500/20",
+      3: "bg-gradient-to-t from-amber-700/30 to-amber-600/10 border-amber-600/20",
+    };
+
+    return (
+      <div
+        className={`flex flex-col items-center gap-1 ${isCenter ? "pb-0" : "pt-4"}`}
+        style={{ animation: `lb-slide-in 0.4s ease ${(rank - 1) * 0.1}s both` }}
+      >
+        {/* Crown for #1 */}
+        {isCenter && (
+          <div className="text-xl mb-0.5" style={{ filter: "drop-shadow(0 0 6px rgba(234,179,8,0.6))" }}>
+            👑
+          </div>
+        )}
+
+        {/* Avatar */}
+        <div
+          className={`rounded-full flex items-center justify-center font-extrabold text-white select-none shrink-0 ${
+            isCenter ? "ring-2 ring-yellow-400/60 shadow-[0_0_20px_rgba(234,179,8,0.35)]" : `ring-1 ${badge.ring}`
+          }`}
+          style={{
+            width: avatarSize,
+            height: avatarSize,
+            background: color,
+            fontSize: isCenter ? 20 : 15,
+          }}
+        >
+          {name[0]?.toUpperCase() ?? "?"}
+        </div>
+
+        {/* Medal */}
+        <span className="text-lg leading-none">{badge.emoji}</span>
+
+        {/* Name */}
+        <span
+          className={`text-[11px] font-bold text-center leading-tight max-w-[70px] truncate ${
+            isMe ? "text-orange-300" : badge.text
+          }`}
+          title={name}
+        >
+          {name}
+          {isMe && <span className="block text-[9px] text-orange-400/80">YOU</span>}
+        </span>
+
+        {/* XP */}
+        <span className={`text-xs font-extrabold tabular-nums ${badge.text}`}>
+          {entry.leaderboardMetric.toLocaleString()}
+          <span className="text-[9px] font-normal text-zinc-500 ml-0.5">xp</span>
+        </span>
+
+        {/* Podium block */}
+        <div
+          className={`w-16 rounded-t-lg border ${podiumColors[rank]} ${podiumHeights[rank]} flex items-center justify-center`}
+        >
+          <span className="text-zinc-500 text-xs font-bold">#{rank}</span>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="mb-5 px-1">
+      {/* Layout: 2nd | 1st | 3rd  (align to bottom) */}
+      <div className="flex items-end justify-center gap-2">
+        <PodiumCard entry={second} rank={2} isCenter={false} />
+        <PodiumCard entry={first}  rank={1} isCenter={true}  />
+        <PodiumCard entry={third}  rank={3} isCenter={false} />
+      </div>
+    </div>
+  );
+}
+
+// ─── Your Rank Card ───────────────────────────────────────────────────────────
+
+interface YourRankCardProps {
+  rank: number;
+  playerName: string;
+  loading: boolean;
+}
+
+function YourRankCard({ rank, playerName, loading }: YourRankCardProps) {
+  return (
+    <div
+      className="mt-4 flex items-center gap-3 px-4 py-3 rounded-xl border border-orange-500/30 bg-orange-500/8"
+      style={{ animation: "lb-slide-in 0.35s ease both" }}
+    >
+      {/* Avatar */}
+      <div
+        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold text-white shrink-0"
+        style={{ background: "#FF8534" }}
+      >
+        {playerName[0]?.toUpperCase() ?? "?"}
+      </div>
+
+      {/* Label */}
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-zinc-400 font-medium">Your Position</p>
+        <p className="text-sm font-bold text-orange-300 truncate">{playerName}</p>
+      </div>
+
+      {/* Rank badge */}
+      <div className="shrink-0 text-right">
+        {loading ? (
+          <Spinner size={14} />
+        ) : (
+          <>
+            <span className="text-lg font-extrabold text-orange-400 tabular-nums">
+              #{rank}
+            </span>
+            <p className="text-[9px] text-zinc-500 font-medium">Your Rank</p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 interface Props {
   currentPlayerName?: string;
+  currentUserId?: string;
 }
 
-export default function LeaderboardTabs({ currentPlayerName }: Props) {
+export default function LeaderboardTabs({ currentPlayerName, currentUserId }: Props) {
   const [activeTab,    setActiveTab]    = useState<LeaderboardPeriod>("daily");
   const [entries,      setEntries]      = useState<PeriodLeaderboardEntry[]>([]);
   const [cursorDoc,    setCursorDoc]    = useState<QueryDocumentSnapshot | null>(null);
@@ -89,10 +239,12 @@ export default function LeaderboardTabs({ currentPlayerName }: Props) {
   const [firebaseErr,  setFirebaseErr]  = useState<string | null>(null);
   const [countdown,    setCountdown]    = useState("");
   const [transitioning,setTransitioning]= useState(false);
-  // Track which entry indices were just appended (for slide-in animation)
   const [newFrom,      setNewFrom]      = useState<number>(-1);
 
-  // Prevents a stale "Show More" from running after a tab switch
+  // User rank state (shown when user not in visible list)
+  const [userRank,       setUserRank]      = useState<number | null>(null);
+  const [rankLoading,    setRankLoading]   = useState(false);
+
   const activeTabRef = useRef(activeTab);
 
   // ── Tab switch ──
@@ -114,6 +266,7 @@ export default function LeaderboardTabs({ currentPlayerName }: Props) {
     setHasMore(false);
     setFirebaseErr(null);
     setNewFrom(-1);
+    setUserRank(null);
 
     const unsub = subscribeToPeriodLeaderboard(
       activeTab,
@@ -132,6 +285,37 @@ export default function LeaderboardTabs({ currentPlayerName }: Props) {
 
     return unsub;
   }, [activeTab]);
+
+  // ── Fetch user rank when entries or tab change ──
+  useEffect(() => {
+    if (!currentUserId || initLoading) return;
+
+    const playerKey = currentPlayerName?.toLowerCase().trim() ?? "";
+    const inVisible  = entries.some(
+      (e) => (e.displayName ?? "").toLowerCase().trim() === playerKey,
+    );
+
+    if (inVisible) {
+      setUserRank(null);
+      return;
+    }
+
+    // User not visible — fetch their actual rank
+    let cancelled = false;
+    setRankLoading(true);
+    fetchUserRankInPeriod(activeTab, currentUserId)
+      .then((rank) => {
+        if (!cancelled) setUserRank(rank);
+      })
+      .catch(() => {
+        if (!cancelled) setUserRank(null);
+      })
+      .finally(() => {
+        if (!cancelled) setRankLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [entries, activeTab, currentUserId, currentPlayerName, initLoading]);
 
   // ── Countdown timer ──
   useEffect(() => {
@@ -152,10 +336,9 @@ export default function LeaderboardTabs({ currentPlayerName }: Props) {
       const { entries: next, lastDoc, hasMore: more } =
         await fetchNextLeaderboardPage(tabAtClick, PAGE_SIZE, cursorDoc);
 
-      // Discard result if user switched tabs while loading
       if (activeTabRef.current !== tabAtClick) return;
 
-      setNewFrom(entries.length);                    // animate new rows
+      setNewFrom(entries.length);
       setEntries((prev) => [...prev, ...next]);
       setCursorDoc(lastDoc);
       setHasMore(more);
@@ -166,7 +349,7 @@ export default function LeaderboardTabs({ currentPlayerName }: Props) {
     }
   }, [loadingMore, hasMore, cursorDoc, entries.length]);
 
-  // Reset newFrom after animation completes
+  // Reset newFrom after animation
   useEffect(() => {
     if (newFrom < 0) return;
     const t = setTimeout(() => setNewFrom(-1), 600);
@@ -233,12 +416,21 @@ export default function LeaderboardTabs({ currentPlayerName }: Props) {
         }}
       >
 
-        {/* Loading skeleton — first page only */}
+        {/* Loading skeleton */}
         {initLoading && (
           <div className="space-y-2">
-            {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+            {Array.from({ length: 3 }).map((_, i) => (
               <SkeletonRow key={i} delay={i * 0.05} />
             ))}
+            <div className="flex justify-center gap-6 py-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex flex-col items-center gap-1.5">
+                  <div className="w-10 h-10 rounded-full bg-zinc-800/70 animate-pulse" style={{ animationDelay: `${i * 0.08}s` }} />
+                  <div className="w-14 h-2 rounded bg-zinc-800/70 animate-pulse" style={{ animationDelay: `${i * 0.08 + 0.05}s` }} />
+                  <div className={`w-14 rounded-t-lg bg-zinc-800/70 animate-pulse ${i === 0 ? "h-10" : i === 1 ? "h-14" : "h-8"}`} />
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -265,6 +457,12 @@ export default function LeaderboardTabs({ currentPlayerName }: Props) {
         {/* ── Leaderboard list ── */}
         {!initLoading && entries.length > 0 && (
           <>
+            {/* Top 3 Podium */}
+            {entries.length >= 3 && (
+              <Podium entries={entries} playerKey={playerKey} />
+            )}
+
+            {/* Full ranked list (all entries including top 3) */}
             <ol className="space-y-1.5">
               {entries.map((entry, i) => {
                 const rank   = i + 1;
@@ -378,7 +576,6 @@ export default function LeaderboardTabs({ currentPlayerName }: Props) {
                   )}
                 </button>
               ) : entries.length > PAGE_SIZE ? (
-                /* All pages loaded */
                 <p className="text-center text-[11px] text-zinc-600 py-2 flex items-center justify-center gap-2">
                   <span className="inline-block h-px w-10 bg-zinc-800" />
                   All {entries.length} players shown
@@ -387,10 +584,19 @@ export default function LeaderboardTabs({ currentPlayerName }: Props) {
               ) : null}
             </div>
 
-            {/* ── "You're not on the board" nudge ── */}
-            {playerKey && myRank < 0 && (
+            {/* ── Your Rank card (shown when user not in visible list) ── */}
+            {currentUserId && playerKey && myRank < 0 && (userRank !== null || rankLoading) && (
+              <YourRankCard
+                rank={userRank ?? 0}
+                playerName={currentPlayerName ?? "You"}
+                loading={rankLoading}
+              />
+            )}
+
+            {/* ── "Not on board" nudge (when user has no entry at all) ── */}
+            {playerKey && myRank < 0 && !rankLoading && userRank === null && (
               <p className="text-center text-[11px] text-zinc-600 mt-3">
-                You&apos;re not in the top {entries.length} yet —{" "}
+                You&apos;re not on the board yet —{" "}
                 <span className="text-orange-400/70 font-semibold">play to climb!</span>
               </p>
             )}
@@ -398,7 +604,7 @@ export default function LeaderboardTabs({ currentPlayerName }: Props) {
         )}
       </div>
 
-      {/* ── Keyframes (injected once) ── */}
+      {/* ── Keyframes ── */}
       <style>{`
         @keyframes lb-spin {
           to { transform: rotate(360deg); }
