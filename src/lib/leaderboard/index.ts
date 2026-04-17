@@ -23,4 +23,8 @@ export type {
 
 export { getPeriodKey, msUntilReset } from "./periodKeys";
 export { updateLeaderboardPeriod, updateAllPeriodLeaderboards } from "./updateLeaderboardPeriod";
-export { subscribeToPeriodLeaderboard, fetchPeriodLeaderboard } from "./getLeaderboardByPeriod";
+export {
+  subscribeToPeriodLeaderboard,
+  fetchNextLeaderboardPage,
+  fetchPeriodLeaderboard,
+} from "./getLeaderboardByPeriod";
