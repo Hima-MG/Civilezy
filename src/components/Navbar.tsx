@@ -8,7 +8,7 @@ import { useAnnouncementBar } from "@/contexts/AnnouncementContext";
 
 const URLS = {
   LMS_LOGIN:     EXTERNAL_URLS.login,
-  LMS_ENROLL:    EXTERNAL_URLS.signup,
+  // LMS_ENROLL:    EXTERNAL_URLS.de,
 } as const;
 
 const NAV_LINKS = [
@@ -157,14 +157,14 @@ export default function Navbar() {
           >
             Login
           </a>
-          <a
+          {/* <a
             href={URLS.LMS_ENROLL}
             target="_blank"
             rel="noopener noreferrer"
             style={styles.mobilePrimaryBtn}
           >
             Enroll Now
-          </a>
+          </a> */}
         </div>
       </div>
 
