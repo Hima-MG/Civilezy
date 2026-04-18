@@ -28,31 +28,31 @@ export const HERO_DOMAINS: HeroDomainConfig[] = [
     icon: "🔧",
     seoSubtitle: "Try CiviiEzy Civil Engineering Questions for ITI Overseer candidates",
     questions: [
-      {
-        question: "The minimum reinforcement in a RCC slab as per IS 456 is:",
-        options: ["0.10% of bD", "0.12% of bD for HYSD bars", "0.15% of bD", "0.20% of bD"],
-        correct: 1,
-      },
-      {
-        question: "Which cement is most suitable for marine construction works?",
-        options: ["Ordinary Portland Cement", "Rapid Hardening Cement", "Portland Pozzolana Cement", "White Cement"],
-        correct: 2,
-      },
-      {
-        question: "The standard size of a modular brick as per IS 1077 is:",
-        options: ["19 x 9 x 9 cm", "20 x 10 x 10 cm", "23 x 11 x 7.5 cm", "22.5 x 10.5 x 7.5 cm"],
-        correct: 1,
-      },
-      {
-        question: "In chain surveying, the term 'offset' refers to:",
-        options: ["Distance along the chain line", "Lateral distance from the chain line", "Vertical distance from ground", "Bearing of the survey line"],
-        correct: 1,
-      },
-      {
-        question: "The slope of a staircase should generally not exceed:",
-        options: ["30 degrees", "40 degrees", "50 degrees", "60 degrees"],
-        correct: 1,
-      },
+       {
+      question:     "Q. For a Group B educational building up to 24 m height, maximum travel distance to a fire exit per NBC 2016 is:",
+      options:      ["A. 15 m", "B. 22.5 m", "C. 30 m", "D. 45 m"],
+      correct: 1,
+    },
+    {
+      question:     "Q. A 20 mm rivet joins two plates each 10 mm thick and transmits a load of 30000 N. Bearing stress on the rivet shank is:",
+      options:      ["A. 100 N/mm²", "B. 125 N/mm²", "C. 150 N/mm²", "D. 200 N/mm²"],
+      correct: 2,
+    },
+    {
+      question:     "Q. In the three-point problem, the 'triangle of error' vanishes when:",
+      options:      ["A. Station is on great circle", "B. Table is correctly oriented", "C. All angles are equal", "D. Three points are collinear"],
+      correct: 1,
+    },
+    {
+      question:     "Q. Permissible tolerance on length of standard modular brick as per IS 1077 is about:",
+      options:      ["A. ±1 mm", "B. ±3 mm per brick", "C. ±20 mm per 20 bricks", "D. ±50 mm"],
+      correct: 2,
+    },
+    {
+      question:     "Q. An isometric view shows an L-shaped block. The minimum number of orthographic views required to describe it fully is:",
+      options:      ["A. 1 view", "B. 2 views", "C. 3 views", "D. 6 views"],
+      correct: 2,
+    },
     ],
   },
   {
@@ -61,31 +61,31 @@ export const HERO_DOMAINS: HeroDomainConfig[] = [
     icon: "📐",
     seoSubtitle: "Try CiviiEzy Civil Engineering Questions for Diploma / First Grade Overseer exam",
     questions: [
-      {
-        question: "In a singly reinforced beam, the neutral axis depth factor depends on:",
-        options: ["Steel percentage only", "Modular ratio and steel percentage", "Concrete grade only", "Load intensity"],
-        correct: 1,
-      },
-      {
-        question: "The most economical cross-section of a lined canal is:",
-        options: ["Rectangular", "Trapezoidal", "Circular", "Triangular"],
-        correct: 1,
-      },
-      {
-        question: "Slump test of concrete measures its:",
-        options: ["Strength", "Workability", "Durability", "Water-cement ratio"],
-        correct: 1,
-      },
-      {
-        question: "The bearing capacity of soil is determined by:",
-        options: ["Sieve analysis", "Plate load test", "Hydrometer analysis", "Proctor test"],
-        correct: 1,
-      },
-      {
-        question: "In limit state method of design, the partial safety factor for dead load is:",
-        options: ["1.0", "1.2", "1.5", "1.8"],
-        correct: 2,
-      },
+       {
+      question:     "Q. Strength of figure in triangulation depends primarily on:",
+      options:      ["A. Number of triangles only", "B. Distribution and size of angles", "C. Only base length", "D. Only the instrument used"],
+      correct: 1,
+    },
+    {
+      question:     "Q. For an I-section in plastic analysis, the typical shape factor is approximately:",
+      options:      ["A. 1.05", "B. 1.14", "C. 1.50", "D. 1.70"],
+      correct: 1,
+    },
+    {
+      question:     "Q. A summit vertical curve connects a +3% and a −2% grade. The algebraic difference of grades N equals:",
+      options:      ["A. 1%", "B. 5%", "C. −1%", "D. 6%"],
+      correct: 1,
+    },
+    {
+      question:     "Q. Cube strength at 3 days for OPC concrete is approximately what percent of 28-day strength?",
+      options:      ["A. 40%", "B. 20%", "C. 65%", "D. 90%"],
+      correct: 0,
+    },
+    {
+      question:     "Q. If sand bulks 20% and site measures 1.2 m³, actual dry volume is:",
+      options:      ["A. 0.80 m³", "B. 1.00 m³", "C. 1.20 m³", "D. 1.44 m³"],
+      correct: 1,
+    },
     ],
   },
   {
@@ -94,31 +94,31 @@ export const HERO_DOMAINS: HeroDomainConfig[] = [
     icon: "🎓",
     seoSubtitle: "Try CiviiEzy Civil Engineering Questions for B.Tech / AE level exam",
     questions: [
-      {
-        question: "As per IS 1893, the seismic zone factor (Z) for Zone III in Kerala is:",
-        options: ["0.10", "0.16", "0.24", "0.36"],
-        correct: 1,
-      },
-      {
-        question: "The critical depth in open channel flow occurs when the Froude number is:",
-        options: ["Less than 1", "Equal to 1", "Greater than 1", "Equal to 0"],
-        correct: 1,
-      },
-      {
-        question: "In pre-stressed concrete, the loss of stress due to elastic shortening is:",
-        options: ["Time-dependent loss", "Immediate loss", "Friction loss", "Relaxation loss"],
-        correct: 1,
-      },
-      {
-        question: "The BOD of treated sewage for safe disposal into a river should not exceed:",
-        options: ["10 mg/L", "20 mg/L", "30 mg/L", "50 mg/L"],
-        correct: 1,
-      },
-      {
-        question: "The California Bearing Ratio (CBR) test is used to evaluate:",
-        options: ["Compressive strength of concrete", "Subgrade strength of soil", "Tensile strength of steel", "Shear strength of rock"],
-        correct: 1,
-      },
+       {
+      question:     "Q. A Pelton wheel jet has V = 42 m/s, bucket velocity u = 20 m/s and deflection 180°. Work done per unit mass (assuming smooth buckets) is:",
+      options:      ["A. 440 J/kg", "B. 880 J/kg", "C. 1760 J/kg", "D. 2000 J/kg"],
+      correct: 1,
+    },
+    {
+      question:     "Q. The primary functions of railway track ballast do NOT include:",
+      options:      ["A. Distributing wheel loads uniformly to the formation", "B. Holding the sleepers laterally and longitudinally", "C. Providing drainage under the sleepers", "D. Transmitting traction from rail to sleeper"],
+      correct: 3,
+    },
+    {
+      question:     "Q. A plate load test on sand with a 300 mm square plate gives Sp = 5 mm at working pressure. The expected settlement of a 1500 mm square footing at the same pressure (Terzaghi) is approximately:",
+      options:      ["A. about 10 mm", "B. about 12 mm", "C. about 14 mm", "D. about 18 mm"],
+      correct: 2,
+    },
+    {
+      question:     "Q. A singly reinforced M20+Fe415 beam with b = 300 mm, d = 500 mm has Ast = 1200 mm². The depth of neutral axis xu is:",
+      options:      ["A. 150 mm", "B. 200 mm", "C. 240 mm", "D. 300 mm"],
+      correct: 1,
+    },
+    {
+      question:     "Q. Given a 2×2 stiffness matrix [K] = [[4, 2], [2, 3]] (in consistent units), the determinant used to invert it is:",
+      options:      ["A. 5", "B. 6", "C. 8", "D. 12"],
+      correct: 2,
+    },
     ],
   },
   {
@@ -127,31 +127,31 @@ export const HERO_DOMAINS: HeroDomainConfig[] = [
     icon: "🗺️",
     seoSubtitle: "Try CiviiEzy Civil Engineering Questions for Surveyor Grade exam",
     questions: [
-      {
-        question: "The instrument used for measuring horizontal and vertical angles is:",
-        options: ["Dumpy level", "Theodolite", "Chain", "Prismatic compass"],
-        correct: 1,
-      },
-      {
-        question: "In levelling, the correction for curvature is:",
-        options: ["Additive", "Subtractive", "Zero", "Depends on distance"],
-        correct: 0,
-      },
-      {
-        question: "The principle of plane table surveying is based on:",
-        options: ["Triangulation", "Traversing", "Parallelism", "Graphical solution of intersection"],
-        correct: 3,
-      },
-      {
-        question: "A contour line that closes upon itself indicates:",
-        options: ["A valley", "A hill or depression", "A flat terrain", "A ridge"],
-        correct: 1,
-      },
-      {
-        question: "The sensitivity of a level tube depends on:",
-        options: ["Length of the tube", "Radius of curvature", "Diameter of the tube", "Liquid used"],
-        correct: 1,
-      },
+       {
+      question:     "Q. Principle of least squares for adjustment of redundant observations requires:",
+      options:      ["A. Σv = 0", "B. Σv² = maximum", "C. Σv² = minimum", "D. Σv³ = 0"],
+      correct: 2,
+    },
+    {
+      question:     "Q. Tangent length of a simple circular curve with R = 300 m and deflection Δ = 60° is:",
+      options:      ["A. 150.0 m", "B. 173.2 m", "C. 200.0 m", "D. 259.8 m"],
+      correct: 1,
+    },
+    {
+      question:     "Q. The two-point problem in plane tabling is used to:",
+      options:      ["A. Locate table from 3 points", "B. Orient table using 2 known points", "C. Fix area of triangle", "D. Compute traverse closing"],
+      correct: 1,
+    },
+    {
+      question:     "Q. The Double Meridian Distance (DMD) method computes traverse area using:",
+      options:      ["A. Latitudes and departures", "B. Only departures", "C. Only latitudes", "D. Only bearings"],
+      correct: 0,
+    },
+    {
+      question:     "Q. In trigonometric levelling to an inaccessible point, base not in line, using single plane method needs:",
+      options:      ["A. One angle only", "B. Two horizontal angles + one vertical angle", "C. Three vertical angles", "D. Only distance measurement"],
+      correct: 1,
+    },
     ],
   },
 ];
