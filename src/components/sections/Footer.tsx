@@ -6,7 +6,7 @@ import { EXTERNAL_URLS } from "@/lib/constants";
 
 // ─── URL Constants ──────────────────────────────────────────────────────────
 const WA_LINK       = EXTERNAL_URLS.social.whatsapp;
-const YT_LINK       = "https://www.youtube.com/@CivilEzy-youtube";
+const YT_LINK       = "https://www.youtube.com/@CivilEzy";
 const IG_LINK       = "https://www.instagram.com/civilezy_by_wincentre";
 const FB_LINK       = "https://www.facebook.com";
 
