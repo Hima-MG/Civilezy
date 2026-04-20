@@ -99,7 +99,7 @@ export default function BlogIndexPage() {
                   <span style={{ background: tag.bg, border: `1px solid ${tag.border}`, borderRadius: "100px", padding: "4px 14px", fontSize: "12px", fontWeight: 600, color: tag.text }}>
                     {post.tag}
                   </span>
-                  <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", background: "rgba(255,98,0,0.08)", padding: "4px 12px", borderRadius: "100px", border: "1px solid rgba(255,98,0,0.15)", color: "#FF8534", fontWeight: 600 }}>
+                  <span style={{ fontSize: "12px", background: "rgba(255,98,0,0.08)", padding: "4px 12px", borderRadius: "100px", border: "1px solid rgba(255,98,0,0.15)", color: "#FF8534", fontWeight: 600 }}>
                     Featured
                   </span>
                 </div>
