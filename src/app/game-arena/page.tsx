@@ -317,24 +317,24 @@ export default function GameArenaPage() {
         bestStreak,
       });
 
-      // Save session for analytics
-      await saveGameSession({
-        uid: user.uid,
-        domain: selectedDomain?.toLowerCase() ?? "",
-        subjects: selectedSubjects,
-        difficulty: selectedDifficulty?.toLowerCase() ?? "",
-        totalQuestions: questions.length,
-        correctAnswers: score,
-        xpEarned: xp,
-        subjectBreakdown,
-        date: todayStr(),
-      });
-
       setScoreSaved(true);
       fetchLeaderboard();
     } catch {
       setSaveError("Failed to save score. Please try again.");
     } finally { setSavingScore(false); }
+
+    // Save analytics session separately — non-critical, never blocks the main save
+    saveGameSession({
+      uid: user.uid,
+      domain: selectedDomain?.toLowerCase() ?? "",
+      subjects: selectedSubjects,
+      difficulty: selectedDifficulty?.toLowerCase() ?? "",
+      totalQuestions: questions.length,
+      correctAnswers: score,
+      xpEarned: xp,
+      subjectBreakdown,
+      date: todayStr(),
+    }).catch(err => console.error("[analytics] saveGameSession failed:", err));
   };
 
   useEffect(() => {

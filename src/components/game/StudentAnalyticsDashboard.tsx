@@ -314,22 +314,28 @@ export default function StudentAnalyticsDashboard({ onBack }: Props) {
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    try {
-      const [a, r, rk, wd] = await Promise.all([
-        fetchUserAnalytics(user.uid),
-        fetchUserReports(user.uid),
-        fetchUserRank(user.uid),
-        fetchWeakSubjects(user.uid),
-      ]);
-      setAnalytics(a);
-      setReports(r);
-      setRank(rk);
-      setWeakData(wd);
-    } catch {
-      // silently fail — UI shows empty states
-    } finally {
-      setLoading(false);
-    }
+
+    // allSettled — each query fails independently, others still populate
+    const [a, r, rk, wd] = await Promise.allSettled([
+      fetchUserAnalytics(user.uid),
+      fetchUserReports(user.uid),
+      fetchUserRank(user.uid),
+      fetchWeakSubjects(user.uid),
+    ]);
+
+    if (a.status === "fulfilled") setAnalytics(a.value);
+    else console.error("[analytics] fetchUserAnalytics:", a.reason);
+
+    if (r.status === "fulfilled") setReports(r.value);
+    else console.error("[analytics] fetchUserReports:", r.reason);
+
+    if (rk.status === "fulfilled") setRank(rk.value);
+    else console.error("[analytics] fetchUserRank:", rk.reason);
+
+    if (wd.status === "fulfilled") setWeakData(wd.value);
+    else console.error("[analytics] fetchWeakSubjects:", wd.reason);
+
+    setLoading(false);
   }, [user]);
 
   useEffect(() => {
