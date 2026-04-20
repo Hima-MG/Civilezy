@@ -15,6 +15,8 @@ import {
 } from "@/data/quesions";
 import ReportIssueModal from "@/components/game/ReportIssueModal";
 import LeaderboardTabs from "@/components/game/LeaderboardTabs";
+import StudentAnalyticsDashboard from "@/components/game/StudentAnalyticsDashboard";
+import { saveGameSession } from "@/lib/analytics";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Domain = "ITI" | "Diploma" | "BTech";
@@ -168,6 +170,10 @@ export default function GameArenaPage() {
   const [reportedQuestionIds, setReportedQuestionIds] = useState<Set<string>>(new Set());
   const [showReportToast,     setShowReportToast]     = useState(false);
 
+  // ── Analytics state ──
+  const [showAnalytics,    setShowAnalytics]    = useState(false);
+  const [subjectBreakdown, setSubjectBreakdown] = useState<Record<string, { total: number; correct: number }>>({});
+
   const timerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
@@ -311,6 +317,19 @@ export default function GameArenaPage() {
         bestStreak,
       });
 
+      // Save session for analytics
+      await saveGameSession({
+        uid: user.uid,
+        domain: selectedDomain?.toLowerCase() ?? "",
+        subjects: selectedSubjects,
+        difficulty: selectedDifficulty?.toLowerCase() ?? "",
+        totalQuestions: questions.length,
+        correctAnswers: score,
+        xpEarned: xp,
+        subjectBreakdown,
+        date: todayStr(),
+      });
+
       setScoreSaved(true);
       fetchLeaderboard();
     } catch {
@@ -332,6 +351,15 @@ export default function GameArenaPage() {
     const q = questions[currentQuestionIndex];
     const correctAnswer = q.options[q.correct];
     const isCorrect = option === correctAnswer;
+    // Track per-subject result for analytics
+    const subj = q.subject || "Unknown";
+    setSubjectBreakdown(prev => ({
+      ...prev,
+      [subj]: {
+        total: (prev[subj]?.total ?? 0) + 1,
+        correct: (prev[subj]?.correct ?? 0) + (isCorrect ? 1 : 0),
+      },
+    }));
     if (isCorrect) {
       playSound("correct");
       setScore(s => s + 1);
@@ -359,7 +387,7 @@ export default function GameArenaPage() {
   const handlePlayAgain = () => {
     clearTimer(); setGameStarted(false); setShowResult(false); setSelectedAnswer(null);
     setCurrentQuestionIndex(0); setScore(0); setXp(0); setStreakCount(0); setBestStreak(0); setTimedOut(false);
-    setScoreSaved(false); setSaveError(""); setLeaderboard([]);
+    setScoreSaved(false); setSaveError(""); setLeaderboard([]); setSubjectBreakdown({});
     const roundTime = selectedDifficulty ? QUIZ_CONFIG.timers[selectedDifficulty] : 180;
     roundTimeRef.current = roundTime;
     setTimeLeft(roundTime);
@@ -421,6 +449,13 @@ export default function GameArenaPage() {
         <AuthModal />
       </main>
     );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ANALYTICS SCREEN
+  // ═══════════════════════════════════════════════════════════════════════════
+  if (showAnalytics) {
+    return <StudentAnalyticsDashboard onBack={() => setShowAnalytics(false)} />;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -722,6 +757,9 @@ export default function GameArenaPage() {
             <button onClick={handlePlayAgain} className="flex items-center justify-center gap-2 bg-zinc-800 border border-zinc-700 text-zinc-300 font-semibold px-8 py-3.5 rounded-xl hover:bg-zinc-700 hover:border-zinc-500 transition-all duration-200">
               ⚙️ Change Setup
             </button>
+            <button onClick={() => { handlePlayAgain(); setShowAnalytics(true); }} className="flex items-center justify-center gap-2 bg-zinc-800/60 border border-orange-500/30 text-orange-400 font-semibold px-8 py-3.5 rounded-xl hover:bg-orange-500/10 hover:border-orange-500/50 transition-all duration-200">
+              📊 My Analytics
+            </button>
           </div>
 
           {/* ── Auto-save status ── */}
@@ -886,6 +924,13 @@ export default function GameArenaPage() {
               {(profile?.displayName || user.displayName || "U").charAt(0).toUpperCase()}
             </div>
             <span className="text-sm text-zinc-300 font-semibold">{profile?.displayName || user.displayName}</span>
+            <div className="w-px h-4 bg-zinc-700 mx-1" />
+            <button
+              onClick={() => setShowAnalytics(true)}
+              className="flex items-center gap-1.5 text-xs text-orange-400 hover:text-orange-300 transition-colors font-semibold"
+            >
+              📊 Analytics
+            </button>
             <button
               onClick={logout}
               className="text-xs text-zinc-500 hover:text-rose-400 transition-colors font-medium ml-1"
