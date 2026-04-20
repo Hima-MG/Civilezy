@@ -7,8 +7,10 @@ import {
   fetchUserAnalytics,
   fetchUserReports,
   fetchUserRank,
+  fetchWeakSubjects,
   type UserAnalytics,
   type UserReportStats,
+  type WeakSubjectsData,
 } from "@/lib/analytics";
 
 // ─── Mini Bar Chart ───────────────────────────────────────────────────────────
@@ -165,6 +167,122 @@ function InsightCard({ text }: { text: string }) {
   );
 }
 
+// ─── Weak Subject Banner ──────────────────────────────────────────────────────
+
+function WeakSubjectBanner({
+  data,
+  onPractice,
+}: {
+  data: WeakSubjectsData;
+  onPractice: () => void;
+}) {
+  const { weakest, subjects } = data;
+
+  if (subjects.length === 0) {
+    return (
+      <div className="flex items-center gap-3 bg-zinc-800/40 border border-zinc-700/40 rounded-2xl px-5 py-4">
+        <span className="text-2xl">📭</span>
+        <div>
+          <p className="text-sm font-semibold text-zinc-300">No attempt data yet</p>
+          <p className="text-xs text-zinc-600 mt-0.5">
+            Answer questions in a game to start tracking subject-level accuracy.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!weakest) return null;
+
+  const severityColor =
+    weakest.accuracy < 30
+      ? { ring: "border-rose-500/40", bg: "bg-rose-500/6", text: "text-rose-400", badge: "bg-rose-500/15 text-rose-300" }
+      : weakest.accuracy < 50
+      ? { ring: "border-orange-500/40", bg: "bg-orange-500/6", text: "text-orange-400", badge: "bg-orange-500/15 text-orange-300" }
+      : { ring: "border-amber-500/40", bg: "bg-amber-500/6", text: "text-amber-400", badge: "bg-amber-500/15 text-amber-300" };
+
+  return (
+    <div className={`rounded-2xl border ${severityColor.ring} ${severityColor.bg} overflow-hidden`}>
+      {/* Main weak subject row */}
+      <div className="flex items-center justify-between gap-3 px-5 py-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="text-2xl shrink-0">🔥</span>
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-0.5">
+              Weak Subject
+            </p>
+            <p className={`text-base font-extrabold ${severityColor.text} leading-tight truncate`}>
+              {weakest.subject}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <div className={`text-right px-3 py-1.5 rounded-xl ${severityColor.badge}`}>
+            <div className="text-lg font-extrabold leading-none">{weakest.accuracy}%</div>
+            <div className="text-[10px] opacity-70 leading-none mt-0.5">accuracy</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats row */}
+      <div className="flex items-center gap-0 border-t border-white/5">
+        {[
+          { label: "Attempted", value: weakest.attempted },
+          { label: "Correct", value: weakest.correct },
+          { label: "Wrong", value: weakest.attempted - weakest.correct },
+        ].map((s, i) => (
+          <div key={s.label} className={`flex-1 text-center py-3 ${i > 0 ? "border-l border-white/5" : ""}`}>
+            <div className="text-base font-bold text-white">{s.value}</div>
+            <div className="text-[10px] text-zinc-600 mt-0.5">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Accuracy bar + CTA */}
+      <div className="px-5 pb-4 pt-1">
+        <div className="h-1.5 bg-black/20 rounded-full overflow-hidden mb-4">
+          <div
+            className={`h-full rounded-full transition-all duration-700 ${
+              weakest.accuracy < 30
+                ? "bg-rose-500"
+                : weakest.accuracy < 50
+                ? "bg-orange-500"
+                : "bg-amber-500"
+            }`}
+            style={{ width: `${weakest.accuracy}%` }}
+          />
+        </div>
+        <button
+          onClick={onPractice}
+          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 hover:scale-[1.02] active:scale-100 ${severityColor.badge}`}
+        >
+          🚀 Practice {weakest.subject.split(" ").slice(0, 3).join(" ")} Now
+        </button>
+      </div>
+
+      {/* Other weak subjects (if any, beyond weakest) */}
+      {subjects.filter(s => s.subject !== weakest.subject && s.accuracy < 50 && s.attempted >= 3).length > 0 && (
+        <div className="border-t border-white/5 px-5 py-3">
+          <p className="text-[10px] text-zinc-600 uppercase tracking-widest mb-2">Also needs work</p>
+          <div className="flex flex-wrap gap-2">
+            {subjects
+              .filter(s => s.subject !== weakest.subject && s.accuracy < 50 && s.attempted >= 3)
+              .slice(0, 3)
+              .map(s => (
+                <span
+                  key={s.subject}
+                  className="text-[11px] bg-zinc-800 border border-zinc-700 rounded-full px-2.5 py-1 text-zinc-400"
+                >
+                  {s.subject.split(" ").slice(0, 2).join(" ")} — {s.accuracy}%
+                </span>
+              ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Section Header ───────────────────────────────────────────────────────────
 
 function SectionHeader({ title, right }: { title: string; right?: React.ReactNode }) {
@@ -189,6 +307,7 @@ export default function StudentAnalyticsDashboard({ onBack }: Props) {
   const [analytics, setAnalytics] = useState<UserAnalytics | null>(null);
   const [reports, setReports] = useState<UserReportStats | null>(null);
   const [rank, setRank] = useState<number>(0);
+  const [weakData, setWeakData] = useState<WeakSubjectsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [chartMode, setChartMode] = useState<"accuracy" | "xp">("accuracy");
 
@@ -196,14 +315,16 @@ export default function StudentAnalyticsDashboard({ onBack }: Props) {
     if (!user) return;
     setLoading(true);
     try {
-      const [a, r, rk] = await Promise.all([
+      const [a, r, rk, wd] = await Promise.all([
         fetchUserAnalytics(user.uid),
         fetchUserReports(user.uid),
         fetchUserRank(user.uid),
+        fetchWeakSubjects(user.uid),
       ]);
       setAnalytics(a);
       setReports(r);
       setRank(rk);
+      setWeakData(wd);
     } catch {
       // silently fail — UI shows empty states
     } finally {
@@ -258,9 +379,10 @@ export default function StudentAnalyticsDashboard({ onBack }: Props) {
         "📅 No active streak. Play one game today to start building your consistency streak!",
       );
 
-    if (analytics.weakestSubject)
+    const weakSubject = weakData?.weakest?.subject ?? analytics.weakestSubject;
+    if (weakSubject)
       insights.push(
-        `📉 Weakest area: "${analytics.weakestSubject}". Dedicate your next session to this subject.`,
+        `📉 Weakest area: "${weakSubject}". Dedicate your next session to this subject.`,
       );
 
     if (rank > 0 && rank <= 10)
@@ -406,6 +528,17 @@ export default function StudentAnalyticsDashboard({ onBack }: Props) {
             </section>
 
             {/* ════════════════════════════════════════
+                WEAK SUBJECT DETECTION (user_attempts)
+            ════════════════════════════════════════ */}
+            <section>
+              <SectionHeader title="Weak Subject Detection" />
+              <WeakSubjectBanner
+                data={weakData ?? { subjects: [], weakest: null }}
+                onPractice={onBack}
+              />
+            </section>
+
+            {/* ════════════════════════════════════════
                 2 + 3. SUBJECT PERFORMANCE + WEAK AREA
             ════════════════════════════════════════ */}
             {analytics && analytics.subjectStats.length > 0 ? (
@@ -413,9 +546,9 @@ export default function StudentAnalyticsDashboard({ onBack }: Props) {
                 <SectionHeader
                   title="Subject Performance"
                   right={
-                    analytics.weakestSubject ? (
+                    (weakData?.weakest?.subject ?? analytics.weakestSubject) ? (
                       <span className="text-[11px] font-medium text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-full leading-none">
-                        ⚠ Weak: {analytics.weakestSubject.split(" ").slice(0, 3).join(" ")}
+                        ⚠ Weak: {(weakData?.weakest?.subject ?? analytics.weakestSubject)!.split(" ").slice(0, 3).join(" ")}
                       </span>
                     ) : null
                   }
@@ -648,7 +781,7 @@ export default function StudentAnalyticsDashboard({ onBack }: Props) {
             {/* ════════════════════════════════════════
                 8. PRACTICE CTA
             ════════════════════════════════════════ */}
-            {analytics?.weakestSubject ? (
+            {(weakData?.weakest?.subject ?? analytics?.weakestSubject) ? (
               <section
                 className="rounded-2xl p-5 border border-orange-500/20 relative overflow-hidden"
                 style={{
@@ -664,7 +797,9 @@ export default function StudentAnalyticsDashboard({ onBack }: Props) {
                 </div>
                 <h3 className="text-lg font-extrabold text-white mb-1.5">
                   Focus on{" "}
-                  <span className="text-orange-400">{analytics.weakestSubject}</span>
+                  <span className="text-orange-400">
+                    {weakData?.weakest?.subject ?? analytics?.weakestSubject}
+                  </span>
                 </h3>
                 <p className="text-zinc-500 text-sm mb-4 leading-relaxed">
                   Your accuracy in this subject is below 50%. A focused session can rapidly boost

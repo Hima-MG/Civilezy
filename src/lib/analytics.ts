@@ -65,6 +65,87 @@ export interface UserReportStats {
   pending: number;
 }
 
+// ─── Attempt (per-question) ───────────────────────────────────────────────────
+
+export interface AttemptInput {
+  uid: string;
+  questionId: string;
+  subject: string;
+  domain: string;
+  difficulty: string;
+  isCorrect: boolean;
+  date: string; // YYYY-MM-DD
+}
+
+export async function saveAttempt(data: AttemptInput): Promise<void> {
+  await addDoc(collection(db, "user_attempts"), {
+    ...data,
+    attemptedAt: serverTimestamp(),
+  });
+}
+
+export interface WeakSubjectResult {
+  subject: string;
+  attempted: number;
+  correct: number;
+  accuracy: number;
+}
+
+export interface WeakSubjectsData {
+  subjects: WeakSubjectResult[];
+  weakest: WeakSubjectResult | null;
+}
+
+/** Minimum attempts before a subject is considered for weak detection. */
+const MIN_ATTEMPTS = 3;
+
+/**
+ * Reads user_attempts, groups by subject in a single pass,
+ * and returns subjects sorted by accuracy ascending (weakest first).
+ */
+export async function fetchWeakSubjects(uid: string): Promise<WeakSubjectsData> {
+  if (!uid) return { subjects: [], weakest: null };
+
+  const snap = await getDocs(
+    query(
+      collection(db, "user_attempts"),
+      where("uid", "==", uid),
+      orderBy("attemptedAt", "desc"),
+      limit(500),
+    ),
+  );
+
+  // Single-pass group by subject
+  const map = new Map<string, { attempted: number; correct: number }>();
+  for (const doc of snap.docs) {
+    const { subject, isCorrect } = doc.data() as { subject: string; isCorrect: boolean };
+    if (!subject) continue;
+    const prev = map.get(subject) ?? { attempted: 0, correct: 0 };
+    map.set(subject, {
+      attempted: prev.attempted + 1,
+      correct: prev.correct + (isCorrect ? 1 : 0),
+    });
+  }
+
+  if (map.size === 0) return { subjects: [], weakest: null };
+
+  const subjects: WeakSubjectResult[] = Array.from(map.entries())
+    .map(([subject, s]) => ({
+      subject,
+      attempted: s.attempted,
+      correct: s.correct,
+      accuracy: Math.round((s.correct / s.attempted) * 100),
+    }))
+    .sort((a, b) => a.accuracy - b.accuracy); // weakest first
+
+  // Weakest = lowest accuracy among subjects with enough data
+  const weakest =
+    subjects.find(s => s.attempted >= MIN_ATTEMPTS) ??
+    (subjects.length > 0 ? subjects[0] : null);
+
+  return { subjects, weakest };
+}
+
 // ─── Save Session ─────────────────────────────────────────────────────────────
 
 export async function saveGameSession(data: GameSessionInput): Promise<void> {

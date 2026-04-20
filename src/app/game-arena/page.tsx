@@ -16,7 +16,7 @@ import {
 import ReportIssueModal from "@/components/game/ReportIssueModal";
 import LeaderboardTabs from "@/components/game/LeaderboardTabs";
 import StudentAnalyticsDashboard from "@/components/game/StudentAnalyticsDashboard";
-import { saveGameSession } from "@/lib/analytics";
+import { saveGameSession, saveAttempt } from "@/lib/analytics";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type Domain = "ITI" | "Diploma" | "BTech";
@@ -351,7 +351,7 @@ export default function GameArenaPage() {
     const q = questions[currentQuestionIndex];
     const correctAnswer = q.options[q.correct];
     const isCorrect = option === correctAnswer;
-    // Track per-subject result for analytics
+    // Track per-subject result in local state (for session save) and user_attempts
     const subj = q.subject || "Unknown";
     setSubjectBreakdown(prev => ({
       ...prev,
@@ -360,6 +360,17 @@ export default function GameArenaPage() {
         correct: (prev[subj]?.correct ?? 0) + (isCorrect ? 1 : 0),
       },
     }));
+    if (user) {
+      saveAttempt({
+        uid: user.uid,
+        questionId: q.id,
+        subject: subj,
+        domain: selectedDomain?.toLowerCase() ?? "",
+        difficulty: selectedDifficulty?.toLowerCase() ?? "",
+        isCorrect,
+        date: todayStr(),
+      }).catch(() => { /* non-critical — silently ignore write failures */ });
+    }
     if (isCorrect) {
       playSound("correct");
       setScore(s => s + 1);
