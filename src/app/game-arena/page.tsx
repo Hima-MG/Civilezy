@@ -281,16 +281,16 @@ export default function GameArenaPage() {
 
   // ── Save score handler (uses authenticated identity) ──
   const handleSaveScore = async () => {
-    if (!user || !profile) return;
+    if (!user || !profile || savingScore || scoreSaved) return;
     setSavingScore(true); setSaveError("");
-    try {
-      // Compute new streak
-      const newStreak = computeStreak(profile.lastPlayed || "", profile.streak || 0);
-      const newTotalScore = (profile.totalScore || 0) + xp;
-      const newGamesPlayed = (profile.gamesPlayed || 0) + 1;
-      const newTotalXp = (profile.totalXp || 0) + xp;
 
-      // Update Firestore user profile
+    // ── Step 1: critical saves (profile + all-time leaderboard) ──
+    try {
+      const newStreak    = computeStreak(profile.lastPlayed || "", profile.streak || 0);
+      const newTotalScore = (profile.totalScore || 0) + xp;
+      const newTotalXp    = (profile.totalXp    || 0) + xp;
+      const newGamesPlayed = (profile.gamesPlayed || 0) + 1;
+
       await updateUserProfile({
         totalScore: newTotalScore,
         totalXp: newTotalXp,
@@ -299,7 +299,6 @@ export default function GameArenaPage() {
         lastPlayed: todayStr(),
       });
 
-      // Save to Firebase all-time leaderboard
       await saveScore({
         uid: user.uid,
         displayName: profile.displayName,
@@ -308,22 +307,26 @@ export default function GameArenaPage() {
         streak: newStreak,
       });
 
-      // Update daily / weekly / monthly period leaderboards
-      await updateAllPeriodLeaderboards({
-        uid: user.uid,
-        displayName: profile.displayName,
-        score,
-        xpEarned: xp,
-        bestStreak,
-      });
-
       setScoreSaved(true);
       fetchLeaderboard();
-    } catch {
+    } catch (err) {
+      console.error("[score] critical save failed:", err);
       setSaveError("Failed to save score. Please try again.");
-    } finally { setSavingScore(false); }
+    } finally {
+      setSavingScore(false);
+    }
 
-    // Save analytics session separately — non-critical, never blocks the main save
+    // ── Step 2: non-critical saves — each fires independently ──
+    const periodInput = {
+      uid: user.uid,
+      displayName: profile.displayName,
+      score,
+      xpEarned: xp,
+      bestStreak,
+    };
+    updateAllPeriodLeaderboards(periodInput)
+      .catch(err => console.error("[score] period leaderboards failed:", err));
+
     saveGameSession({
       uid: user.uid,
       domain: selectedDomain?.toLowerCase() ?? "",
@@ -369,7 +372,7 @@ export default function GameArenaPage() {
         difficulty: selectedDifficulty?.toLowerCase() ?? "",
         isCorrect,
         date: todayStr(),
-      }).catch(() => { /* non-critical — silently ignore write failures */ });
+      }).catch(err => console.error("[analytics] saveAttempt failed:", err));
     }
     if (isCorrect) {
       playSound("correct");
