@@ -4,7 +4,6 @@ import {
   getDocs,
   query,
   where,
-  orderBy,
   limit,
   serverTimestamp,
 } from "firebase/firestore";
@@ -106,11 +105,12 @@ const MIN_ATTEMPTS = 3;
 export async function fetchWeakSubjects(uid: string): Promise<WeakSubjectsData> {
   if (!uid) return { subjects: [], weakest: null };
 
+  // No orderBy — avoids requiring a composite index.
+  // Firestore allows equality filter + limit without an index.
   const snap = await getDocs(
     query(
       collection(db, "user_attempts"),
       where("uid", "==", uid),
-      orderBy("attemptedAt", "desc"),
       limit(500),
     ),
   );
@@ -158,11 +158,11 @@ export async function saveGameSession(data: GameSessionInput): Promise<void> {
 // ─── Fetch Analytics ──────────────────────────────────────────────────────────
 
 export async function fetchUserAnalytics(uid: string): Promise<UserAnalytics> {
+  // No orderBy — avoids requiring a composite index on (uid, playedAt).
   const snap = await getDocs(
     query(
       collection(db, "userGameSessions"),
       where("uid", "==", uid),
-      orderBy("playedAt", "desc"),
       limit(100),
     ),
   );
