@@ -306,7 +306,7 @@ export default function CivilPSCCoachingKeralaPage() {
               <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "linear-gradient(135deg,#FF6200,#FF4500)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", flexShrink: 0 }} aria-hidden="true">🏛️</div>
               <div>
                 <div style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "16px", fontWeight: 700, color: "#fff" }}>Powered by Wincentre</div>
-                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>Kerala's pioneer in Civil PSC coaching — Thrissur</div>
+                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>Kerala&apos;s pioneer in Civil PSC coaching — Thrissur</div>
               </div>
             </div>
 

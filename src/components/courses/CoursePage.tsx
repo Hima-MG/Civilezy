@@ -116,7 +116,7 @@ function HighlightsSection({ data }: { data: CourseData }) {
     <section style={{ background: "linear-gradient(135deg,#1A0800,#120500)", padding: "60px 0", borderTop: "1px solid rgba(255,98,0,0.2)", borderBottom: "1px solid rgba(255,98,0,0.2)" }}>
       <div style={S.container}>
         <div style={{ textAlign: "center", marginBottom: "8px" }}>
-          <span style={{ fontSize: "13px", color: "#FF8534", fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase" }}>What's Included</span>
+          <span style={{ fontSize: "13px", color: "#FF8534", fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase" }}>What&apos;s Included</span>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "12px", maxWidth: "900px", margin: "0 auto" }} className="highlights-grid">
           {data.highlights.map(h => (
@@ -281,7 +281,7 @@ function PerformanceSection({ data }: { data: CourseData }) {
               <span style={S.gradText}>Fix Your Gaps.</span>
             </h2>
             <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.6)", lineHeight: 1.7, marginBottom: "32px" }}>
-              CivilEzy's performance engine tracks every quiz, every session, and every mistake — then turns that data into a clear action plan.
+              CivilEzy&apos;s performance engine tracks every quiz, every session, and every mistake — then turns that data into a clear action plan.
             </p>
             <a href={data.pricing.checkoutUrl} target="_blank" rel="noopener noreferrer" style={S.ctaOrange} onMouseEnter={onOrangeEnter} onMouseLeave={onOrangeLeave}>
               🚀 Start Preparation
