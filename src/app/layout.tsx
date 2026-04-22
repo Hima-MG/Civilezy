@@ -4,28 +4,31 @@ import Navbar from "@/components/Navbar";
 import StickyCTA from "@/components/sections/StickyCTA";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import LayoutShell from "@/components/LayoutShell";
+import LeadCapturePopup from "@/components/LeadCapturePopup";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AnnouncementProvider } from "@/contexts/AnnouncementContext";
 
 export const metadata: Metadata = {
   title: {
-    default:  "CivilEzy | Kerala's #1 Civil Engineering PSC Platform",
+    default:  "CivilEzy | #1 Kerala PSC Civil Engineering Coaching — ITI, Diploma, AE",
     template: "%s | CivilEzy",
   },
   description:
-    "Kerala's only PSC Civil Engineering platform with Smart Lessons, Malayalam Audio Lessons, Smart Quiz System, Short Video Lessons (40–50 min), and Game Arena. ITI / Diploma / AE prep.",
+    "Kerala's top PSC Civil Engineering platform with Game Arena, smart lessons, mock tests, and rank tracking. ITI, Diploma, B.Tech/AE & Surveyor courses. Powered by Wincentre (4.8⭐, 1000+ selections).",
   keywords: [
-    "Kerala PSC Civil Engineering",
+    "Kerala PSC Civil Engineering coaching",
+    "#1 civil psc coaching kerala",
     "best civil engineering psc coaching kerala",
-    "kerala psc civil engineering coaching",
+    "kerala psc civil engineering course",
     "psc civil mock test kerala",
-    "PSC AE Kerala",
-    "Diploma Civil PSC",
-    "ITI Civil PSC preparation",
-    "KWA AE preparation",
-    "PWD Overseer Kerala PSC",
-    "civil engineering PSC Malayalam",
-    "Wincentre PSC coaching",
+    "psc ae kerala coaching",
+    "diploma civil psc kerala",
+    "iti civil psc preparation",
+    "kwa ae preparation kerala",
+    "pwd overseer kerala psc",
+    "civil engineering psc malayalam",
+    "wincentre psc coaching thrissur",
+    "civil psc game arena",
   ],
   metadataBase: new URL("https://civilezy.in"),
   openGraph: {
@@ -33,15 +36,18 @@ export const metadata: Metadata = {
     locale:      "en_IN",
     url:         "https://civilezy.in",
     siteName:    "CivilEzy",
-    title:       "CivilEzy | Kerala's #1 Civil Engineering PSC Platform",
-    description: "Kerala's only PSC Civil Engineering platform with Smart Lessons, Malayalam Audio Lessons, Smart Quiz System, Short Video Lessons (40–50 min), and Game Arena. ITI / Diploma / AE prep.",
+    title:       "CivilEzy | #1 Kerala PSC Civil Engineering Coaching — ITI, Diploma, AE",
+    description: "Kerala's top PSC Civil Engineering platform with Game Arena, smart lessons, mock tests, and rank tracking. Powered by Wincentre (4.8⭐, 1000+ selections).",
+    images:      [{ url: "https://civilezy.in/civilezy_logo_orange.png", width: 1200, height: 630, alt: "CivilEzy Kerala PSC Civil Engineering Coaching Platform" }],
   },
   twitter: {
     card:        "summary_large_image",
-    title:       "CivilEzy | Kerala's #1 Civil Engineering PSC Platform",
-    description: "Kerala's only PSC Civil Engineering platform with Smart Lessons, Malayalam Audio Lessons, Smart Quiz System, Short Video Lessons (40–50 min), and Game Arena. ITI / Diploma / AE prep.",
+    title:       "CivilEzy | #1 Kerala PSC Civil Engineering Coaching — ITI, Diploma, AE",
+    description: "Kerala's top PSC Civil Engineering platform with Game Arena, smart lessons, mock tests, and rank tracking. Powered by Wincentre (4.8⭐, 1000+ selections).",
+    images:      ["https://civilezy.in/civilezy_logo_orange.png"],
   },
-  robots: { index: true, follow: true },
+  alternates:  { canonical: "https://civilezy.in" },
+  robots:      { index: true, follow: true },
 };
 
 const globalSchema = {
@@ -114,6 +120,7 @@ export default function RootLayout({
             <Navbar />
             <LayoutShell>{children}</LayoutShell>
             <StickyCTA />
+            <LeadCapturePopup />
           </AnnouncementProvider>
         </AuthProvider>
       </body>

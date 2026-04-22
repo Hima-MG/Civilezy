@@ -1,30 +1,45 @@
 import type { Metadata } from "next";
 import PricingSection from "@/components/sections/PricingSection";
+import PricingComparison from "@/components/sections/PricingComparison";
 
 export const metadata: Metadata = {
-  title: "Pricing — Kerala PSC Civil Engineering Courses",
+  title: { absolute: "Kerala PSC Civil Engineering Course Pricing | CivilEzy" },
   description:
-    "Course-based pricing for Kerala PSC Civil Engineering preparation. ITI, Diploma, B.Tech/AE and Surveyor plans. Monthly and annual options with installments.",
+    "Affordable Kerala PSC Civil Engineering course plans — ITI ₹1,800/mo, Diploma ₹2,000/mo, B.Tech/AE ₹2,500/mo, Surveyor ₹1,800/mo. Monthly & annual options. 48-hour free demo.",
   keywords: [
-    "Kerala PSC Civil Engineering course",
-    "PSC AE coaching Kerala",
-    "Diploma Civil PSC preparation",
-    "ITI Civil PSC course",
-    "Kerala PSC mock test price",
+    "kerala psc civil engineering course price",
+    "civil psc coaching fees kerala",
+    "iti civil psc course fee",
+    "diploma civil psc price kerala",
+    "ae civil psc coaching cost",
+    "kerala psc civil engineering monthly plan",
+    "civil engineering psc affordable course",
+    "wincentre coaching fee",
   ],
+  alternates: { canonical: "https://civilezy.in/pricing" },
   openGraph: {
-    title:       "Pricing — Kerala PSC Civil Engineering Courses | CivilEzy",
-    description: "Flexible course plans for Kerala PSC Civil Engineering. ITI, Diploma, B.Tech/AE and Surveyor. Monthly and annual options.",
+    title:       "Kerala PSC Civil Engineering Course Pricing | CivilEzy",
+    description: "ITI ₹1,800/mo · Diploma ₹2,000/mo · B.Tech/AE ₹2,500/mo · Surveyor ₹1,800/mo. 48-hr free demo. Powered by Wincentre (4.8⭐).",
     url:         "https://civilezy.in/pricing",
+    siteName:    "CivilEzy",
     type:        "website",
+    locale:      "en_IN",
+    images:      [{ url: "https://civilezy.in/civilezy_logo_orange.png", width: 1200, height: 630, alt: "CivilEzy Kerala PSC Civil Engineering Course Pricing" }],
   },
   twitter: {
     card:        "summary_large_image",
-    title:       "Pricing — Kerala PSC Civil Engineering Courses | CivilEzy",
-    description: "Flexible course plans for Kerala PSC Civil Engineering. ITI, Diploma, B.Tech/AE and Surveyor.",
+    title:       "Kerala PSC Civil Engineering Course Pricing | CivilEzy",
+    description: "ITI ₹1,800/mo · Diploma ₹2,000/mo · B.Tech/AE ₹2,500/mo · Surveyor ₹1,800/mo. 48-hr free demo.",
+    images:      ["https://civilezy.in/civilezy_logo_orange.png"],
   },
+  robots: { index: true, follow: true },
 };
 
 export default function PricingPage() {
-  return <PricingSection />;
+  return (
+    <>
+      <PricingSection />
+      <PricingComparison />
+    </>
+  );
 }
