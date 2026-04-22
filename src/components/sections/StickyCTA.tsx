@@ -32,8 +32,9 @@ export default function StickyCTA() {
   const [visible, setVisible] = useState(false);
   const [hidden,  setHidden]  = useState(false);
 
-  // Suppress entirely on game-arena — buttons there must never be blocked
-  const isGameArena = pathname === "/game-arena";
+  // Suppress on game-arena and course detail pages (each has its own sticky CTA)
+  const isGameArena   = pathname === "/game-arena";
+  const isCoursePage  = pathname?.startsWith("/courses/") ?? false;
 
   // Delay initial appearance
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function StickyCTA() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  if (isGameArena) return null;
+  if (isGameArena || isCoursePage) return null;
 
   const shouldShow = visible && !hidden;
 

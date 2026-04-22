@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { EXTERNAL_URLS } from "@/lib/constants";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -22,6 +23,7 @@ interface CourseData {
   features:      string[];
   // annualBonus:   string[];
   pools:         string[];
+  detailsPage:   string;
 }
 
 // ─── Course data ────────────────────────────────────────────────────────────
@@ -49,6 +51,7 @@ const COURSES: Record<CourseKey, CourseData> = {
     "Live Leaderboard & Performance Analytics",
   ],
   pools: ["KWA", "PWD", "LSGD", "Irrigation"],
+  detailsPage: "/courses/iti",
 },
 // Diploma
 diploma:{
@@ -73,6 +76,7 @@ diploma:{
     "Live Leaderboard & Performance Analytics",
   ],
   pools: ["PWD", "Irrigation", "LSGD", "KWA", "Harbour", "KSEB"],
+  detailsPage: "/courses/diploma",
 },
 // B.Tech
 btech:{
@@ -99,6 +103,7 @@ btech:{
     "AE Level Mock Tests — Ultra-high difficulty, exam-ready questions",
   ],
   pools: ["PWD", "Irrigation", "LSGD", "KWA", "PCB"],
+  detailsPage: "/courses/btech",
 },
 surveyor:
 {
@@ -123,6 +128,7 @@ surveyor:
     "Live Leaderboard & Performance Analytics",
   ],
   pools: ["KWA", "Survey & Land Records", "Tech. Education", "Groundwater Dept."],
+  detailsPage: "/courses/surveyor",
 },
 };
 
@@ -168,6 +174,7 @@ const onAnnualCtaLeave   = (e: React.MouseEvent<HTMLAnchorElement>) => { e.curre
 export default function PricingSection() {
   const [active, setActive] = useState<CourseKey>("diploma");
   const course = COURSES[active];
+  const router = useRouter();
 
   return (
     <section
@@ -264,8 +271,8 @@ export default function PricingSection() {
           style={{ display:"grid", gridTemplateColumns:"1fr 1.1fr", gap:"28px", maxWidth:"900px", margin:"0 auto 36px", alignItems:"start" }}
           className="pricing-cards-grid"
         >
-          <MonthlyCard course={course} />
-          <AnnualCard  course={course} />
+          <MonthlyCard course={course} router={router} />
+          <AnnualCard  course={course} router={router} />
         </div>
 
         {/* ── Payment trust row ── */}
@@ -330,7 +337,7 @@ export default function PricingSection() {
 }
 
 // ─── Monthly Card ──────────────────────────────────────────────────────────
-function MonthlyCard({ course }: { course: CourseData }) {
+function MonthlyCard({ course, router }: { course: CourseData; router: ReturnType<typeof useRouter> }) {
   return (
     <div
       style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:"24px", padding:"32px", position:"relative", transition:"transform 0.3s, box-shadow 0.3s" }}
@@ -371,13 +378,21 @@ function MonthlyCard({ course }: { course: CourseData }) {
       >
         🚀 Start Preparation
       </a>
+      <button
+        onClick={() => router.push(course.detailsPage)}
+        style={{ marginTop:"10px", width:"100%", padding:"12px", borderRadius:"50px", background:"transparent", border:"1px solid rgba(255,255,255,0.2)", color:"#FF8534", fontFamily:"Nunito, sans-serif", fontSize:"14px", fontWeight:700, cursor:"pointer", transition:"border-color 0.2s, color 0.2s" }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,133,52,0.5)"; e.currentTarget.style.color = "#FFB347"; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = "#FF8534"; }}
+      >
+        Know More →
+      </button>
       <p style={{ textAlign:"center", fontSize:"12px", color:"rgba(255,255,255,0.3)", marginTop:"12px" }}>Auto-renewed monthly · Cancel anytime</p>
     </div>
   );
 }
 
 // ─── Annual Card ───────────────────────────────────────────────────────────
-function AnnualCard({ course }: { course: CourseData }) {
+function AnnualCard({ course, router }: { course: CourseData; router: ReturnType<typeof useRouter> }) {
   const pct       = savingsPct(course);
   const saved     = savedAmt(course);
   const quarterly = Math.ceil(course.annual / 4);
@@ -445,6 +460,14 @@ function AnnualCard({ course }: { course: CourseData }) {
       >
         🚀 Start Preparation
       </a>
+      <button
+        onClick={() => router.push(course.detailsPage)}
+        style={{ marginTop:"10px", width:"100%", padding:"12px", borderRadius:"50px", background:"transparent", border:"1px solid rgba(255,255,255,0.2)", color:"#FF8534", fontFamily:"Nunito, sans-serif", fontSize:"14px", fontWeight:700, cursor:"pointer", transition:"border-color 0.2s, color 0.2s" }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(255,133,52,0.5)"; e.currentTarget.style.color = "#FFB347"; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = "#FF8534"; }}
+      >
+        Know More →
+      </button>
       <p style={{ textAlign:"center", fontSize:"12px", color:"rgba(255,255,255,0.35)", marginTop:"12px" }}>Cancel anytime</p>
     </div>
   );

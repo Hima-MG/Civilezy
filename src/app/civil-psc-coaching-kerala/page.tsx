@@ -4,17 +4,18 @@ import Script from "next/script";
 import { testimonials } from "@/data/testimonials";
 
 export const metadata: Metadata = {
-  title: "Best Civil Engineering PSC Coaching in Kerala | CivilEzy by Wincentre",
+  title: { absolute: "Best Civil Engineering PSC Coaching in Kerala | Civilezy" },
   description:
-    "CivilEzy – Kerala's best Civil Engineering PSC coaching platform powered by Wincentre (4.8⭐, 445+ reviews, Thrissur). Game Arena mock tests, live leaderboard, Malayalam audio lessons. ITI | Diploma | B.Tech | AE prep.",
+    "Practice Kerala PSC civil engineering questions, track your rank, and improve accuracy with Civilezy powered by Wincentre (4.8⭐, 445+ reviews).",
   keywords: [
-    "best civil engineering psc coaching kerala",
+    "best civil psc coaching kerala",
     "kerala psc civil engineering coaching",
-    "psc civil mock test kerala",
+    "civil psc mock test kerala",
+    "psc civil questions kerala",
+    "best civil engineering psc coaching kerala",
     "civil engineering psc preparation kerala",
     "wincentre psc coaching thrissur",
     "kerala psc civil AE coaching online",
-    "civil psc online coaching kerala",
     "PSC civil engineering mock test",
     "KWA AE preparation kerala",
     "PWD overseer coaching kerala",
@@ -27,15 +28,17 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: "https://civilezy.in/civil-psc-coaching-kerala",
     siteName: "CivilEzy",
-    title: "Best Civil Engineering PSC Coaching in Kerala | CivilEzy by Wincentre",
+    title: "Best Civil Engineering PSC Coaching in Kerala | Civilezy",
     description:
-      "Kerala's #1 Civil Engineering PSC platform powered by Wincentre (4.8⭐, 445+ reviews). Game Arena, live leaderboard, expert content – 1000+ government jobs secured.",
+      "Practice Kerala PSC civil engineering questions, track your rank, and improve accuracy with Civilezy powered by Wincentre (4.8⭐, 445+ reviews).",
+    images: [{ url: "https://civilezy.in/civilezy_logo_orange.png", width: 1200, height: 630, alt: "Civilezy – Best Civil PSC Coaching Kerala" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Best Civil Engineering PSC Coaching in Kerala | CivilEzy",
+    title: "Best Civil Engineering PSC Coaching in Kerala | Civilezy",
     description:
-      "Kerala's #1 Civil Engineering PSC platform powered by Wincentre (4.8⭐, 445+ reviews). Practice with Game Arena, leaderboard, mock tests.",
+      "Practice Kerala PSC civil engineering questions, track your rank, and improve accuracy with Civilezy powered by Wincentre (4.8⭐, 445+ reviews).",
+    images: ["https://civilezy.in/civilezy_logo_orange.png"],
   },
 };
 
@@ -151,6 +154,49 @@ const LEADERBOARD_PREVIEW = [
   { rank: "5", name: "Ajay V.", score: "6,900 XP", dept: "B.Tech" },
 ];
 
+const COURSE_CARDS = [
+  {
+    key:     "iti",
+    href:    "/courses/iti",
+    emoji:   "🔧",
+    title:   "Civil PSC – ITI",
+    desc:    "For Overseer / Draughtsman Gr 2 & 3, Tradesman, Tracer, Work Superintendent across KWA, PWD, LSGD & Irrigation.",
+    pools:   ["KWA", "PWD", "LSGD", "Irrigation"],
+    price:   1800,
+    popular: false,
+  },
+  {
+    key:     "diploma",
+    href:    "/courses/diploma",
+    emoji:   "📐",
+    title:   "Civil PSC – Diploma",
+    desc:    "For Overseer Gr 1/2/3, Junior Instructor, Site Engineer across PWD, Irrigation, LSGD, KWA, Harbour & KSEB.",
+    pools:   ["PWD", "Irrigation", "LSGD", "KWA", "Harbour"],
+    price:   2000,
+    popular: true,
+  },
+  {
+    key:     "btech",
+    href:    "/courses/btech",
+    emoji:   "🎓",
+    title:   "Civil PSC – B.Tech",
+    desc:    "For B.Tech Civil graduates targeting Assistant Engineer (AE) posts in PWD, Irrigation, LSGD, KWA & PCB.",
+    pools:   ["PWD", "Irrigation", "LSGD", "KWA", "PCB"],
+    price:   2500,
+    popular: false,
+  },
+  {
+    key:     "surveyor",
+    href:    "/courses/surveyor",
+    emoji:   "📏",
+    title:   "Surveyor Course",
+    desc:    "For ITI Surveyor license holders targeting Surveyor Gr II & related posts in KWA, Survey & Land Records, and Groundwater Dept.",
+    pools:   ["KWA", "Survey & Land Records", "Groundwater"],
+    price:   1800,
+    popular: false,
+  },
+] as const;
+
 const BLOG_POSTS = [
   {
     href: "/blog/how-to-crack-kerala-psc-civil-engineering",
@@ -237,14 +283,119 @@ export default function CivilPSCCoachingKeralaPage() {
                 href="/game-arena"
                 style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "linear-gradient(135deg, #FF6200, #FF8534)", color: "#fff", padding: "16px 38px", borderRadius: "12px", fontWeight: 700, fontSize: "1.05rem", textDecoration: "none", fontFamily: "Rajdhani, sans-serif", letterSpacing: "0.3px", boxShadow: "0 8px 28px rgba(255,98,0,0.4)" }}
               >
-                🎮 Practice Now – Free
+                🎮 Start Practice
               </Link>
               <Link
                 href="/pricing"
                 style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.18)", color: "#fff", padding: "16px 38px", borderRadius: "12px", fontWeight: 600, fontSize: "1.05rem", textDecoration: "none" }}
               >
-                View Courses →
+                Explore Courses →
               </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── TRUST SECTION ─────────────────────────────────────────────────── */}
+        <section
+          aria-label="Trust signals – Powered by Wincentre"
+          style={{ background: "linear-gradient(135deg,#1A0800,#120500)", borderTop: "1px solid rgba(255,98,0,0.2)", borderBottom: "1px solid rgba(255,98,0,0.2)", padding: "40px 5%" }}
+        >
+          <div style={{ maxWidth: "1100px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: "48px" }}>
+            {/* Powered by Wincentre */}
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "linear-gradient(135deg,#FF6200,#FF4500)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", flexShrink: 0 }} aria-hidden="true">🏛️</div>
+              <div>
+                <div style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "16px", fontWeight: 700, color: "#fff" }}>Powered by Wincentre</div>
+                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>Kerala's pioneer in Civil PSC coaching — Thrissur</div>
+              </div>
+            </div>
+
+            <div style={{ width: "1px", height: "44px", background: "rgba(255,255,255,0.1)" }} aria-hidden="true" className="trust-divider" />
+
+            {/* Rating */}
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "36px", fontWeight: 700, background: "linear-gradient(135deg,#FF6200,#FFB800)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", lineHeight: 1 }}>4.8</div>
+                <div style={{ display: "flex", gap: "2px", justifyContent: "center", marginTop: "4px" }} aria-label="4.8 out of 5 stars">
+                  {[1,2,3,4,5].map(s => <span key={s} aria-hidden="true" style={{ color: "#FFB800", fontSize: "14px" }}>★</span>)}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "16px", fontWeight: 700, color: "#fff" }}>Rated 4.8 / 5</div>
+                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>445+ verified student reviews</div>
+              </div>
+            </div>
+
+            <div style={{ width: "1px", height: "44px", background: "rgba(255,255,255,0.1)" }} aria-hidden="true" className="trust-divider" />
+
+            {/* Track record */}
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(50,200,100,0.12)", border: "1px solid rgba(50,200,100,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", flexShrink: 0 }} aria-hidden="true">🏆</div>
+              <div>
+                <div style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "16px", fontWeight: 700, color: "#fff" }}>1000+ Govt. Jobs</div>
+                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>Students placed across Kerala departments</div>
+              </div>
+            </div>
+
+            <div style={{ width: "1px", height: "44px", background: "rgba(255,255,255,0.1)" }} aria-hidden="true" className="trust-divider" />
+
+            {/* Experience */}
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(100,200,255,0.1)", border: "1px solid rgba(100,200,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", flexShrink: 0 }} aria-hidden="true">📅</div>
+              <div>
+                <div style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "16px", fontWeight: 700, color: "#fff" }}>15+ Years</div>
+                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>Proven track record in PSC coaching</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── COURSES SECTION ────────────────────────────────────────────────── */}
+        <section aria-labelledby="courses-heading" style={{ padding: "84px 5%", background: "#091729" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: "52px" }}>
+              <div style={{ display: "inline-block", background: "rgba(255,98,0,0.12)", border: "1px solid rgba(255,98,0,0.3)", borderRadius: "100px", padding: "5px 18px", fontSize: "13px", fontWeight: 700, color: "#FF8534", marginBottom: "16px" }}>
+                All Courses
+              </div>
+              <h2 id="courses-heading" style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "clamp(1.8rem, 4vw, 2.9rem)", fontWeight: 700, color: "#fff" }}>
+                Choose Your <span style={{ background: "linear-gradient(135deg,#FF6200,#FFB800)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>PSC Category</span>
+              </h2>
+              <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "1rem", marginTop: "14px", maxWidth: "520px", margin: "14px auto 0" }}>
+                Every Kerala PSC Civil Engineering category covered — structured, syllabus-mapped, and exam-ready.
+              </p>
+            </div>
+
+            <div className="courses-grid">
+              {COURSE_CARDS.map((c) => (
+                <Link
+                  key={c.key}
+                  href={c.href}
+                  style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${c.popular ? "rgba(255,98,0,0.4)" : "rgba(255,255,255,0.08)"}`, borderRadius: "20px", padding: "32px 26px", textDecoration: "none", display: "flex", flexDirection: "column", gap: "0", position: "relative", transition: "border-color 0.2s, transform 0.2s", boxShadow: c.popular ? "0 0 30px rgba(255,98,0,0.1)" : "none" }}
+                >
+                  {c.popular && (
+                    <div style={{ position: "absolute", top: "-13px", left: "50%", transform: "translateX(-50%)", background: "linear-gradient(90deg,#FF6200,#FF8534)", color: "#fff", fontSize: "11px", fontWeight: 800, padding: "4px 18px", borderRadius: "100px", whiteSpace: "nowrap", boxShadow: "0 4px 12px rgba(255,98,0,0.4)" }} aria-hidden="true">
+                      ⭐ MOST POPULAR
+                    </div>
+                  )}
+                  <div style={{ fontSize: "2.6rem", marginBottom: "16px" }}>{c.emoji}</div>
+                  <h3 style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "1.3rem", fontWeight: 700, color: "#fff", marginBottom: "8px" }}>{c.title}</h3>
+                  <p style={{ fontSize: "0.88rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.65, marginBottom: "18px", flex: 1 }}>{c.desc}</p>
+                  {/* Pools */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "20px" }}>
+                    {c.pools.map(p => (
+                      <span key={p} style={{ background: "rgba(255,98,0,0.1)", border: "1px solid rgba(255,98,0,0.22)", borderRadius: "100px", padding: "3px 10px", fontSize: "11px", fontWeight: 700, color: "#FF8534" }}>{p}</span>
+                    ))}
+                  </div>
+                  {/* Price */}
+                  <div style={{ display: "flex", alignItems: "baseline", gap: "6px", marginBottom: "18px" }}>
+                    <span style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "1.6rem", fontWeight: 700, background: "linear-gradient(135deg,#FF6200,#FFB800)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>₹{c.price.toLocaleString("en-IN")}</span>
+                    <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)" }}>/month</span>
+                  </div>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#FF8534", fontSize: "14px", fontWeight: 700 }}>
+                    Know More <span aria-hidden="true">→</span>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
@@ -503,22 +654,29 @@ export default function CivilPSCCoachingKeralaPage() {
       </main>
 
       <style>{`
-        .why-grid   { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-        .arena-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-        .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-        .blog-grid  { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .why-grid     { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .arena-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+        .testi-grid   { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .blog-grid    { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .courses-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
         @media (max-width: 1024px) {
-          .why-grid   { grid-template-columns: repeat(2, 1fr); }
-          .testi-grid { grid-template-columns: repeat(2, 1fr); }
-          .blog-grid  { grid-template-columns: repeat(2, 1fr); }
+          .why-grid     { grid-template-columns: repeat(2, 1fr); }
+          .testi-grid   { grid-template-columns: repeat(2, 1fr); }
+          .blog-grid    { grid-template-columns: repeat(2, 1fr); }
+          .courses-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 768px) {
-          .arena-grid { grid-template-columns: 1fr; gap: 40px; }
+          .arena-grid   { grid-template-columns: 1fr; gap: 40px; }
+          .trust-divider { display: none; }
         }
         @media (max-width: 600px) {
-          .why-grid   { grid-template-columns: 1fr; }
-          .testi-grid { grid-template-columns: 1fr; }
-          .blog-grid  { grid-template-columns: 1fr; }
+          .why-grid     { grid-template-columns: 1fr; }
+          .testi-grid   { grid-template-columns: 1fr; }
+          .blog-grid    { grid-template-columns: 1fr; }
+          .courses-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 400px) {
+          .courses-grid { grid-template-columns: 1fr; }
         }
       `}</style>
     </>
