@@ -19,7 +19,8 @@
       "Bash(xargs grep:*)",
       "Bash(node -e \"require\\('firebase-admin/app'\\)\")",
       "Bash(cat scripts/*)",
-      "Bash(node -e \"const sa = require\\('./scripts/serviceAccountKey.json'\\); console.log\\('Service Account Project:', sa.project_id\\)\")"
+      "Bash(node -e \"const sa = require\\('./scripts/serviceAccountKey.json'\\); console.log\\('Service Account Project:', sa.project_id\\)\")",
+      "Bash(python3 -c ' *)"
     ]
   }
 }

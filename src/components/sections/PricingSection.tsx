@@ -281,7 +281,7 @@ export default function PricingSection() {
           aria-label="Payment guarantees"
           style={{ display:"flex", justifyContent:"center", gap:"32px", flexWrap:"wrap", marginBottom:"28px", listStyle:"none", padding:0, margin:"0 0 28px" }}
         >
-          {["✔ Monthly plan auto-debited","✔ Annual plan — 3-month installments available","✔ Secure payment","✔ Cancel anytime"].map(t => (
+          {["✔ Monthly plan auto-debited","✔ Annual plans ","✔ Secure payment","✔ Cancel anytime"].map(t => (
             <li key={t} style={{ display:"flex", alignItems:"center", gap:"6px", fontSize:"13px", color:"rgba(255,255,255,0.5)" }}>
               <span style={{ color:"#32C864", fontWeight:800 }} aria-hidden="true">{t[0]}</span>
               {t.slice(1)}
@@ -413,7 +413,7 @@ function AnnualCard({ course, router }: { course: CourseData; router: ReturnType
         Annual Plan{" "}
         <span className="sr-only">— Most Popular, Save {pct}%</span>
       </h3>
-      <p style={{ fontSize:"13px", color:"rgba(255,255,255,0.45)", marginBottom:"20px", margin:"0 0 20px" }}>Best value · Yearly access + installment option</p>
+      <p style={{ fontSize:"13px", color:"rgba(255,255,255,0.45)", marginBottom:"20px", margin:"0 0 20px" }}>Best value · Yearly access + 48 Hr Free Demo </p>
 
       <div style={{ marginBottom:"6px" }}>
         <span style={{ fontSize:"18px", color:"rgba(255,255,255,0.35)", textDecoration:"line-through", marginRight:"8px" }}>{fmt(course.annualOrig)}</span>
@@ -432,13 +432,13 @@ function AnnualCard({ course, router }: { course: CourseData; router: ReturnType
         </div>
       </div>
 
-      <div style={{ background:"rgba(255,98,0,0.08)", border:"1px solid rgba(255,98,0,0.2)", borderRadius:"12px", padding:"12px 16px", marginBottom:"24px", display:"flex", alignItems:"center", gap:"10px" }}>
+      {/* <div style={{ background:"rgba(255,98,0,0.08)", border:"1px solid rgba(255,98,0,0.2)", borderRadius:"12px", padding:"12px 16px", marginBottom:"24px", display:"flex", alignItems:"center", gap:"10px" }}>
         <span aria-hidden="true" style={{ fontSize:"20px", flexShrink:0 }}>💳</span>
         <div>
           <p style={{ fontSize:"13px", fontWeight:700, color:"#FF8534", marginBottom:"2px", margin:"0 0 2px" }}>Yearly plan available in 3-month installments</p>
           <p style={{ fontSize:"12px", color:"rgba(255,255,255,0.5)", margin:0 }}>Pay {fmt(quarterly)} every quarter · No interest · Easy on your wallet</p>
         </div>
-      </div>
+      </div> */}
 
       {/* <ul style={{ listStyle:"none", padding:0, display:"flex", flexDirection:"column", gap:"11px", marginBottom:"28px" }}>
         {course.annualBonus.map((f, i) => (

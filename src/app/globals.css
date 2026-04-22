@@ -181,3 +181,38 @@ img, video { max-width: 100%; height: auto; }
 @media (max-width: 360px) {
   .nav-cta-label { display: none; }
 }
+/* ─── CoursePage responsive grids ───────────────────────────────────── */
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1);    }
+  50%       { opacity: 0.5; transform: scale(0.75); }
+}
+@media (max-width: 768px) {
+  .course-sticky-cta { display: block !important; }
+}
+@media (max-width: 640px) {
+  .stats-grid          { grid-template-columns: repeat(2,1fr) !important; }
+  .hero-bullets        { grid-template-columns: 1fr !important; }
+  .highlights-grid     { grid-template-columns: 1fr !important; }
+  .ps-grid             { grid-template-columns: 1fr !important; }
+  .flow-row            { flex-direction: column !important; align-items: center !important; }
+  .flow-row > div      { width: 100% !important; }
+  .subjects-grid       { grid-template-columns: 1fr !important; }
+  .deliverables-grid   { grid-template-columns: 1fr !important; }
+  .features-grid       { grid-template-columns: 1fr !important; }
+  .perf-grid           { grid-template-columns: 1fr !important; }
+  .live-grid           { grid-template-columns: 1fr !important; }
+  .wincentre-grid      { grid-template-columns: 1fr !important; }
+  .testimonials-grid   { grid-template-columns: 1fr !important; }
+  .bonus-grid          { grid-template-columns: 1fr !important; }
+  .pricing-cards-grid  { grid-template-columns: 1fr !important; }
+  .explore-grid        { grid-template-columns: repeat(2,1fr) !important; }
+}
+@media (max-width: 900px) {
+  .features-grid       { grid-template-columns: repeat(2,1fr) !important; }
+  .subjects-grid       { grid-template-columns: repeat(2,1fr) !important; }
+  .highlights-grid     { grid-template-columns: repeat(2,1fr) !important; }
+  .testimonials-grid   { grid-template-columns: 1fr !important; }
+  .bonus-grid          { grid-template-columns: repeat(2,1fr) !important; }
+  .explore-grid        { grid-template-columns: repeat(2,1fr) !important; }
+  .wincentre-grid      { grid-template-columns: 1fr !important; }
+}
