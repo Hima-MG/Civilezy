@@ -513,7 +513,7 @@ export const COURSES: Record<string, CourseData> = {
       { icon: "📈", title: "Performance Analytics", desc: "Track accuracy by subject, monitor rank movement, and identify weak areas with data." },
     ],
     liveClasses: {
-      schedule: "Every Sunday 6:00 PM – 8:00 PM IST",
+      schedule: "Monday-Friday 7:30 PM – 8:30 PM IST",
       topics: [
         "Surveyor PSC PYQ Analysis",
         "Modern Surveying Instruments Deep Dive",
@@ -566,10 +566,7 @@ export const COURSES: Record<string, CourseData> = {
         q: "Is Malayalam support available?",
         a: "Yes. Every chapter has a Malayalam audio lesson — surveying methods, instruments, and related topics explained in your own language.",
       },
-      {
-        q: "Is an installment option available?",
-        a: "Yes. The ₹15,000 annual plan can be paid as ₹3,750 every 3 months — 4 installments, zero interest, cancel anytime.",
-      },
+      
     ],
   },
 };
