@@ -15,15 +15,16 @@ const FB_LINK       = "https://www.facebook.com";
 // Internal paths use Next.js <Link>; external use <a>.
 const FOOTER_NAV: Record<string, { label: string; href: string; external?: boolean }[]> = {
   Courses: [
-    { label:"Civil PSC-ITI",      href:EXTERNAL_URLS.checkout.iti,      external:true },
-    { label:"Civil PSC-Diploma",  href:EXTERNAL_URLS.checkout.diploma,  external:true },
-    { label:"Civil PSC-B.Tech",   href:EXTERNAL_URLS.checkout.btech,    external:true },
-    { label:"Surveyor Courses",   href:EXTERNAL_URLS.checkout.surveyor, external:true },
+    { label:"All Courses",        href:"/courses"          },
+    { label:"Civil PSC — ITI",    href:"/courses/iti"      },
+    { label:"Civil PSC — Diploma",href:"/courses/diploma"  },
+    { label:"Civil PSC — B.Tech", href:"/courses/btech"    },
+    { label:"Surveyor Course",    href:"/courses/surveyor" },
   ],
   Resources: [
-    // { label:"Free Mock Test",          href:"/game-arena"                         },
-    { label:"Blog & Guides",           href:EXTERNAL_URLS.blog, external:true },
-    { label:"Pricing Plans",           href:"/pricing"                            },
+    { label:"Game Arena",         href:"/game-arena"       },
+    { label:"Blog & Guides",      href:"/blog"             },
+    { label:"Pricing Plans",      href:"/pricing"          },
   ],
   Company: [
     { label:"About Us",         href:EXTERNAL_URLS.about,         external:true },

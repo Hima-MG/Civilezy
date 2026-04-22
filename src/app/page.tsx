@@ -13,6 +13,7 @@ import Footer from "@/components/sections/Footer";
 import TickerSection from "@/components/sections/TickerSection";
 import AppDownloadSection from "@/components/sections/AppDownloadSection";
 import BlogSection from "@/components/sections/BlogSection";
+import ExploreCivilezy from "@/components/sections/ExploreCivilezy";
 
 export default function Home() {
   return (
@@ -29,6 +30,7 @@ export default function Home() {
       <TestimonialsSection />
       {/* <DepartmentSection /> */}
       <BlogSection />
+      <ExploreCivilezy />
       <FinalCTASection />
       <Footer />
     </>

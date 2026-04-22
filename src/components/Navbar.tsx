@@ -106,14 +106,15 @@ export default function Navbar() {
           </li>
 
           {/* Courses dropdown */}
-          <li style={{ listStyle: "none", position: "relative" }} ref={dropdownRef}>
-            <button
-              onClick={() => setCoursesOpen((v) => !v)}
-              onMouseEnter={() => setCoursesOpen(true)}
+          <li
+            style={{ listStyle: "none", position: "relative" }}
+            ref={dropdownRef}
+            onMouseEnter={() => setCoursesOpen(true)}
+            onMouseLeave={() => setCoursesOpen(false)}
+          >
+            <Link
+              href="/courses"
               style={{
-                background:     "none",
-                border:         "none",
-                cursor:         "pointer",
                 display:        "inline-flex",
                 alignItems:     "center",
                 gap:            "5px",
@@ -121,22 +122,21 @@ export default function Navbar() {
                 fontSize:       "15px",
                 fontWeight:     isCoursesActive ? 700 : 500,
                 fontFamily:     "Nunito, sans-serif",
-                padding:        0,
+                textDecoration: "none",
                 transition:     "color 0.2s",
                 whiteSpace:     "nowrap",
               }}
-              onMouseLeave={() => {/* keep open; handled by onMouseLeave on container */}}
-              aria-expanded={coursesOpen}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "#FF8534"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = isCoursesActive ? "#FF8534" : "rgba(255,255,255,0.85)"; }}
               aria-haspopup="true"
+              aria-expanded={coursesOpen}
             >
               Courses
               <ChevronIcon open={coursesOpen} />
-            </button>
+            </Link>
 
             {/* Dropdown panel */}
             <div
-              onMouseEnter={() => setCoursesOpen(true)}
-              onMouseLeave={() => setCoursesOpen(false)}
               style={{
                 position:     "absolute",
                 top:          "calc(100% + 14px)",

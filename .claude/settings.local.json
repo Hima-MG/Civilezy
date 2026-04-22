@@ -22,7 +22,9 @@
       "Bash(node -e \"const sa = require\\('./scripts/serviceAccountKey.json'\\); console.log\\('Service Account Project:', sa.project_id\\)\")",
       "Bash(python3 -c ' *)",
       "Bash(rm src/app/courses/iti/page.tsx src/app/courses/diploma/page.tsx src/app/courses/btech/page.tsx src/app/courses/surveyor/page.tsx)",
-      "Bash(rmdir src/app/courses/iti src/app/courses/diploma src/app/courses/btech src/app/courses/surveyor)"
+      "Bash(rmdir src/app/courses/iti src/app/courses/diploma src/app/courses/btech src/app/courses/surveyor)",
+      "Bash(python -c \"import sys,json; logs=json.load\\(sys.stdin\\); errors=[l for l in logs if 'error' in l.get\\('type',''\\).lower\\(\\) or 'Error' in l.get\\('text',''\\)]; [print\\(e['text'][:300]\\) for e in errors[-10:]]\")",
+      "Bash(python -c \"import sys,json; logs=json.load\\(sys.stdin\\); recent=[l for l in logs[-30:]]; [print\\(l.get\\('type',''\\), l.get\\('text',''\\)[:200]\\) for l in recent]\")"
     ]
   }
 }
