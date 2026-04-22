@@ -20,7 +20,9 @@
       "Bash(node -e \"require\\('firebase-admin/app'\\)\")",
       "Bash(cat scripts/*)",
       "Bash(node -e \"const sa = require\\('./scripts/serviceAccountKey.json'\\); console.log\\('Service Account Project:', sa.project_id\\)\")",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(rm src/app/courses/iti/page.tsx src/app/courses/diploma/page.tsx src/app/courses/btech/page.tsx src/app/courses/surveyor/page.tsx)",
+      "Bash(rmdir src/app/courses/iti src/app/courses/diploma src/app/courses/btech src/app/courses/surveyor)"
     ]
   }
 }

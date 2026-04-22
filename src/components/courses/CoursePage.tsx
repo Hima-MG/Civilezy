@@ -518,18 +518,18 @@ function TestimonialsSection({ data }: { data: CourseData }) {
           </p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "24px" }} className="testimonials-grid">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "16px" }} className="testimonials-grid">
           {data.testimonials.map(t => (
-            <div key={t.name} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", padding: "28px", display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div style={{ display: "flex", gap: "4px" }} aria-label="5 stars">
-                {[...Array(5)].map((_, i) => <span key={i} aria-hidden="true" style={{ color: "#FFB800", fontSize: "16px" }}>★</span>)}
+            <div key={t.name} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", gap: "3px" }} aria-label="5 stars">
+                {[...Array(5)].map((_, i) => <span key={i} aria-hidden="true" style={{ color: "#FFB800", fontSize: "13px" }}>★</span>)}
               </div>
-              <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.75)", lineHeight: 1.7, margin: 0, flex: 1, fontStyle: "italic" }}>
+              <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.75)", lineHeight: 1.65, margin: 0, flex: 1, fontStyle: "italic" }}>
                 &ldquo;{t.text}&rdquo;
               </p>
-              <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "16px" }}>
-                <div style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "17px", fontWeight: 700, color: "#fff" }}>{t.name}</div>
-                <div style={{ fontSize: "12px", color: "#FF8534", fontWeight: 600, marginTop: "2px" }}>{t.role}</div>
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "12px" }}>
+                <div style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "15px", fontWeight: 700, color: "#fff" }}>{t.name}</div>
+                <div style={{ fontSize: "11px", color: "#FF8534", fontWeight: 600, marginTop: "2px" }}>{t.role}</div>
               </div>
             </div>
           ))}
@@ -556,12 +556,12 @@ function BonusSection({ data }: { data: CourseData }) {
           </h2>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "20px", maxWidth: "900px", margin: "0 auto" }} className="bonus-grid">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "16px" }} className="bonus-grid">
           {data.bonus.map(b => (
-            <div key={b.title} style={{ background: "rgba(255,184,0,0.05)", border: "1px solid rgba(255,184,0,0.15)", borderRadius: "18px", padding: "28px", textAlign: "center" }}>
-              <span aria-hidden="true" style={{ fontSize: "40px", display: "block", marginBottom: "14px" }}>{b.icon}</span>
-              <div style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "18px", fontWeight: 700, color: "#fff", marginBottom: "8px" }}>{b.title}</div>
-              <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.52)", lineHeight: 1.55 }}>{b.desc}</div>
+            <div key={b.title} style={{ background: "rgba(255,184,0,0.05)", border: "1px solid rgba(255,184,0,0.15)", borderRadius: "14px", padding: "18px", textAlign: "center" }}>
+              <span aria-hidden="true" style={{ fontSize: "30px", display: "block", marginBottom: "10px" }}>{b.icon}</span>
+              <div style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "15px", fontWeight: 700, color: "#fff", marginBottom: "6px" }}>{b.title}</div>
+              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.52)", lineHeight: 1.5 }}>{b.desc}</div>
             </div>
           ))}
         </div>

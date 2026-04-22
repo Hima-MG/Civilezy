@@ -143,6 +143,36 @@ export default function BlogIndexPage() {
             </Link>
           </div>
         </div>
+
+        {/* ─── READ MORE ARTICLES ── */}
+        <div style={{ marginTop: "60px", borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: "48px" }}>
+          <div style={{ textAlign: "center", marginBottom: "28px" }}>
+            <h3 style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "1.4rem", fontWeight: 700, color: "#fff", marginBottom: "8px" }}>
+              Read More Articles
+            </h3>
+            <p style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.45)", margin: 0 }}>
+              Looking for more preparation content?
+            </p>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", justifyContent: "center" }}>
+            {[
+              { href: "/blog/how-to-crack-kerala-psc-civil-engineering", label: "How to Crack Kerala PSC Civil Engineering Exam" },
+              { href: "/blog/top-100-psc-civil-questions-kerala",        label: "Top 100 PSC Civil Questions Kerala" },
+              { href: "/blog/best-books-civil-psc-kerala",               label: "Best Books for Civil PSC Kerala" },
+            ].map((a) => (
+              <Link
+                key={a.href}
+                href={a.href}
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", padding: "12px 20px", fontSize: "13px", fontWeight: 600, color: "rgba(255,255,255,0.7)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}
+              >
+                📄 {a.label} →
+              </Link>
+            ))}
+          </div>
+          <p style={{ textAlign: "center", marginTop: "20px", fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>
+            Explore older articles on Kerala PSC Civil Engineering preparation.
+          </p>
+        </div>
       </div>
 
       <style>{`

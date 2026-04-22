@@ -211,7 +211,7 @@ img, video { max-width: 100%; height: auto; }
   .features-grid       { grid-template-columns: repeat(2,1fr) !important; }
   .subjects-grid       { grid-template-columns: repeat(2,1fr) !important; }
   .highlights-grid     { grid-template-columns: repeat(2,1fr) !important; }
-  .testimonials-grid   { grid-template-columns: 1fr !important; }
+  .testimonials-grid   { grid-template-columns: repeat(2,1fr) !important; }
   .bonus-grid          { grid-template-columns: repeat(2,1fr) !important; }
   .explore-grid        { grid-template-columns: repeat(2,1fr) !important; }
   .wincentre-grid      { grid-template-columns: 1fr !important; }

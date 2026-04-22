@@ -138,6 +138,16 @@ export default function Blog2Page() {
 
       <main style={{ background: "var(--navy)", color: "#fff", minHeight: "100vh", padding: "0 0 80px" }}>
 
+        {/* ─── OLDER ARTICLES BANNER ── */}
+        <div style={{ background: "rgba(255,184,0,0.08)", borderBottom: "1px solid rgba(255,184,0,0.2)", padding: "12px 5%", display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", flexWrap: "wrap", textAlign: "center" }}>
+          <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)" }}>
+            You are viewing an older article.
+          </span>
+          <Link href="/blog" style={{ fontSize: "13px", fontWeight: 700, color: "#FFB800", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+            Visit our updated blog for the latest content →
+          </Link>
+        </div>
+
         {/* ─── ARTICLE HERO ── */}
         <div style={{ background: "linear-gradient(160deg, #040C18 0%, #0B1E3D 100%)", padding: "70px 5% 56px" }}>
           <div style={{ maxWidth: "820px", margin: "0 auto" }}>

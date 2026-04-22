@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { EXTERNAL_URLS } from "@/lib/constants";
-
-const BLOG_URL = EXTERNAL_URLS.blog;
+import Link from "next/link";
 
 type Category = "All" | "PSC Live" | "Rank Blueprint" | "Exam Decoded" | "Smart Study" | "Civil Easy";
 
@@ -290,10 +288,8 @@ export default function BlogSection() {
                   <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>
                     {post.date}
                   </span>
-                  <a
-                    href={BLOG_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <Link
+                    href={`/blog/${post.slug}`}
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
@@ -313,7 +309,7 @@ export default function BlogSection() {
                     }}
                   >
                     Read more →
-                  </a>
+                  </Link>
                 </div>
               </article>
             );
@@ -322,10 +318,8 @@ export default function BlogSection() {
 
         {/* View All CTA */}
         <div style={{ textAlign: "center" }}>
-          <a
-            href={BLOG_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/blog"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -351,7 +345,7 @@ export default function BlogSection() {
             }}
           >
             View All Articles →
-          </a>
+          </Link>
         </div>
       </div>
 
