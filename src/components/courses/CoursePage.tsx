@@ -51,12 +51,8 @@ function HeroSection({ data }: { data: CourseData }) {
           {/* Badge row */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
             <span style={S.badge}>{data.emoji} {data.badge}</span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(50,200,100,0.1)", border: "1px solid rgba(50,200,100,0.25)", borderRadius: "20px", padding: "4px 14px", fontSize: "12px", fontWeight: 700, color: "#32C864" }}>
-              <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: "50%", background: "#32C864", display: "inline-block", animation: "pulseDot 2s infinite" }} />
-              Live Course Active
-            </span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(255,98,0,0.1)", border: "1px solid rgba(255,98,0,0.25)", borderRadius: "20px", padding: "4px 14px", fontSize: "12px", fontWeight: 700, color: "#FF8534" }}>
-              🔥 Batch Filling Fast
+              📅 Upcoming PSC exams are near. Start preparation now.
             </span>
           </div>
 
@@ -72,7 +68,7 @@ function HeroSection({ data }: { data: CourseData }) {
             {data.subtitle}
           </p>
 
-          {/* Pools */}
+          {/* Categories */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "24px" }}>
             {data.pools.map(pool => (
               <span key={pool} style={{ background: "rgba(255,98,0,0.12)", border: "1px solid rgba(255,98,0,0.3)", borderRadius: "20px", padding: "5px 14px", fontSize: "13px", fontWeight: 700, color: "#FF8534" }}>
@@ -227,14 +223,12 @@ function ProblemSolutionSection({ data }: { data: CourseData }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// 4 — SYSTEM FLOW  (Learn → Revise → Practice → Test → Master)
+// 4 — SYSTEM FLOW  (Study → Revise → Practice)
 // ══════════════════════════════════════════════════════════════════════════════
 const FLOW_STEPS = [
-  { icon: "📘", label: "Learn",    desc: "Structured lessons" },
-  { icon: "🔁", label: "Revise",   desc: "Smart flashcards"  },
-  { icon: "⚡", label: "Practice", desc: "Topic quizzes"     },
-  { icon: "📊", label: "Test",     desc: "Full mock exams"   },
-  { icon: "🏆", label: "Master",   desc: "Rank & get selected" },
+  { icon: "📘", label: "Study",    desc: "Structured lessons" },
+  { icon: "🔁", label: "Revise",   desc: "Built-in revision mode" },
+  { icon: "⚡", label: "Practice", desc: "Graded quizzes" },
 ];
 
 function SystemFlowSection() {
@@ -248,19 +242,19 @@ function SystemFlowSection() {
             <span style={S.gradText}>Rank & Selection</span>
           </h2>
           <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.5)", maxWidth: "440px", margin: "0 auto" }}>
-            Stop random study. Follow the same system that helped 1,000+ candidates get government jobs.
+            Stop random study. Follow the same 3-step system that helped 1,000+ candidates get government jobs.
           </p>
         </div>
 
-        <div style={{ display: "flex", alignItems: "stretch", justifyContent: "center", flexWrap: "wrap", gap: "0", maxWidth: "960px", margin: "0 auto" }} className="flow-row">
+        <div style={{ display: "flex", alignItems: "stretch", justifyContent: "center", flexWrap: "wrap", gap: "0", maxWidth: "700px", margin: "0 auto" }} className="flow-row">
           {FLOW_STEPS.map((step, i) => (
             <div key={step.label} style={{ display: "flex", alignItems: "center", gap: "0" }}>
               {/* Step card */}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", padding: "24px 20px", textAlign: "center", minWidth: "140px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "16px" }}>
-                <div style={{ width: "60px", height: "60px", borderRadius: "14px", background: i === 4 ? "linear-gradient(135deg,#FF6200,#FFB800)" : "rgba(255,98,0,0.12)", border: i === 4 ? "none" : "1px solid rgba(255,98,0,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", padding: "24px 20px", textAlign: "center", minWidth: "160px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "16px" }}>
+                <div style={{ width: "60px", height: "60px", borderRadius: "14px", background: i === 2 ? "linear-gradient(135deg,#FF6200,#FFB800)" : "rgba(255,98,0,0.12)", border: i === 2 ? "none" : "1px solid rgba(255,98,0,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px" }}>
                   {step.icon}
                 </div>
-                <div style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "18px", fontWeight: 700, color: i === 4 ? "#FF8534" : "#fff" }}>{step.label}</div>
+                <div style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "18px", fontWeight: 700, color: i === 2 ? "#FF8534" : "#fff" }}>{step.label}</div>
                 <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.42)", lineHeight: 1.4 }}>{step.desc}</div>
               </div>
               {/* Arrow */}
@@ -367,7 +361,7 @@ function StudySystemSection({ data }: { data: CourseData }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// 7 — PERFORMANCE SYSTEM
+// 7 — QUIZ SYSTEM
 // ══════════════════════════════════════════════════════════════════════════════
 function PerformanceSection({ data }: { data: CourseData }) {
   return (
@@ -375,13 +369,13 @@ function PerformanceSection({ data }: { data: CourseData }) {
       <div style={S.container}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "60px", alignItems: "center" }} className="perf-grid">
           <div>
-            <span style={S.badge}>Performance System</span>
+            <span style={S.badge}>Quiz System</span>
             <h2 style={{ ...S.h2, marginTop: "8px" }}>
-              Know Your Rank.{" "}
-              <span style={S.gradText}>Fix Your Gaps.</span>
+              Graded Quizzes.{" "}
+              <span style={S.gradText}>Live Leaderboard.</span>
             </h2>
             <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.6)", lineHeight: 1.7, marginBottom: "32px" }}>
-              CivilEzy&apos;s performance engine tracks every quiz, every session, and every mistake — then turns that data into a clear action plan.
+              Every lesson ends with a graded quiz. Attempt it unlimited times until you master the topic. See your rank on the live leaderboard.
             </p>
             <a href={data.pricing.checkoutUrl} target="_blank" rel="noopener noreferrer" style={S.ctaOrange} onMouseEnter={onOrangeEnter} onMouseLeave={onOrangeLeave}>
               🚀 Start Preparation
@@ -407,7 +401,7 @@ function PerformanceSection({ data }: { data: CourseData }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// 8 — LIVE CLASSES (optional)
+// 8 — LIVE CLASSES (ITI only)
 // ══════════════════════════════════════════════════════════════════════════════
 function LiveClassesSection({ liveClasses, checkoutUrl }: { liveClasses: NonNullable<CourseData["liveClasses"]>; checkoutUrl: string }) {
   return (
@@ -457,7 +451,7 @@ function LiveClassesSection({ liveClasses, checkoutUrl }: { liveClasses: NonNull
 // ══════════════════════════════════════════════════════════════════════════════
 const WINCENTRE_STATS = [
   { value: "15+",    label: "Years of PSC Coaching" },
-  { value: "4.8★",  label: "Average Rating"         },
+  { value: "4.8⭐", label: "Average Rating"         },
   { value: "445+",  label: "Verified Reviews"        },
   { value: "1,000+",label: "Govt. Jobs Secured"      },
 ];
@@ -476,7 +470,7 @@ function WincentreTrustSection() {
               <span style={S.gradText}>Civil PSC Coaching</span>
             </h2>
             <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.6)", lineHeight: 1.7, marginBottom: "28px" }}>
-              CivilEzy is the digital platform of Wincentre — Thrissur&apos;s pioneer in Civil PSC coaching since its inception. The same proven methodology, now available online for every Kerala aspirant.
+              CivilEzy is the digital platform of Wincentre Kerala — Kerala&apos;s pioneer in Civil PSC coaching. The same proven methodology, now available online for every Kerala aspirant.
             </p>
             <Link
               href="/civil-psc-coaching-kerala"
@@ -508,7 +502,7 @@ function TestimonialsSection({ data }: { data: CourseData }) {
       <Glow top="40%" left="30%" color="#FFB800" size={500} />
       <div style={S.container}>
         <div style={{ textAlign: "center", marginBottom: "52px" }}>
-          <span style={S.badge}>Success Stories</span>
+          <span style={S.badge}>What Real Government Servants from Civilezy Speak</span>
           <h2 style={S.h2}>
             Real Students.{" "}
             <span style={S.gradText}>Real Government Jobs.</span>
@@ -587,9 +581,9 @@ function PricingSection({ data }: { data: CourseData }) {
         </div>
         {/* Urgency banner */}
         <div style={{ maxWidth: "600px", margin: "0 auto 40px", textAlign: "center", background: "rgba(255,98,0,0.08)", border: "1px solid rgba(255,98,0,0.2)", borderRadius: "12px", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
-          <span style={{ fontSize: "16px" }} aria-hidden="true">🔥</span>
-          <span style={{ fontSize: "14px", fontWeight: 700, color: "#FF8534" }}>Batch currently active — limited seats available</span>
-          <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.45)" }}>Enroll now to secure your spot</span>
+          <span style={{ fontSize: "16px" }} aria-hidden="true">📅</span>
+          <span style={{ fontSize: "14px", fontWeight: 700, color: "#FF8534" }}>Upcoming PSC exams are near.</span>
+          <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.45)" }}>Start preparation now.</span>
         </div>
 
         <div style={{ textAlign: "center", marginBottom: "40px" }}>
@@ -598,7 +592,7 @@ function PricingSection({ data }: { data: CourseData }) {
             <span style={S.gradText}>Maximum Value.</span>
           </h2>
           <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.52)", maxWidth: "460px", margin: "0 auto" }}>
-            Both plans unlock everything — full access, all pools, all features.
+            Both plans unlock everything — full access, all categories, all features.
           </p>
         </div>
 
@@ -723,7 +717,7 @@ function FinalCTASection({ data }: { data: CourseData }) {
       <div style={{ ...S.container, textAlign: "center" }}>
         {/* Wincentre chip */}
         <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,184,0,0.1)", border: "1px solid rgba(255,184,0,0.25)", borderRadius: "50px", padding: "6px 18px", fontSize: "13px", fontWeight: 700, color: "#FFB800", marginBottom: "24px" }}>
-          <span aria-hidden="true">🏛️</span> Powered by Wincentre · 4.8⭐ · 1,000+ Govt. Jobs
+          <span aria-hidden="true">🏛️</span> Powered by Wincentre Kerala · 4.8⭐ · 1,000+ Govt. Jobs
         </div>
 
         <h2 style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "clamp(32px,5vw,60px)", fontWeight: 700, lineHeight: 1.1, color: "#fff", marginBottom: "16px" }}>
@@ -757,8 +751,7 @@ function FinalCTASection({ data }: { data: CourseData }) {
 // 15 — EXPLORE MORE (internal links)
 // ══════════════════════════════════════════════════════════════════════════════
 const EXPLORE_LINKS = [
-  { href: "/game-arena",                emoji: "🎮", label: "Game Arena",       desc: "Compete live with 5,200+ students",      external: false },
-  { href: "/civil-psc-coaching-kerala", emoji: "🏛️", label: "About CivilEzy",   desc: "Powered by Wincentre · 4.8⭐",          external: false },
+  { href: "/civil-psc-coaching-kerala", emoji: "🏛️", label: "About CivilEzy",   desc: "Powered by Wincentre Kerala · 4.8⭐",   external: false },
   { href: "/pricing",                   emoji: "📚", label: "All Courses",      desc: "ITI · Diploma · B.Tech · Surveyor",      external: false },
   { href: EXTERNAL_URLS.demo,           emoji: "🚀", label: "Free 48-Hr Demo", desc: "Try before you enroll — no payment",     external: true  },
 ] as const;
@@ -773,7 +766,7 @@ function ExploreMoreSection() {
             Everything CivilEzy Offers
           </h2>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "16px", maxWidth: "900px", margin: "0 auto" }} className="explore-grid">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "16px", maxWidth: "700px", margin: "0 auto" }} className="explore-grid">
           {EXPLORE_LINKS.map(link => (
             link.external ? (
               <a

@@ -46,7 +46,7 @@ export const COURSES: Record<string, CourseData> = {
       { label: "Active Students", value: "5,200+" },
       { label: "Questions", value: "50,000+" },
       { label: "Success Rate", value: "92%" },
-      { label: "Avg Rating", value: "4.9★" },
+      { label: "Avg Rating", value: "4.8⭐" },
     ],
     pricing: {
       monthly: 1800,
@@ -60,8 +60,8 @@ export const COURSES: Record<string, CourseData> = {
       "LIVE Classes (Mon–Fri)",
       "Malayalam + Smart Learning",
       "Practice Until You Master",
-      "Live Leaderboard & Rank Tracking",
-      "Performance Analytics Dashboard",
+      "Live Leaderboard",
+      "Unlimited Quiz Attempts",
     ],
     problems: [
       { icon: "📚", title: "No Structured Preparation", desc: "Textbooks, YouTube, random PDFs — no clear path for PSC-specific ITI content." },
@@ -70,10 +70,10 @@ export const COURSES: Record<string, CourseData> = {
       { icon: "⏳", title: "Lack of Consistency", desc: "Studying without a schedule leads to gaps, burnout, and missed topics." },
     ],
     solutions: [
-      { icon: "🗺️", title: "Learn → Revise → Practice → Improve", desc: "A proven 4-step cycle that takes you from understanding to rank-readiness." },
-      { icon: "🏠", title: "All-in-One Platform", desc: "Video lessons, audio, quizzes, live classes, and analytics — all in one place." },
+      { icon: "🗺️", title: "Study → Revise → Practice", desc: "A proven 3-step system that takes you from understanding to rank-readiness." },
+      { icon: "🏠", title: "All-in-One Platform", desc: "Video lessons, audio, quizzes, and live classes — all in one place." },
       { icon: "🎧", title: "Malayalam Audio Lessons", desc: "Understand complex concepts in your mother tongue. Study on the go, anywhere." },
-      { icon: "📊", title: "Performance Dashboard", desc: "Identify weak subjects, track your rank trajectory, and get daily insights." },
+      { icon: "📊", title: "Live Leaderboard", desc: "See your rank among all students. Real competition drives real preparation." },
     ],
     subjects: [
       "Building Materials",
@@ -86,35 +86,33 @@ export const COURSES: Record<string, CourseData> = {
       "Transportation",
       "Engineering Mechanics",
       "Drawing & Planning",
-      "Practice Exams",
     ],
     deliverables: [
-      "Full ITI syllabus — KWA, PWD, LSGD & Irrigation pools covered",
-      "LIVE Classes Mon–Fri at 7:30 PM with recordings",
-      "Unlimited practice until mastery — unlimited retries",
-      "Performance tracking with real-time rank analytics",
+      "Full ITI syllabus — KWA, PWD, LSGD & Irrigation categories covered",
+      "LIVE Classes Monday–Friday at 7:30 PM – 8:30 PM with recordings",
+      "Graded quizzes after each lesson with unlimited attempts",
+      "Live leaderboard to track your rank among all students",
     ],
     features: [
       { icon: "🎥", title: "Video Classes", desc: "~30 min focused video lessons per topic. Clear explanations, zero filler." },
       { icon: "🎧", title: "Malayalam Audio Lessons", desc: "Every chapter has a Malayalam audio walkthrough. Learn on commutes." },
       { icon: "📘", title: "Interactive Text Lessons", desc: "Study Mode → Revision Mode → Exam Mode. Structured learning at your pace." },
-      { icon: "⚡", title: "Practice Quiz", desc: "Unlimited attempts per quiz. Wrong answers explained. XP + streak rewards." },
-      { icon: "🎮", title: "Game Arena Access", desc: "Compete in live quiz battles. Earn XP. Climb the weekly leaderboard." },
-      { icon: "📊", title: "Analytics Dashboard", desc: "See your rank, weak areas, accuracy rate, and improvement over time." },
+      { icon: "⚡", title: "Practice Quiz", desc: "Graded quizzes after every lesson with unlimited attempts. Wrong answers explained." },
+      { icon: "🏆", title: "Live Leaderboard", desc: "See your rank among all ITI students. Real competition builds real preparation." },
+      { icon: "🔁", title: "Built-in Revision Mode", desc: "Smart revision ensures key topics stay fresh before exam day." },
     ],
     performance: [
-      { icon: "🏆", title: "Grade A to Unlock Next Chapter", desc: "Score Grade A in each chapter quiz before advancing. Ensures mastery, not just coverage." },
-      { icon: "🔄", title: "Unlimited Retries", desc: "Attempt any quiz as many times as needed until you master the topic." },
-      { icon: "📊", title: "Leaderboard System", desc: "See your rank among all ITI students. Real competition drives real preparation." },
-      { icon: "📈", title: "Progress Over Time", desc: "Track your score curve week by week with detailed improvement graphs." },
+      { icon: "⚡", title: "Graded Quizzes After Each Lesson", desc: "Quiz after every topic to ensure understanding before moving forward." },
+      { icon: "🔄", title: "Unlimited Attempts", desc: "Retry any quiz as many times as needed until you master the topic." },
+      { icon: "📊", title: "Live Leaderboard", desc: "See your rank among all ITI students. Real competition drives real preparation." },
     ],
     liveClasses: {
-      schedule: "Mon–Fri, 7:30 PM – 9:00 PM IST",
+      schedule: "Monday–Friday, 7:30 PM – 8:30 PM",
       topics: [
         "Cyclic syllabus — all topics covered in rotation",
         "Recordings available — never miss a class",
         "Doubt clearing — ask questions live",
-        "Previous year question walkthroughs",
+        "Exam strategy and last-minute revision",
       ],
     },
     testimonials: [
@@ -126,7 +124,7 @@ export const COURSES: Record<string, CourseData> = {
       {
         name: "Anila S. A",
         role: "Second Grade Draftsman, PWD",
-        text: "The quiz system is powerful. After every topic I had to score Grade A before moving on. That forced me to actually master each chapter.",
+        text: "The quiz system is powerful. After every topic I had graded quizzes that forced me to actually master each chapter before moving on.",
       },
       {
         name: "Priya KS",
@@ -140,7 +138,7 @@ export const COURSES: Record<string, CourseData> = {
       },
     ],
     bonus: [
-      { icon: "📦", title: "KWA Bundle", desc: "Dedicated KWA-specific question sets, previous papers, and targeted mock tests." },
+      { icon: "📦", title: "KWA Bundle", desc: "Dedicated KWA-specific question sets and targeted practice for the exam." },
       { icon: "👥", title: "Study Groups", desc: "Join active ITI peer groups. Share notes, discuss topics, keep each other accountable." },
       { icon: "💬", title: "Community Support", desc: "1,000+ students in the community. Daily questions, exam notifications, mutual support." },
       { icon: "📩", title: "Private Chat", desc: "Direct access to instructors for doubt clearing — no question goes unanswered." },
@@ -156,11 +154,11 @@ export const COURSES: Record<string, CourseData> = {
       },
       {
         q: "Are LIVE classes included?",
-        a: "Yes. LIVE classes run Mon–Fri at 7:30 PM – 9:00 PM IST. All sessions are recorded so you never miss a class.",
+        a: "Yes. LIVE classes run Monday–Friday at 7:30 PM – 8:30 PM. All sessions are recorded so you never miss a class.",
       },
       {
-        q: "Is my progress saved if I renew?",
-        a: "Yes. All your progress, scores, and completed chapters are saved across renewals — monthly or yearly.",
+        q: "How does the quiz system work?",
+        a: "Every lesson ends with a graded quiz. You can attempt it unlimited times. There is also a live leaderboard to track your rank among all students.",
       },
       {
         q: "Is Malayalam support available?",
@@ -171,7 +169,7 @@ export const COURSES: Record<string, CourseData> = {
 
   diploma: {
     title: "Civil PSC – Diploma",
-    subtitle: "For Overseer Gr 1, Overseer Gr 2 & 3, Junior Instructor, Site Engineer & more — across Kerala departments.",
+    subtitle: "For Overseer Gr 1, Overseer Gr 2 & 3, Junior Instructor, Site Engineer & more — across various Kerala departments.",
     badge: "Diploma Level Course",
     emoji: "📐",
     pools: ["PWD", "Irrigation", "LSGD", "KWA", "Harbour", "KSEB"],
@@ -179,7 +177,7 @@ export const COURSES: Record<string, CourseData> = {
       { label: "Active Students", value: "5,200+" },
       { label: "Questions", value: "50,000+" },
       { label: "Rank Holders", value: "2,000+" },
-      { label: "Avg Rating", value: "4.9★" },
+      { label: "Avg Rating", value: "4.8⭐" },
     ],
     pricing: {
       monthly: 2000,
@@ -190,11 +188,11 @@ export const COURSES: Record<string, CourseData> = {
     },
     highlights: [
       "50,000+ Questions",
-      "1,200+ Mock Tests",
       "Smart Interactive Lessons",
       "Bite-sized Video Lectures",
       "Malayalam Audio Lessons",
       "Smart Practice Quiz",
+      "Live Leaderboard",
     ],
     problems: [
       { icon: "📚", title: "No Structured Preparation", desc: "Students jump between textbooks, YouTube, and PDFs with no clear path or priority." },
@@ -203,10 +201,10 @@ export const COURSES: Record<string, CourseData> = {
       { icon: "📉", title: "Not Enough Exam-Level Practice", desc: "Without regular timed practice at the right difficulty level, real exam pressure becomes overwhelming." },
     ],
     solutions: [
-      { icon: "🔁", title: "Learn → Revise → Practice → Test → Master", desc: "A 5-step cycle that takes you from understanding to exam-readiness, one topic at a time." },
-      { icon: "🏠", title: "One Platform Covering Everything", desc: "Video lessons, audio, quizzes, mock tests, and analytics — all in one place, nothing missing." },
+      { icon: "🔁", title: "Study → Revise → Practice", desc: "A proven 3-step system that takes you from understanding to exam-readiness, one topic at a time." },
+      { icon: "🏠", title: "One Platform Covering Everything", desc: "Video lessons, audio, and quizzes — all in one place, nothing missing." },
       { icon: "📅", title: "Designed for Consistent Daily Progress", desc: "A clear study path every day — no confusion, no gaps, no wasted sessions." },
-      { icon: "📊", title: "Built-In Revision Prevents Forgetting", desc: "Smart revision surfaces key topics at the right intervals so nothing slips through." },
+      { icon: "📊", title: "Built-In Revision Mode", desc: "Smart revision surfaces key topics at the right intervals so nothing slips through." },
     ],
     subjects: [
       "Building Materials",
@@ -218,37 +216,26 @@ export const COURSES: Record<string, CourseData> = {
       "Transportation Engineering (Highway, Railway, Bridge, Tunnel, Airport)",
       "Theory of Structures",
       "Quantity Surveying",
-      "Practice Exams (Diploma Level)",
     ],
     deliverables: [
       "Full syllabus coverage — no gaps",
       "Step-by-step structured preparation",
       "Designed for real exam pattern",
-      "Practice-driven learning improves exam accuracy",
+      "Graded quizzes after each lesson with unlimited attempts",
     ],
     features: [
       { icon: "🎥", title: "Bite-sized Video Lessons", desc: "Short, focused video lessons per topic. High clarity, zero filler." },
       { icon: "🎧", title: "Malayalam Audio Learning", desc: "Every chapter in Malayalam audio — learn complex topics on the go, in your language." },
       { icon: "📘", title: "Interactive Text Lessons", desc: "Study → Revision → Exam Mode. Structured progression with no wasted time." },
-      { icon: "⚡", title: "Practice Quiz", desc: "Quiz after every lesson with unlimited attempts. Every wrong answer explained." },
-      { icon: "📝", title: "PYQs + Chapter-wise Tests", desc: "All Diploma PSC previous year questions organised by chapter and difficulty." },
+      { icon: "⚡", title: "Practice Quiz", desc: "Graded quiz after every lesson with unlimited attempts. Every wrong answer explained." },
       { icon: "🃏", title: "Flashcards & Memory Tools", desc: "Quick-recall flashcards for formulas, definitions, and key facts before exam day." },
+      { icon: "🏆", title: "Live Leaderboard", desc: "See your rank among all Diploma students. Real competition keeps you sharp." },
     ],
     performance: [
-      { icon: "🏆", title: "Grade A to Unlock Next Chapter", desc: "Score Grade A before advancing — ensures true mastery, not just coverage." },
-      { icon: "🔄", title: "Unlimited Retries Until Mastery", desc: "Retry any quiz as many times as needed. The system rewards persistence." },
-      { icon: "📊", title: "Leaderboard System", desc: "Compete with Diploma students statewide. Real competition keeps you sharp." },
-      { icon: "📈", title: "Performance Tracking & Analytics", desc: "Track accuracy by subject, monitor rank movement, and fix weak areas with data." },
+      { icon: "⚡", title: "Graded Quizzes After Each Lesson", desc: "Quiz after every topic to ensure understanding. Instant feedback on every attempt." },
+      { icon: "🔄", title: "Unlimited Attempts", desc: "Retry any quiz as many times as needed. The system rewards persistence." },
+      { icon: "📊", title: "Live Leaderboard", desc: "Compete with Diploma students statewide. Real competition keeps you sharp." },
     ],
-    liveClasses: {
-      schedule: "Every Saturday 7:00 PM – 9:00 PM IST",
-      topics: [
-        "Previous Year Diploma PSC Question Analysis",
-        "High-Weightage Topic Deep Dives",
-        "Pool-Specific Strategy Sessions",
-        "Doubt Clearing & Mock Test Walkthroughs",
-      ],
-    },
     testimonials: [
       {
         name: "Sreeja K K",
@@ -263,16 +250,16 @@ export const COURSES: Record<string, CourseData> = {
       {
         name: "Sumitha M S",
         role: "First Grade Draftsman, Irrigation",
-        text: "The practice system improved my confidence completely. I used to freeze in mock tests — after unlimited quiz retries, exam day felt like just another practice session.",
+        text: "The practice system improved my confidence completely. I used to feel anxious about exams — after unlimited quiz retries, exam day felt like just another practice session.",
       },
       {
         name: "Arya R.",
         role: "Site Engineer, KWA",
-        text: "Perfect for working students and repeaters. Evening classes, recordings, flexible study — I prepared while working full-time and still made the rank list.",
+        text: "Perfect for working students and repeaters. Flexible study, recordings, a clear plan — I prepared while working full-time and still made the rank list.",
       },
     ],
     bonus: [
-      { icon: "🔧", title: "Civil PSC ITI Level Course", desc: "Full ITI course access bundled in — revise foundational concepts and cover ITI-level pools." },
+      { icon: "🔧", title: "Civil PSC ITI Level Course", desc: "Full ITI course access bundled in — revise foundational concepts and cover ITI-level categories." },
       { icon: "📦", title: "KWA Bundle (Civil + Mech)", desc: "Dedicated KWA question sets covering both Civil and Mechanical sections of the paper." },
       { icon: "👥", title: "Study Groups & Community Access", desc: "Join active Diploma peer groups. Share notes, discuss tough topics, stay accountable." },
       { icon: "📩", title: "Private Chat Support", desc: "Direct instructor access for doubt clearing — no question goes unanswered." },
@@ -287,12 +274,12 @@ export const COURSES: Record<string, CourseData> = {
         a: "Yes. The course starts from fundamentals and builds up progressively. Students who joined years after completing their Diploma have succeeded with this system.",
       },
       {
-        q: "Is a practice system included?",
-        a: "Yes. Every lesson has a practice quiz with unlimited attempts. You can retry until you score Grade A and unlock the next chapter.",
+        q: "How does the quiz system work?",
+        a: "Every lesson ends with a graded quiz with unlimited attempts. There is also a live leaderboard to track your rank among all Diploma students.",
       },
       {
-        q: "Are mock tests included?",
-        a: "Yes. 1,200+ full-length Diploma-level mock tests simulating real PSC exam pattern are included in all plans.",
+        q: "Is my progress saved if I renew?",
+        a: "Yes. All your progress, scores, and completed chapters are saved across renewals — monthly or yearly.",
       },
       {
         q: "Is Malayalam support available?",
@@ -303,15 +290,15 @@ export const COURSES: Record<string, CourseData> = {
 
   btech: {
     title: "Civil PSC – B.Tech",
-    subtitle: "For B.Tech Civil Engineering graduates targeting Assistant Engineer posts across Kerala departments: PWD • Irrigation • LSGD • KWA • PCB",
+    subtitle: "For B.Tech Civil Engineering graduates targeting Assistant Engineer posts across various Kerala departments: PWD • Irrigation • LSGD • KWA • PCB",
     badge: "B.Tech / AE Level Course",
     emoji: "🎓",
     pools: ["PWD", "Irrigation", "LSGD", "KWA", "PCB"],
     stats: [
       { label: "Active Students", value: "5,200+" },
       { label: "AE Questions", value: "70,000+" },
-      { label: "Mock Tests", value: "1,500+" },
-      { label: "Avg Rating", value: "4.9★" },
+      { label: "Rank Holders", value: "2,000+" },
+      { label: "Avg Rating", value: "4.8⭐" },
     ],
     pricing: {
       monthly: 2500,
@@ -322,25 +309,23 @@ export const COURSES: Record<string, CourseData> = {
     },
     highlights: [
       "70,000+ Questions",
-      "1,500+ Mock Tests",
       "Smart Interactive Lessons",
       "Bite-sized Video Lectures",
       "Malayalam Audio Lessons",
       "Smart Practice Quiz",
       "Rank Booster Lessons (AE Level)",
-      "AE Level Mock Tests",
     ],
     problems: [
       { icon: "⚙️", title: "No Structured AE-Level Preparation", desc: "PSC AE questions require deep understanding of design, analysis and theory. Random study doesn't work." },
       { icon: "🔄", title: "Difficulty in Advanced Concepts", desc: "Years after graduation, core B.Tech concepts fade. Advanced theory needs structured re-learning." },
       { icon: "📖", title: "Poor Revision Strategy", desc: "Reading once and forgetting — there's no system to revise, retain, and reinforce AE-level topics." },
-      { icon: "📉", title: "Lack of High-Level Practice", desc: "Diploma-level question banks don't prepare you for AE exams. You need AE-specific high-difficulty practice." },
+      { icon: "📉", title: "Lack of High-Level Practice", desc: "You need AE-specific high-difficulty practice to be ready for the actual exam." },
     ],
     solutions: [
-      { icon: "🔁", title: "Learn → Revise → Practice → Test → Master", desc: "A proven 5-step cycle designed specifically for AE-level depth and exam pressure." },
-      { icon: "🏠", title: "One Platform for Complete AE Preparation", desc: "Video lessons, audio, quizzes, mock tests, and analytics — everything for AE in one place." },
-      { icon: "🚀", title: "Structured Path Designed for Rank", desc: "Every subject, every lesson, every test mapped to AE PSC pool patterns — no wasted effort." },
-      { icon: "📊", title: "Performance Analytics", desc: "Track your rank trajectory, identify weak subjects, and course-correct before exam day." },
+      { icon: "🔁", title: "Study → Revise → Practice", desc: "A proven 3-step system designed specifically for AE-level depth and exam pressure." },
+      { icon: "🏠", title: "One Platform for Complete AE Preparation", desc: "Video lessons, audio, and quizzes — everything for AE in one place." },
+      { icon: "🚀", title: "Structured Path Designed for Rank", desc: "Every subject, every lesson, every quiz mapped to AE PSC exam patterns — no wasted effort." },
+      { icon: "🔁", title: "Built-In Revision Mode", desc: "Smart revision ensures advanced concepts stay sharp before exam day." },
     ],
     subjects: [
       "Engineering Mechanics",
@@ -357,37 +342,26 @@ export const COURSES: Record<string, CourseData> = {
       "Transportation Engineering",
       "Construction Management",
       "Quantity Surveying",
-      "Practice Exams (AE Level)",
     ],
     deliverables: [
       "Full AE syllabus coverage — PWD, Irrigation, LSGD, KWA & PCB",
       "Advanced concept clarity through structured progression",
-      "Exam-focused preparation with 1,500+ AE-level mock tests",
+      "Graded quizzes after each lesson with unlimited attempts",
       "Rank Booster Lessons for the highest-difficulty AE questions",
     ],
     features: [
       { icon: "🎥", title: "Bite-sized Video Lessons", desc: "Short, focused AE-level video lessons. Complex topics broken into clear segments." },
       { icon: "🎧", title: "Malayalam Audio Learning", desc: "Design and analysis topics in Malayalam. Understand deeply, not just memorize." },
       { icon: "📘", title: "Interactive Text Lessons", desc: "Study → Revision → Exam Mode. Structured AE learning with zero wasted time." },
-      { icon: "⚡", title: "Practice Quiz", desc: "Quiz after every lesson with unlimited attempts. Wrong answers explained in detail." },
-      { icon: "📝", title: "PYQs + Chapter-wise Tests", desc: "All AE Civil PSC previous year questions organised by chapter and difficulty." },
+      { icon: "⚡", title: "Practice Quiz", desc: "Graded quiz after every lesson with unlimited attempts. Wrong answers explained in detail." },
       { icon: "🚀", title: "Rank Booster Insights", desc: "Advanced AE concepts and exam shortcuts targeting the toughest PSC questions." },
+      { icon: "🏆", title: "Live Leaderboard", desc: "See your rank among all AE aspirants. Real competition builds real exam confidence." },
     ],
     performance: [
-      { icon: "🏆", title: "Grade-Based Progression", desc: "Advance only after scoring a passing grade. Ensures real mastery before moving forward." },
-      { icon: "🔄", title: "Unlimited Retries", desc: "Attempt any quiz or test as many times as needed until you truly master the topic." },
-      { icon: "📊", title: "Leaderboard System", desc: "Compete with AE aspirants statewide. Real competition builds real exam confidence." },
-      { icon: "📈", title: "Performance Analytics", desc: "Track accuracy by subject, monitor rank trajectory, and fix weak areas with data." },
+      { icon: "⚡", title: "Graded Quizzes After Each Lesson", desc: "Quiz after every topic to ensure real mastery before moving forward." },
+      { icon: "🔄", title: "Unlimited Attempts", desc: "Attempt any quiz as many times as needed until you truly master the topic." },
+      { icon: "📊", title: "Live Leaderboard", desc: "Compete with AE aspirants statewide. Real competition builds real exam confidence." },
     ],
-    liveClasses: {
-      schedule: "Every Saturday & Sunday 7:00 PM – 9:00 PM IST",
-      topics: [
-        "AE PYQ Deep Dive Analysis",
-        "Structural Design Problem Solving",
-        "High-Difficulty Topic Bootcamps",
-        "AE Mock Test Walkthroughs & Strategy",
-      ],
-    },
     testimonials: [
       {
         name: "Rehana K R",
@@ -412,7 +386,7 @@ export const COURSES: Record<string, CourseData> = {
     ],
     bonus: [
       { icon: "📐", title: "Civil PSC Diploma Level Course", desc: "Access to Diploma-level content included — revise foundational concepts anytime." },
-      { icon: "🔧", title: "Civil PSC ITI Level Course", desc: "Full ITI course access bundled in — useful for cross-department pool preparation." },
+      { icon: "🔧", title: "Civil PSC ITI Level Course", desc: "Full ITI course access bundled in — useful for cross-department category preparation." },
       { icon: "📦", title: "KWA Bundle (Civil + Mech)", desc: "Dedicated KWA question sets covering both Civil and Mechanical components of the AE paper." },
       { icon: "👥", title: "Study Groups & Community Access", desc: "Join active AE peer groups. Share notes, discuss hard topics, stay accountable." },
       { icon: "📩", title: "Private Chat Support", desc: "Direct instructor access for doubt clearing — no AE-level question goes unanswered." },
@@ -420,7 +394,7 @@ export const COURSES: Record<string, CourseData> = {
     faq: [
       {
         q: "Is the full AE syllabus covered?",
-        a: "Yes. All 14 subjects — Engineering Mechanics, SOM, Structural Analysis, RCC, Steel Structures, Geotechnical Engineering, Fluid Mechanics, Hydrology, Irrigation, Environmental Engineering, Surveying, Transportation, Construction Management, and Quantity Surveying — are fully covered.",
+        a: "Yes. All 14 subjects — Engineering Mechanics, Strength of Materials, Structural Analysis, RCC, Steel Structures, Geotechnical Engineering, Fluid Mechanics, Hydrology, Irrigation, Environmental Engineering, Surveying, Transportation, Construction Management, and Quantity Surveying — are fully covered.",
       },
       {
         q: "Is this course beginner friendly?",
@@ -428,11 +402,11 @@ export const COURSES: Record<string, CourseData> = {
       },
       {
         q: "Are AE-level questions included?",
-        a: "Yes. 70,000+ AE-specific questions across all subjects, mapped to PSC pool patterns for PWD, Irrigation, LSGD, KWA, and PCB.",
+        a: "Yes. 70,000+ AE-specific questions across all subjects, mapped to PSC exam patterns for PWD, Irrigation, LSGD, KWA, and PCB.",
       },
       {
-        q: "Are mock tests included?",
-        a: "Yes. 1,500+ full-length AE-level mock tests with detailed analytics and difficulty levels matching actual PSC AE papers.",
+        q: "How does the quiz system work?",
+        a: "Every lesson ends with a graded quiz with unlimited attempts. There is also a live leaderboard to track your rank among all AE aspirants.",
       },
       {
         q: "Is Malayalam support available?",
@@ -443,15 +417,15 @@ export const COURSES: Record<string, CourseData> = {
 
   surveyor: {
     title: "Surveyor Civil PSC",
-    subtitle: "For ITI Surveyor license holders targeting Surveyor Gr II, Tradesman (Survey) and all surveyor-grade Kerala PSC posts across departments: KWA • Survey & Land Records • Technical Education • Groundwater Department",
+    subtitle: "For ITI Surveyor license holders targeting Surveyor Gr II, Tradesman (Survey) and all surveyor-grade Kerala PSC posts across various Kerala departments: KWA • Survey & Land Records • Technical Education • Groundwater Department",
     badge: "Surveyor Grade Course",
     emoji: "📏",
     pools: ["KWA", "Survey & Land Records", "Tech. Education", "Groundwater Dept."],
     stats: [
       { label: "Active Students", value: "5,200+" },
       { label: "Questions", value: "30,000+" },
-      { label: "Mock Tests", value: "1,000+" },
-      { label: "Avg Rating", value: "4.9★" },
+      { label: "Rank Holders", value: "500+" },
+      { label: "Avg Rating", value: "4.8⭐" },
     ],
     pricing: {
       monthly: 1800,
@@ -462,11 +436,11 @@ export const COURSES: Record<string, CourseData> = {
     },
     highlights: [
       "30,000+ Questions",
-      "1,000+ Mock Tests",
       "Smart Interactive Lessons",
       "Bite-sized Video Lectures",
       "Malayalam Audio Lessons",
       "Smart Practice Quiz",
+      "Live Leaderboard",
     ],
     problems: [
       { icon: "🔍", title: "No Structured Preparation for Surveyor Exams", desc: "General civil coaching doesn't cover the surveyor syllabus — chain survey, instruments, acts, and land records are left out." },
@@ -475,10 +449,10 @@ export const COURSES: Record<string, CourseData> = {
       { icon: "📉", title: "Lack of Exam-Level Practice", desc: "Surveyor-specific question banks barely exist. Students go into the exam without adequate practice." },
     ],
     solutions: [
-      { icon: "🔁", title: "Learn → Revise → Practice → Test → Master", desc: "A 5-step cycle that builds genuine mastery — from understanding surveyor concepts to scoring on exam day." },
-      { icon: "🏠", title: "One Platform Covering Complete Preparation", desc: "Video lessons, audio, quizzes, mock tests, and analytics — all in one place for surveyor exams." },
+      { icon: "🔁", title: "Study → Revise → Practice", desc: "A proven 3-step system that builds genuine mastery — from understanding surveyor concepts to scoring on exam day." },
+      { icon: "🏠", title: "One Platform Covering Complete Preparation", desc: "Video lessons, audio, and quizzes — all in one place for surveyor exams." },
       { icon: "📅", title: "Structured Path for Consistent Progress", desc: "A clear daily study plan so you always know what to do next — no confusion, no wasted sessions." },
-      { icon: "📊", title: "Revision System Ensures Retention", desc: "Built-in revision surfaces key topics at the right time so nothing slips through before exam day." },
+      { icon: "📊", title: "Built-In Revision Mode", desc: "Smart revision ensures key topics stay fresh so nothing slips through before exam day." },
     ],
     subjects: [
       "Chain Survey",
@@ -490,37 +464,26 @@ export const COURSES: Record<string, CourseData> = {
       "AutoCAD",
       "Workshop Calculation and Science",
       "Building Materials and Construction",
-      "Practice Exams (Surveyor Level)",
     ],
     deliverables: [
       "Complete syllabus coverage — practical + theory integration",
       "Exam-oriented preparation mapped to PSC pattern",
-      "Built-in revision system ensures nothing is forgotten",
-      "Practice-driven learning improves speed and accuracy",
+      "Built-in revision mode ensures nothing is forgotten",
+      "Graded quizzes after each lesson with unlimited attempts",
     ],
     features: [
       { icon: "🎥", title: "Bite-sized Video Lessons", desc: "Short, focused video lessons per surveyor topic. Visual explanations for instruments and methods." },
       { icon: "🎧", title: "Malayalam Audio Learning", desc: "Every chapter in Malayalam audio — instruments, acts, and survey methods made easy in your language." },
       { icon: "📘", title: "Interactive Text Lessons", desc: "Study → Revision → Exam Mode. Structured surveyor learning with zero wasted time." },
-      { icon: "⚡", title: "Practice Quiz", desc: "Quiz after every lesson with unlimited attempts. Every wrong answer explained in detail." },
-      { icon: "📝", title: "PYQs + Chapter-wise Tests", desc: "All surveyor-grade Kerala PSC previous year questions organised by chapter and difficulty." },
-      { icon: "🎮", title: "Game Arena Access", desc: "Compete in live quiz battles with surveyor aspirants statewide. Earn XP and rank points." },
+      { icon: "⚡", title: "Practice Quiz", desc: "Graded quiz after every lesson with unlimited attempts. Every wrong answer explained in detail." },
+      { icon: "🏆", title: "Live Leaderboard", desc: "See your rank among all surveyor aspirants statewide. Real competition builds real confidence." },
+      { icon: "🔁", title: "Built-in Revision Mode", desc: "Smart revision ensures key surveying concepts stay fresh before exam day." },
     ],
     performance: [
-      { icon: "🏆", title: "Grade-Based Progression", desc: "Advance only after scoring the required grade — ensures real mastery before moving forward." },
-      { icon: "🔄", title: "Unlimited Retries", desc: "Retry any quiz or test as many times as needed until you truly master the topic." },
-      { icon: "📊", title: "Leaderboard System", desc: "Compete with surveyor aspirants statewide. Real competition builds real confidence." },
-      { icon: "📈", title: "Performance Analytics", desc: "Track accuracy by subject, monitor rank movement, and identify weak areas with data." },
+      { icon: "⚡", title: "Graded Quizzes After Each Lesson", desc: "Quiz after every topic to ensure real mastery before moving forward." },
+      { icon: "🔄", title: "Unlimited Attempts", desc: "Retry any quiz as many times as needed until you truly master the topic." },
+      { icon: "📊", title: "Live Leaderboard", desc: "Compete with surveyor aspirants statewide. Real competition builds real confidence." },
     ],
-    liveClasses: {
-      schedule: "Monday-Friday 7:30 PM – 8:30 PM IST",
-      topics: [
-        "Surveyor PSC PYQ Analysis",
-        "Modern Surveying Instruments Deep Dive",
-        "Land Acts & Revenue Laws Session",
-        "Mock Test Walkthroughs & Strategy",
-      ],
-    },
     testimonials: [
       {
         name: "Nivedya C",
@@ -530,7 +493,7 @@ export const COURSES: Record<string, CourseData> = {
       {
         name: "Sneha T S",
         role: "Surveyor Grade 1, KWA",
-        text: "The practice system improved my accuracy completely. I used to make silly mistakes in timed tests — unlimited retries trained me to be consistent.",
+        text: "The practice system improved my accuracy completely. I used to feel anxious about timed tests — unlimited retries trained me to be consistent.",
       },
       {
         name: "Sheeja T A",
@@ -546,8 +509,8 @@ export const COURSES: Record<string, CourseData> = {
     bonus: [
       { icon: "👥", title: "Study Groups & Community Access", desc: "Join active surveyor peer groups. Share notes, discuss tough topics, stay accountable together." },
       { icon: "📩", title: "Private Chat Support", desc: "Direct instructor access for doubt clearing — no surveyor question goes unanswered." },
-      { icon: "⚔️", title: "CIVIL WAR Access", desc: "Live competitive quiz battles exclusively for surveyor-level students. Test yourself under real pressure." },
       { icon: "📢", title: "News & Updates Channels", desc: "Stay updated on exam notifications, syllabus changes, and rank list announcements in real time." },
+      { icon: "🔁", title: "Built-in Revision Mode", desc: "Smart revision integrated into the platform to help you retain key surveying concepts." },
     ],
     faq: [
       {
@@ -559,14 +522,17 @@ export const COURSES: Record<string, CourseData> = {
         a: "Yes. The course starts from fundamentals and builds progressively. Students who joined years after completing their ITI have succeeded with this structured system.",
       },
       {
-        q: "Are mock tests included?",
-        a: "Yes. 1,000+ full-length surveyor-level mock tests simulating real PSC exam pattern are included in all plans.",
+        q: "How does the quiz system work?",
+        a: "Every lesson ends with a graded quiz with unlimited attempts. There is also a live leaderboard to track your rank among all surveyor aspirants.",
+      },
+      {
+        q: "Is my progress saved if I renew?",
+        a: "Yes. All your progress, scores, and completed chapters are saved across renewals — monthly or yearly.",
       },
       {
         q: "Is Malayalam support available?",
         a: "Yes. Every chapter has a Malayalam audio lesson — surveying methods, instruments, and related topics explained in your own language.",
       },
-      
     ],
   },
 };
