@@ -256,13 +256,13 @@ export default function Hero() {
                 href={LMS_FREE_TEST}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Sign up for 48 hour free demo — opens in new tab"
+                aria-label="Start Demo Course — opens in new tab"
                 className="hero-cta-btn"
                 style={{ background:"linear-gradient(135deg,#FF6200,#FF4500)", color:"white", border:"none", padding:"16px 32px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"17px", fontWeight:800, cursor:"pointer", boxShadow:"0 6px 30px rgba(255,98,0,0.5)", transition:"transform 0.2s, box-shadow 0.2s", display:"inline-flex", alignItems:"center", gap:"8px", textDecoration:"none" }}
                 onMouseEnter={onPrimaryEnter}
                 onMouseLeave={onPrimaryLeave}
               >
-                🚀 Sign Up for 48 Hr Free Demo
+                🚀 Start Demo Course
               </a>
               <button
                 className="hero-cta-btn"
@@ -276,7 +276,7 @@ export default function Hero() {
             </div>
 
             <p style={{ fontSize:"12px", color:"rgba(255,255,255,0.38)", marginBottom:"32px" }}>
-              ✓ 48 Hr free access &nbsp;·&nbsp; ✓ Kerala PSC-specific questions
+              ✓ Demo course access &nbsp;·&nbsp; ✓ Kerala PSC-specific questions
             </p>
 
             {/* Stats */}

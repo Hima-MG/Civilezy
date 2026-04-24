@@ -413,7 +413,7 @@ function AnnualCard({ course, router }: { course: CourseData; router: ReturnType
         Annual Plan{" "}
         <span className="sr-only">— Most Popular, Save {pct}%</span>
       </h3>
-      <p style={{ fontSize:"13px", color:"rgba(255,255,255,0.45)", marginBottom:"20px", margin:"0 0 20px" }}>Best value · Yearly access + 48 Hr Free Demo </p>
+      <p style={{ fontSize:"13px", color:"rgba(255,255,255,0.45)", marginBottom:"20px", margin:"0 0 20px" }}>Best value · Yearly access · Demo course included</p>
 
       <div style={{ marginBottom:"6px" }}>
         <span style={{ fontSize:"18px", color:"rgba(255,255,255,0.35)", textDecoration:"line-through", marginRight:"8px" }}>{fmt(course.annualOrig)}</span>

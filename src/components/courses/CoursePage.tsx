@@ -102,7 +102,7 @@ function HeroSection({ data }: { data: CourseData }) {
               🚀 Enroll Now
             </a>
             <a href={EXTERNAL_URLS.demo} target="_blank" rel="noopener noreferrer" style={S.ctaGhost} onMouseEnter={onGhostEnter} onMouseLeave={onGhostLeave}>
-              Try Free Demo
+              Try Demo Lesson
             </a>
           </div>
 
@@ -654,7 +654,7 @@ function PricingSection({ data }: { data: CourseData }) {
 
         {/* Trust signals */}
         <div style={{ display: "flex", justifyContent: "center", gap: "24px", flexWrap: "wrap" }}>
-          {["✔ Secure Payment", "✔ Cancel Anytime", "✔ 48 hr Free Demo"].map(t => (
+          {["✔ Secure Payment", "✔ Cancel Anytime", "✔ Demo Course Access"].map(t => (
             <span key={t} style={{ fontSize: "13px", color: "rgba(255,255,255,0.38)", display: "flex", alignItems: "center", gap: "4px" }}>
               <span style={{ color: "#32C864", fontWeight: 800 }} aria-hidden="true">{t[0]}</span>
               {t.slice(1)}
@@ -736,11 +736,11 @@ function FinalCTASection({ data }: { data: CourseData }) {
             🚀 Enroll Now
           </a>
           <a href={EXTERNAL_URLS.demo} target="_blank" rel="noopener noreferrer" style={{ ...S.ctaGhost, padding: "18px 48px", fontSize: "18px" }} onMouseEnter={onGhostEnter} onMouseLeave={onGhostLeave}>
-            Try Free Demo
+            Try Demo Lesson
           </a>
         </div>
         <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.28)" }}>
-          No commitment · Cancel anytime · 48Hr Free Demo
+          No commitment · Cancel anytime · Demo course access
         </p>
       </div>
     </section>
@@ -753,7 +753,7 @@ function FinalCTASection({ data }: { data: CourseData }) {
 const EXPLORE_LINKS = [
   { href: "/civil-psc-coaching-kerala", emoji: "🏛️", label: "About CivilEzy",   desc: "Powered by Wincentre Kerala · 4.8⭐",   external: false },
   { href: "/pricing",                   emoji: "📚", label: "All Courses",      desc: "ITI · Diploma · B.Tech · Surveyor",      external: false },
-  { href: EXTERNAL_URLS.demo,           emoji: "🚀", label: "Free 48-Hr Demo", desc: "Try before you enroll — no payment",     external: true  },
+  { href: EXTERNAL_URLS.demo,           emoji: "🚀", label: "Start Demo Course", desc: "Experience our learning system with a demo course", external: true  },
 ] as const;
 
 function ExploreMoreSection() {

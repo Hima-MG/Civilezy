@@ -199,7 +199,7 @@ export default function PricingComparison() {
 
         {/* Bottom note */}
         <p style={{ textAlign: "center", marginTop: "24px", fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>
-          All plans include 48-hour free demo · No credit card required · Cancel anytime
+          Demo course available · No credit card required · Cancel anytime
         </p>
       </div>
 

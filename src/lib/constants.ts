@@ -5,7 +5,7 @@ export const EXTERNAL_URLS = {
   login:     "https://learn.civilezy.in/en/signup",
   signup:    "https://learn.civilezy.in/register",
   dashboard: "https://learn.civilezy.in/dashboard",
-  demo:      "https://learn.civilezy.in/free-trial-request",
+  demo:      "https://civilezy.ezycourse.com/checkout/?product_id=41923&product_type=course",
   blog:      "https://learn.civilezy.in/blog",
   about:     "https://learn.civilezy.in/about",
   contact:   "https://learn.civilezy.in/contact/",

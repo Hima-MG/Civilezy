@@ -112,7 +112,7 @@ export default function FinalCTASection() {
             href={LMS_FREE_TEST}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Sign up for 48 hour free demo — opens in new tab"
+            aria-label="Start Demo Course — opens in new tab"
             style={{
               background:     "linear-gradient(135deg, #FF6200, #FF4500)",
               color:          "white",
@@ -131,7 +131,7 @@ export default function FinalCTASection() {
             onMouseEnter={onPrimaryEnter}
             onMouseLeave={onPrimaryLeave}
           >
-            🚀 Sign Up for 48 Hr Free Demo
+            🚀 Start Demo Course
           </a>
 
           <a
@@ -167,8 +167,7 @@ export default function FinalCTASection() {
           style={{ marginTop:"24px", fontSize:"13px", color:"rgba(255,255,255,0.55)" }}
           aria-label="CivilEzy trust guarantees"
         >
-         
-          ✓ Instant access &nbsp;&nbsp;
+          ✓ Instant demo access &nbsp;&nbsp;
           ✓ Kerala PSC-specific &nbsp;&nbsp;
           ✓ Malayalam Audio lessons &nbsp;&nbsp;
         </p>

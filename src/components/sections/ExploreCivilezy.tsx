@@ -25,7 +25,7 @@ const EXPLORE_ITEMS = [
     href:    "/pricing",
     emoji:   "💡",
     title:   "Pricing",
-    desc:    "Flexible monthly and annual plans. Starting ₹1,800/month with a 48-hour free demo — no credit card needed.",
+    desc:    "Flexible monthly and annual plans. Starting ₹1,800/month — demo course available before enrolling.",
     cta:     "View Plans →",
     color:   "#32C864",
     bg:      "rgba(50,200,100,0.08)",
