@@ -59,6 +59,7 @@ export default function StickyCTA() {
       <div
         role="region"
         aria-label="Start your free Kerala PSC preparation"
+        className="sticky-cta"
         style={{
           position:             "fixed",
           bottom:               0,

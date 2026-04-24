@@ -5,6 +5,7 @@ import StickyCTA from "@/components/sections/StickyCTA";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import LayoutShell from "@/components/LayoutShell";
 import LeadCapturePopup from "@/components/LeadCapturePopup";
+import WhatsAppWidget from "@/components/WhatsAppWidget";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AnnouncementProvider } from "@/contexts/AnnouncementContext";
 
@@ -120,6 +121,7 @@ export default function RootLayout({
             <Navbar />
             <LayoutShell>{children}</LayoutShell>
             <StickyCTA />
+            <WhatsAppWidget />
             <LeadCapturePopup />
           </AnnouncementProvider>
         </AuthProvider>

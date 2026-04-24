@@ -146,9 +146,10 @@ h1, h2, h3, h4, h5 {
 }
 
 /* ─── Mobile hero CTA buttons ────────────────────────────────────────── */
-@media (max-width: 480px) {
-  .hero-cta-btn { width: 100% !important; justify-content: center !important; }
-  .hero-ctas    { flex-direction: column !important; }
+@media (max-width: 768px) {
+  .sticky-cta {
+    display: none;
+  }
 }
 
 /* ─── Section padding – mobile first ─────────────────────────────────── */
