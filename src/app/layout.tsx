@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/react";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import StickyCTA from "@/components/sections/StickyCTA";
@@ -126,6 +126,7 @@ export default function RootLayout({
             <LeadCapturePopup />
           </AnnouncementProvider>
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
