@@ -178,13 +178,22 @@ export default function GameArenaPage() {
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   const handleDomainSelect = (domain: Domain) => {
+    console.log("[GameArena] Domain selected:", domain);
     if (selectedDomain !== domain) { setSelectedSubjects([]); setShowMoreSubjects(false); }
     setSelectedDomain(domain);
   };
 
   const currentSubjects = selectedDomain ? DOMAIN_SUBJECTS[selectedDomain] : null;
   const isReady = selectedDomain !== null && selectedSubjects.length > 0 && selectedDifficulty !== null;
-  const toggleSubject = (id: string) => setSelectedSubjects(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
+  const toggleSubject = (id: string) => {
+    console.log("[GameArena] Subject toggled:", id);
+    setSelectedSubjects(prev => prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]);
+  };
+
+  const handleDifficultySelect = (id: Difficulty) => {
+    console.log("[GameArena] Difficulty selected:", id);
+    setSelectedDifficulty(id);
+  };
 
   // ── Sound engine (Web Audio API + file fallback) ─────────────────────────
   const playSound = useCallback((type: "correct" | "wrong" | "timeout") => {
@@ -913,7 +922,7 @@ export default function GameArenaPage() {
   // SETUP SCREEN
   // ═══════════════════════════════════════════════════════════════════════════
   return (
-    <main className="min-h-screen bg-zinc-950 text-white">
+    <main className="relative min-h-screen bg-zinc-950 text-white">
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage:"linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px)", backgroundSize:"40px 40px" }} />
 
       <div className="relative z-10 max-w-3xl mx-auto px-4 py-12">
@@ -974,7 +983,7 @@ export default function GameArenaPage() {
               const isSelected = selectedDomain === d.id;
               return (
                 <button key={d.id} onClick={() => handleDomainSelect(d.id)}
-                  className={`group relative flex flex-col items-center justify-center gap-2 p-5 rounded-xl border transition-all duration-200 cursor-pointer text-center hover:scale-[1.02]
+                  className={`group relative flex flex-col items-center justify-center gap-2 p-5 rounded-xl border transition-all duration-200 cursor-pointer text-center hover:scale-[1.02] touch-manipulation
                     ${isSelected ? "border-orange-500 bg-orange-500/10 shadow-lg shadow-orange-500/10" : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-500 hover:bg-zinc-800"}`}>
                   {isSelected && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-orange-500 shadow-sm shadow-orange-400" />}
                   <span className="text-2xl">{d.icon}</span>
@@ -987,7 +996,7 @@ export default function GameArenaPage() {
         </section>
 
         {/* ── STEP 2 — Subjects ── */}
-        <div className={`transition-all duration-500 ease-in-out overflow-hidden ${selectedDomain ? "max-h-[1000px] opacity-100 mb-10" : "max-h-0 opacity-0 mb-0"}`}>
+        <div className={`transition-all duration-500 ease-in-out overflow-hidden ${selectedDomain ? "max-h-[3000px] opacity-100 mb-10" : "max-h-0 opacity-0 mb-0"}`}>
           <section className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 backdrop-blur-sm">
             <StepHeader step={2} title="Choose Subjects" subtitle={selectedSubjects.length > 0 ? `${selectedSubjects.length} subject${selectedSubjects.length > 1 ? "s" : ""} selected` : "Select one or more subjects based on your preparation"} />
             {currentSubjects && (
@@ -997,7 +1006,7 @@ export default function GameArenaPage() {
                     const isSelected = selectedSubjects.includes(s.id);
                     return (
                       <button key={s.id} onClick={() => toggleSubject(s.id)}
-                        className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer hover:scale-[1.02]
+                        className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer hover:scale-[1.02] touch-manipulation
                           ${isSelected ? "border-orange-500 bg-orange-500/10 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.15)]" : "border-zinc-700 bg-zinc-800/50 text-zinc-300 hover:border-zinc-500 hover:bg-zinc-800"}`}>
                         <span className="text-base shrink-0">{s.icon}</span>
                         <span className="leading-tight flex-1 text-left">{s.label}</span>
@@ -1027,7 +1036,7 @@ export default function GameArenaPage() {
                                   const isSelected = selectedSubjects.includes(subj);
                                   return (
                                     <button key={subj} onClick={() => toggleSubject(subj)}
-                                      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer hover:scale-[1.02]
+                                      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer hover:scale-[1.02] touch-manipulation
                                         ${isSelected ? "border-orange-500 bg-orange-500/10 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.15)]" : "border-zinc-700/60 border-dashed bg-zinc-800/30 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"}`}>
                                       <span className="text-base shrink-0">{subjectIcon(subj)}</span>
                                       <span className="leading-tight flex-1 text-left">{subj}</span>
@@ -1045,7 +1054,7 @@ export default function GameArenaPage() {
                               const isSelected = selectedSubjects.includes(s.id);
                               return (
                                 <button key={s.id} onClick={() => toggleSubject(s.id)}
-                                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer hover:scale-[1.02]
+                                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 cursor-pointer hover:scale-[1.02] touch-manipulation
                                     ${isSelected ? "border-orange-500 bg-orange-500/10 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.15)]" : "border-zinc-700/60 border-dashed bg-zinc-800/30 text-zinc-400 hover:border-zinc-500 hover:bg-zinc-800 hover:text-zinc-300"}`}>
                                   <span className="text-base shrink-0">{s.icon}</span>
                                   <span className="leading-tight flex-1 text-left">{s.label}</span>
@@ -1091,8 +1100,8 @@ export default function GameArenaPage() {
               };
               const textMap: Record<string,string> = { emerald:"text-emerald-400", amber:"text-amber-400", rose:"text-rose-400" };
               return (
-                <button key={d.id} onClick={() => setSelectedDifficulty(d.id)}
-                  className={`group relative flex flex-col items-center gap-2 p-5 rounded-xl border transition-all duration-200 cursor-pointer text-center hover:scale-[1.02] ${accentMap[d.color]}`}>
+                <button key={d.id} onClick={() => handleDifficultySelect(d.id)}
+                  className={`group relative flex flex-col items-center gap-2 p-5 rounded-xl border transition-all duration-200 cursor-pointer text-center hover:scale-[1.02] touch-manipulation ${accentMap[d.color]}`}>
                   {isSelected && <div className={`absolute top-2 right-2 w-2 h-2 rounded-full ${d.color === "emerald" ? "bg-emerald-500" : d.color === "amber" ? "bg-amber-500" : "bg-rose-500"}`} />}
                   <span className="text-2xl">{d.icon}</span>
                   <span className={`font-bold text-base ${isSelected ? textMap[d.color] : "text-white"}`}>{d.label}</span>
