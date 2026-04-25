@@ -68,6 +68,7 @@ export default function StickyCTA() {
           zIndex:               900,
           transform:            shouldShow ? "translateY(0)" : "translateY(110%)",
           opacity:              shouldShow ? 1 : 0,
+          pointerEvents:        shouldShow ? "auto" : "none",
           transition:           "transform 0.45s cubic-bezier(0.16,1,0.3,1), opacity 0.35s ease",
           background:           "rgba(8,15,30,0.88)",
           backdropFilter:       "blur(16px)",

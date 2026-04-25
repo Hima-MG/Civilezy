@@ -91,6 +91,8 @@ export default function WhatsAppWidget() {
 
   return (
     <>
+      {/* pointer-events: none on root so the layout box doesn't block page clicks.
+          Children that need interaction set pointer-events: auto explicitly. */}
       <div
         ref={containerRef}
         className="wa-widget-root"
@@ -103,6 +105,7 @@ export default function WhatsAppWidget() {
           flexDirection: "column",
           alignItems: "flex-end",
           gap: "12px",
+          pointerEvents: "none",
         }}
       >
         {/* ── Popup menu ── */}
@@ -113,7 +116,7 @@ export default function WhatsAppWidget() {
           style={{
             opacity: open ? 1 : 0,
             transform: open ? "translateY(0) scale(1)" : "translateY(12px) scale(0.94)",
-            pointerEvents: open ? "all" : "none",
+            pointerEvents: open ? "auto" : "none",
             transition: "opacity 0.25s ease, transform 0.28s cubic-bezier(0.16,1,0.3,1)",
             background: "rgba(7,12,26,0.97)",
             backdropFilter: "blur(24px)",
@@ -213,6 +216,8 @@ export default function WhatsAppWidget() {
             transition: "background 0.2s, transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s",
             transform: open ? "rotate(0deg) scale(1.06)" : "rotate(0deg) scale(1)",
             position: "relative",
+            pointerEvents: "auto",
+            touchAction: "manipulation",
           }}
         >
           {/* Ping ring — only when closed */}
