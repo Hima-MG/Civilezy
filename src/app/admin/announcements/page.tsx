@@ -14,12 +14,13 @@ import {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const TYPES: AnnouncementType[] = ["exam", "result", "achievement"];
+const TYPES: AnnouncementType[] = ["exam", "result", "achievement", "update"];
 
 const TYPE_CFG: Record<AnnouncementType, { color: string; bg: string; icon: string; label: string }> = {
   exam:        { color: "#FF8534", bg: "rgba(255,133,52,0.15)", icon: "📋", label: "Exam" },
   result:      { color: "#22c55e", bg: "rgba(34,197,94,0.15)",  icon: "🏆", label: "Result" },
   achievement: { color: "#FFB800", bg: "rgba(255,184,0,0.15)",  icon: "⭐", label: "Achievement" },
+  update:      { color: "#3b82f6", bg: "rgba(59,130,246,0.15)", icon: "📢", label: "Update" },
 };
 
 interface FormState {

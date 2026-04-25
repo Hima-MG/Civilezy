@@ -4,13 +4,14 @@ import {
   doc, getDocs, query, where, Timestamp, serverTimestamp,
 } from "firebase/firestore";
 
-export type AnnouncementType = "exam" | "result" | "achievement";
+export type AnnouncementType = "exam" | "result" | "achievement" | "update";
 
 export interface Announcement {
   id: string;
   title: string;
+  description?: string;
   type: AnnouncementType;
-  link: string;
+  link?: string;
   isActive: boolean;
   priority: number;
   createdAt: Timestamp;
@@ -21,16 +22,37 @@ export type AnnouncementInput = Omit<Announcement, "id" | "createdAt">;
 
 const COL = "announcements";
 
-/** Fetch active, non-expired announcements sorted by priority desc */
+const byNewest = (a: Announcement, b: Announcement) =>
+  (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0);
+
+const byPriorityThenNewest = (a: Announcement, b: Announcement) =>
+  b.priority - a.priority || byNewest(a, b);
+
+function filterExpired(items: Announcement[]): Announcement[] {
+  const now = Timestamp.now().toMillis();
+  return items.filter((a) => !a.expiresAt || a.expiresAt.toMillis() > now);
+}
+
+/** Fetch active, non-expired announcements sorted by priority desc.
+ *  Used by AnnouncementBar — returns the top item first. */
 export async function getActiveAnnouncements(): Promise<Announcement[]> {
-  const now = Timestamp.now();
   const snap = await getDocs(
     query(collection(db, COL), where("isActive", "==", true))
   );
-  return snap.docs
-    .map((d) => ({ id: d.id, ...d.data() } as Announcement))
-    .filter((a) => !a.expiresAt || a.expiresAt.toMillis() > now.toMillis())
-    .sort((a, b) => b.priority - a.priority || b.createdAt?.toMillis() - a.createdAt?.toMillis());
+  return filterExpired(
+    snap.docs.map((d) => ({ id: d.id, ...d.data() } as Announcement))
+  ).sort(byPriorityThenNewest);
+}
+
+/** Fetch active, non-expired announcements ordered newest-first.
+ *  Used by the public /announcements page. */
+export async function getAnnouncementsPage(): Promise<Announcement[]> {
+  const snap = await getDocs(
+    query(collection(db, COL), where("isActive", "==", true))
+  );
+  return filterExpired(
+    snap.docs.map((d) => ({ id: d.id, ...d.data() } as Announcement))
+  ).sort(byNewest);
 }
 
 /** Fetch all announcements (admin) */
@@ -38,7 +60,7 @@ export async function getAllAnnouncements(): Promise<Announcement[]> {
   const snap = await getDocs(collection(db, COL));
   return snap.docs
     .map((d) => ({ id: d.id, ...d.data() } as Announcement))
-    .sort((a, b) => b.priority - a.priority || b.createdAt?.toMillis() - a.createdAt?.toMillis());
+    .sort(byPriorityThenNewest);
 }
 
 export async function addAnnouncement(input: AnnouncementInput): Promise<string> {
