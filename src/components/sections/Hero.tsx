@@ -9,6 +9,7 @@ import { EXTERNAL_URLS } from "@/lib/constants";
 // ─── Constants ───────────────────────────────────────────────────────────────
 const LMS_FREE_TEST = EXTERNAL_URLS.demo;
 const LMS_LOGIN= EXTERNAL_URLS.login
+const LMS_SEE = EXTERNAL_URLS.see;
 
 // ─── Rank System ────────────────────────────────────────────────────────────
 interface RankInfo { label: string; icon: string; color: string; }
@@ -38,11 +39,11 @@ const onPrimaryLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
   e.currentTarget.style.transform = "translateY(0)";
   e.currentTarget.style.boxShadow = "0 6px 30px rgba(255,98,0,0.5)";
 };
-const onSecondaryEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
+const onSecondaryEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
   e.currentTarget.style.borderColor = "#FF6200";
   e.currentTarget.style.background  = "rgba(255,98,0,0.1)";
 };
-const onSecondaryLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
+const onSecondaryLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
   e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)";
   e.currentTarget.style.background  = "transparent";
 };
@@ -264,15 +265,18 @@ export default function Hero() {
               >
                 🚀 Start Demo Course
               </a>
-              <button
+              <a
+                href={LMS_SEE}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="See how CivilEzy works — opens in new tab"
                 className="hero-cta-btn"
-                aria-label="See how CivilEzy works"
-                style={{ background:"transparent", color:"#ffffff", border:"2px solid rgba(255,255,255,0.3)", padding:"14px 28px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"16px", fontWeight:600, cursor:"pointer", transition:"border-color 0.2s, background 0.2s", display:"inline-flex", alignItems:"center", gap:"8px" }}
+                style={{ background:"transparent", color:"#ffffff", border:"2px solid rgba(255,255,255,0.3)", padding:"14px 28px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"16px", fontWeight:600, cursor:"pointer", transition:"border-color 0.2s, background 0.2s", display:"inline-flex", alignItems:"center", gap:"8px", textDecoration:"none" }}
                 onMouseEnter={onSecondaryEnter}
                 onMouseLeave={onSecondaryLeave}
               >
                 ▶ See How It Works
-              </button>
+              </a>
             </div>
 
             <p style={{ fontSize:"12px", color:"rgba(255,255,255,0.38)", marginBottom:"32px" }}>
