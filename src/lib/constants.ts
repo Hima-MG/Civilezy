@@ -9,6 +9,7 @@ export const EXTERNAL_URLS = {
   blog:      "https://learn.civilezy.in/blog",
   about:     "https://learn.civilezy.in/about",
   contact:   "https://learn.civilezy.in/contact/",
+  see:"https://youtu.be/38tjn1OC1t0?si=1jkR9Yc0m8__3Rpy",
 
   legal: {
     privacy: "https://learn.civilezy.in/privacy-policy",

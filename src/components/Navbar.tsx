@@ -19,7 +19,7 @@ const PLAIN_LINKS = [
   { label: "Home",       href: "/"           },
   { label: "Game Arena", href: "/game-arena" },
   { label: "Pricing",    href: "/pricing"    },
-  { label: "Blog",       href: "/blog"       },
+  // { label: "Blog",       href: "/blog"       },
 ] as const;
 
 export default function Navbar() {
