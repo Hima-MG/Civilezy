@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { WHATSAPP_NUMBER, WHATSAPP_DISPLAY } from "@/lib/constants";
 
-const WA_NUMBER = "919074557825";
+const WA_NUMBER = WHATSAPP_NUMBER;
 
 const CHAT_OPTIONS = [
   {
@@ -191,7 +192,7 @@ export default function WhatsAppWidget() {
 
           {/* Footer */}
           <p style={{ marginTop: "13px", fontSize: "11px", color: "rgba(255,255,255,0.2)", textAlign: "center", lineHeight: 1.4 }}>
-            Opens WhatsApp · +91 90745 57825
+            Opens WhatsApp · {WHATSAPP_DISPLAY}
           </p>
         </div>
 

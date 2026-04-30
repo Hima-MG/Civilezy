@@ -73,7 +73,7 @@ const globalSchema = {
     },
     contactPoint: {
       "@type": "ContactPoint",
-      telephone: "+91-90745-57825",
+      telephone: "+91-90723-45630",
       contactType: "customer support",
       availableLanguage: ["English", "Malayalam"],
     },

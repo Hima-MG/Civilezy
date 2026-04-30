@@ -61,7 +61,7 @@ const schemaOrg = {
         addressRegion: "Kerala",
         addressCountry: "IN",
       },
-      telephone: "+919074557825",
+      telephone: "+919072345630",
       email: "support@civilezy.in",
       sameAs: [
         "https://www.youtube.com/@CivilEzy-youtube",

@@ -1,3 +1,11 @@
+// ─── WhatsApp ────────────────────────────────────────────────────────────────
+export const WHATSAPP_NUMBER = "919072345630";
+export const WHATSAPP_DISPLAY = "+91 90723 45630";
+
+export function getWhatsAppUrl(message: string) {
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
 // ─── External LMS URLs ──────────────────────────────────────────────────────
 // All links that leave civilezy.in point here. Never hardcode these in
 // individual components — always import from this file.
@@ -26,7 +34,7 @@ export const EXTERNAL_URLS = {
 
   social: {
     telegram:  "https://t.me/civilezy_psc",
-    whatsapp:  "https://wa.me/919074557825",
+    whatsapp:  `https://wa.me/${WHATSAPP_NUMBER}`,
   },
 
   apps: {
@@ -42,5 +50,5 @@ export const SITE = {
   description: "Kerala's only PSC Civil Engineering platform with Smart Lessons, Malayalam Audio Lessons, Smart Quiz System, Short Video Lessons (40–50 min), and Game Arena. ITI / Diploma / AE prep.",
   url:         "https://civilezy.in",
   email:       "support@civilezy.in",
-  phone:       "+91 90745 57825",
+  phone:       WHATSAPP_DISPLAY,
 } as const;
