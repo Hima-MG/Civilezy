@@ -7,10 +7,10 @@ import { WHATSAPP_NUMBER, WHATSAPP_DISPLAY } from "@/lib/constants";
 // ─── Data ──────────────────────────────────────────────────────────────────
 
 const NEW_COURSES: RenewalCourse[] = [
-  { code: "1043", name: "Civil PSC – ITI",         renewLink: "https://rzp.io/rzp/civil-psc-iti-level" },
-  { code: "1044", name: "Civil PSC – Diploma",     renewLink: "https://rzp.io/rzp/civil-psc-diploma-level" },
-  { code: "1045", name: "Civil PSC – B.Tech / AE", renewLink: "https://rzp.io/rzp/civil-psc-btech-level" },
-  { code: "1046", name: "Civil PSC – Surveyor",    renewLink: "https://rzp.io/rzp/civil-psc-surveyor-level" },
+  { code: "1039", name: "Civil PSC – ITI",         renewLink: "https://rzp.io/rzp/civil-psc-iti-level" },
+  { code: "1040", name: "Civil PSC – Diploma",     renewLink: "https://rzp.io/rzp/civil-psc-diploma-level" },
+  { code: "1041", name: "Civil PSC – B.Tech / AE", renewLink: "https://rzp.io/rzp/civil-psc-btech-level" },
+  { code: "1042", name: "Civil PSC – Surveyor",    renewLink: "https://rzp.io/rzp/civil-psc-surveyor-level" },
 ];
 
 const BT  = "https://rzp.io/rzp/btech-level-course";
@@ -20,28 +20,28 @@ const SRV = "https://rzp.io/rzp/surveyor-grade2";
 
 const OLD_COURSES: RenewalCourse[] = [
   // ── B.Tech ──
-  { code: "1001", name: "B.TECH — Diamond Plan (12 Month)", tier: "Diamond",    validity: "12 M", amount: "₹25,000", renewLink: BT },
-  { code: "1002", name: "B.TECH — Diamond Plan (6 Month)",  tier: "Diamond",    validity: "6 M",  amount: "₹15,000", renewLink: BT },
-  { code: "1003", name: "B.TECH — Diamond Plan (3 Month)",  tier: "Diamond",    validity: "3 M",  amount: "₹7,800",  renewLink: BT },
-  { code: "1004", name: "B.TECH — Diamond Plan (1 Month)",  tier: "Diamond",    validity: "1 M",  amount: "₹3,000",  renewLink: BT },
-  { code: "1005", name: "B.TECH — Gold Plan (12 Month)",    tier: "Gold",       validity: "12 M", amount: "₹18,000", renewLink: BT },
-  { code: "1006", name: "B.TECH — Gold Plan (6 Month)",     tier: "Gold",       validity: "6 M",  amount: "₹10,200", renewLink: BT },
-  { code: "1007", name: "B.TECH — Gold Plan (3 Month)",     tier: "Gold",       validity: "3 M",  amount: "₹5,400",  renewLink: BT },
-  { code: "1008", name: "B.TECH — Gold Plan (1 Month)",     tier: "Gold",       validity: "1 M",  amount: "₹2,000",  renewLink: BT },
-  { code: "1009", name: "B.TECH — Silver Plan (12 Month)",  tier: "Silver",     validity: "12 M", amount: "₹9,000",  renewLink: BT },
-  { code: "1010", name: "B.TECH — Silver Plan (6 Month)",   tier: "Silver",     validity: "6 M",  amount: "₹5,200",  renewLink: BT },
-  { code: "1011", name: "B.TECH — Silver Plan (3 Month)",   tier: "Silver",     validity: "3 M",  amount: "₹2,700",  renewLink: BT },
-  { code: "1012", name: "B.TECH — Silver Plan (1 Month)",   tier: "Silver",     validity: "1 M",  amount: "₹1,000",  renewLink: BT },
+  { code: "1001", name: "B.TECH — Diamond Plan (12 Month)", tier: "Diamond",    validity: "12 M", amount: "₹25,000", renewLink: "https://rzp.io/rzp/btech-diamond-twelve-months" },
+  { code: "1002", name: "B.TECH — Diamond Plan (6 Month)",  tier: "Diamond",    validity: "6 M",  amount: "₹15,000", renewLink: "https://rzp.io/rzp/btech-diamond-six-months" },
+  { code: "1003", name: "B.TECH — Diamond Plan (3 Month)",  tier: "Diamond",    validity: "3 M",  amount: "₹7,800",  renewLink: "https://rzp.io/rzp/btech-diamond-three-months"},
+  { code: "1004", name: "B.TECH — Diamond Plan (1 Month)",  tier: "Diamond",    validity: "1 M",  amount: "₹3,000",  renewLink: "https://rzp.io/rzp/btech-diamond-one-months" },
+  { code: "1005", name: "B.TECH — Gold Plan (12 Month)",    tier: "Gold",       validity: "12 M", amount: "₹18,000", renewLink: "https://rzp.io/rzp/btech-gold-twelve-months" },
+  { code: "1006", name: "B.TECH — Gold Plan (6 Month)",     tier: "Gold",       validity: "6 M",  amount: "₹10,200", renewLink: "https://rzp.io/rzp/btech-gold-six-months" },
+  { code: "1007", name: "B.TECH — Gold Plan (3 Month)",     tier: "Gold",       validity: "3 M",  amount: "₹5,400",  renewLink: "https://rzp.io/rzp/btech-gold-three-months" },
+  { code: "1008", name: "B.TECH — Gold Plan (1 Month)",     tier: "Gold",       validity: "1 M",  amount: "₹2,000",  renewLink: "https://rzp.io/rzp/btech-gold-one-months" },
+  { code: "1009", name: "B.TECH — Silver Plan (12 Month)",  tier: "Silver",     validity: "12 M", amount: "₹9,000",  renewLink: "https://rzp.io/rzp/btech-silver-twelve-months" },
+  { code: "1010", name: "B.TECH — Silver Plan (6 Month)",   tier: "Silver",     validity: "6 M",  amount: "₹5,200",  renewLink: "https://rzp.io/rzp/btech-silver-six-months" },
+  { code: "1011", name: "B.TECH — Silver Plan (3 Month)",   tier: "Silver",     validity: "3 M",  amount: "₹2,700",  renewLink:  "https://rzp.io/rzp/btech-silver-three-months"},
+  { code: "1012", name: "B.TECH — Silver Plan (1 Month)",   tier: "Silver",     validity: "1 M",  amount: "₹1,000",  renewLink: "https://rzp.io/rzp/btech-silver-one-month" },
   // ── Diploma ──
-  { code: "1013", name: "DIPLOMA — Diamond Plan (12 Month)", tier: "Diamond", validity: "12 M", amount: "₹20,000", renewLink: DIP },
-  { code: "1014", name: "DIPLOMA — Diamond Plan (6 Month)",  tier: "Diamond", validity: "6 M",  amount: "₹12,000", renewLink: DIP },
-  { code: "1015", name: "DIPLOMA — Diamond Plan (3 Month)",  tier: "Diamond", validity: "3 M",  amount: "₹6,200",  renewLink: DIP },
-  { code: "1016", name: "DIPLOMA — Diamond Plan (1 Month)",  tier: "Diamond", validity: "1 M",  amount: "₹2,400",  renewLink: DIP },
-  { code: "1017", name: "DIPLOMA — Gold Plan (12 Month)",    tier: "Gold",    validity: "12 M", amount: "₹14,000", renewLink: DIP },
-  { code: "1018", name: "DIPLOMA — Gold Plan (6 Month)",     tier: "Gold",    validity: "6 M",  amount: "₹8,000",  renewLink: DIP },
+  { code: "1013", name: "DIPLOMA — Diamond Plan (12 Month)", tier: "Diamond", validity: "12 M", amount: "₹20,000", renewLink: "https://rzp.io/rzp/diploma-diamond-twelve-month" },
+  { code: "1014", name: "DIPLOMA — Diamond Plan (6 Month)",  tier: "Diamond", validity: "6 M",  amount: "₹12,000", renewLink: "https://rzp.io/rzp/diploma-diamond-six-month" },
+  { code: "1015", name: "DIPLOMA — Diamond Plan (3 Month)",  tier: "Diamond", validity: "3 M",  amount: "₹6,200",  renewLink: "https://rzp.io/rzp/diploma-diamond-three-month" },
+  { code: "1016", name: "DIPLOMA — Diamond Plan (1 Month)",  tier: "Diamond", validity: "1 M",  amount: "₹2,400",  renewLink: "https://rzp.io/rzp/diploma-diamond-one-month" },
+  { code: "1017", name: "DIPLOMA — Gold Plan (12 Month)",    tier: "Gold",    validity: "12 M", amount: "₹14,000", renewLink: "https://rzp.io/rzp/diploma-gold-twelve-month" },
+  { code: "1018", name: "DIPLOMA — Gold Plan (6 Month)",     tier: "Gold",    validity: "6 M",  amount: "₹8,000",  renewLink: "https://rzp.io/rzp/diploma-gold-six-month" },
   { code: "1019", name: "DIPLOMA — Gold Plan (3 Month)",     tier: "Gold",    validity: "3 M",  amount: "₹4,200",  renewLink: "https://rzp.io/rzp/diploma-gold-three-month" },
   { code: "1020", name: "DIPLOMA — Gold Plan (1 Month)",     tier: "Gold",    validity: "1 M",  amount: "₹1,600",  renewLink: "https://rzp.io/rzp/diploma-gold-one-month"   },
-  { code: "1021", name: "DIPLOMA — Silver Plan (12 Month)",  tier: "Silver",  validity: "12 M", amount: "₹7,000",  renewLink: DIP },
+  { code: "1021", name: "DIPLOMA — Silver Plan (12 Month)",  tier: "Silver",  validity: "12 M", amount: "₹7,000",  renewLink: "https://rzp.io/rzp/diploma-silver-twelve-month" },
   { code: "1022", name: "DIPLOMA — Silver Plan (6 Month)",   tier: "Silver",  validity: "6 M",  amount: "₹4,000",  renewLink: "https://rzp.io/rzp/diploma-silver-six-month"   },
   { code: "1023", name: "DIPLOMA — Silver Plan (3 Month)",   tier: "Silver",  validity: "3 M",  amount: "₹2,100",  renewLink: "https://rzp.io/rzp/diploma-silver-three-month" },
   { code: "1024", name: "DIPLOMA — Silver Plan (1 Month)",   tier: "Silver",  validity: "1 M",  amount: "₹800",    renewLink: "https://rzp.io/rzp/diploma-silver-one-month"   },
@@ -59,12 +59,12 @@ const OLD_COURSES: RenewalCourse[] = [
   { code: "1035", name: "ITI — Silver Plan (3 Month)",   tier: "Silver",  validity: "3 M",  amount: "₹1,600",  renewLink: "https://rzp.io/rzp/iti-silver-three-months"   },
   { code: "1036", name: "ITI — Silver Plan (1 Month)",   tier: "Silver",  validity: "1 M",  amount: "₹600",    renewLink: "https://rzp.io/rzp/iti-silver-one-month"      },
   // ── Special ──
-  { code: "1037", name: "Overseer Live (ITI Level) — Batch 1", tier: "Live Batch", validity: "1 M", amount: "₹1,000", renewLink: ITI },
-  { code: "1038", name: "KWA Grade II Course",                  tier: "Grade II",   validity: "1 M", amount: "₹1,000", renewLink: ITI },
-  { code: "1039", name: "Civil PSC — B.Tech Level Course",      tier: "Level Crs",  validity: "1 M", amount: "₹1,800", renewLink: BT  },
-  { code: "1040", name: "Civil PSC — Diploma Level Course",     tier: "Level Crs",  validity: "1 M", amount: "₹1,400", renewLink: DIP },
-  { code: "1041", name: "Civil PSC — ITI Level Course",         tier: "Level Crs",  validity: "1 M", amount: "₹1,000", renewLink: ITI },
-  { code: "1042", name: "Civil PSC — Surveyor Level Course",    tier: "Level Crs",  validity: "1 M", amount: "₹1,000", renewLink: SRV },
+  { code: "1037", name: "Overseer Live (ITI Level) — Batch 1", tier: "Live Batch", validity: "1 M", amount: "₹1,000", renewLink: "https://rzp.io/rzp/live-overseer-iti"},
+  { code: "1038", name: "KWA Grade II Course",                  tier: "Grade II",   validity: "1 M", amount: "₹1,000", renewLink:"https://rzp.io/rzp/kwa-gradeii" },
+  { code: "1039", name: "Civil PSC — B.Tech Level Course",      tier: "Level Crs",  validity: "1 M", amount: "₹1,800", renewLink: "https://rzp.io/rzp/btech-level-course"  },
+  { code: "1040", name: "Civil PSC — Diploma Level Course",     tier: "Level Crs",  validity: "1 M", amount: "₹1,400", renewLink: "https://rzp.io/rzp/diploma-level-course" },
+  { code: "1041", name: "Civil PSC — ITI Level Course",         tier: "Level Crs",  validity: "1 M", amount: "₹1,000", renewLink: "https://rzp.io/rzp/overseer-revised-course" },
+  { code: "1042", name: "Civil PSC — Surveyor Level Course",    tier: "Level Crs",  validity: "1 M", amount: "₹1,000", renewLink: "https://rzp.io/rzp/surveyor-grade2" },
 ];
 
 const CONDITIONS = [

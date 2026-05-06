@@ -7,6 +7,7 @@ export interface RenewalCourse {
   validity?: string;
   amount?:   string;
   renewLink: string;
+  category?: string;
 }
 
 interface RenewalTableProps {
