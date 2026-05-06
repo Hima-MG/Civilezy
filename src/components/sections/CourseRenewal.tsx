@@ -7,10 +7,10 @@ import { WHATSAPP_NUMBER, WHATSAPP_DISPLAY } from "@/lib/constants";
 // ─── Data ──────────────────────────────────────────────────────────────────
 
 const NEW_COURSES: RenewalCourse[] = [
-  { code: "2001", name: "Civil PSC – ITI",         renewLink: "https://rzp.io/rzp/civil-psc-iti-level" },
-  { code: "2002", name: "Civil PSC – Diploma",     renewLink: "https://rzp.io/rzp/civil-psc-diploma-level" },
-  { code: "2003", name: "Civil PSC – B.Tech / AE", renewLink: "https://rzp.io/rzp/civil-psc-btech-level" },
-  { code: "2004", name: "Civil PSC – Surveyor",    renewLink: "https://rzp.io/rzp/civil-psc-surveyor-level" },
+  { code: "1043", name: "Civil PSC – ITI",         renewLink: "https://rzp.io/rzp/civil-psc-iti-level" },
+  { code: "1044", name: "Civil PSC – Diploma",     renewLink: "https://rzp.io/rzp/civil-psc-diploma-level" },
+  { code: "1045", name: "Civil PSC – B.Tech / AE", renewLink: "https://rzp.io/rzp/civil-psc-btech-level" },
+  { code: "1046", name: "Civil PSC – Surveyor",    renewLink: "https://rzp.io/rzp/civil-psc-surveyor-level" },
 ];
 
 const BT  = "https://rzp.io/rzp/btech-level-course";
@@ -20,44 +20,44 @@ const SRV = "https://rzp.io/rzp/surveyor-grade2";
 
 const OLD_COURSES: RenewalCourse[] = [
   // ── B.Tech ──
-  { code: "1001", name: "B.TECH — Diamond Plan (12 Month)", tier: "Diamond",    validity: "12 M", amount: "₹25,000", renewLink: BT  },
-  { code: "1002", name: "B.TECH — Diamond Plan (6 Month)",  tier: "Diamond",    validity: "6 M",  amount: "₹15,000", renewLink: BT  },
-  { code: "1003", name: "B.TECH — Diamond Plan (3 Month)",  tier: "Diamond",    validity: "3 M",  amount: "₹7,800",  renewLink: BT  },
-  { code: "1004", name: "B.TECH — Diamond Plan (1 Month)",  tier: "Diamond",    validity: "1 M",  amount: "₹3,000",  renewLink: BT  },
-  { code: "1005", name: "B.TECH — Gold Plan (12 Month)",    tier: "Gold",       validity: "12 M", amount: "₹18,000", renewLink: BT  },
-  { code: "1006", name: "B.TECH — Gold Plan (6 Month)",     tier: "Gold",       validity: "6 M",  amount: "₹10,200", renewLink: BT  },
-  { code: "1007", name: "B.TECH — Gold Plan (3 Month)",     tier: "Gold",       validity: "3 M",  amount: "₹5,400",  renewLink: BT  },
-  { code: "1008", name: "B.TECH — Gold Plan (1 Month)",     tier: "Gold",       validity: "1 M",  amount: "₹2,000",  renewLink: BT  },
-  { code: "1009", name: "B.TECH — Silver Plan (12 Month)",  tier: "Silver",     validity: "12 M", amount: "₹9,000",  renewLink: BT  },
-  { code: "1010", name: "B.TECH — Silver Plan (6 Month)",   tier: "Silver",     validity: "6 M",  amount: "₹5,200",  renewLink: BT  },
-  { code: "1011", name: "B.TECH — Silver Plan (3 Month)",   tier: "Silver",     validity: "3 M",  amount: "₹2,700",  renewLink: BT  },
-  { code: "1012", name: "B.TECH — Silver Plan (1 Month)",   tier: "Silver",     validity: "1 M",  amount: "₹1,000",  renewLink: BT  },
+  { code: "1001", name: "B.TECH — Diamond Plan (12 Month)", tier: "Diamond",    validity: "12 M", amount: "₹25,000", renewLink: BT },
+  { code: "1002", name: "B.TECH — Diamond Plan (6 Month)",  tier: "Diamond",    validity: "6 M",  amount: "₹15,000", renewLink: BT },
+  { code: "1003", name: "B.TECH — Diamond Plan (3 Month)",  tier: "Diamond",    validity: "3 M",  amount: "₹7,800",  renewLink: BT },
+  { code: "1004", name: "B.TECH — Diamond Plan (1 Month)",  tier: "Diamond",    validity: "1 M",  amount: "₹3,000",  renewLink: BT },
+  { code: "1005", name: "B.TECH — Gold Plan (12 Month)",    tier: "Gold",       validity: "12 M", amount: "₹18,000", renewLink: BT },
+  { code: "1006", name: "B.TECH — Gold Plan (6 Month)",     tier: "Gold",       validity: "6 M",  amount: "₹10,200", renewLink: BT },
+  { code: "1007", name: "B.TECH — Gold Plan (3 Month)",     tier: "Gold",       validity: "3 M",  amount: "₹5,400",  renewLink: BT },
+  { code: "1008", name: "B.TECH — Gold Plan (1 Month)",     tier: "Gold",       validity: "1 M",  amount: "₹2,000",  renewLink: BT },
+  { code: "1009", name: "B.TECH — Silver Plan (12 Month)",  tier: "Silver",     validity: "12 M", amount: "₹9,000",  renewLink: BT },
+  { code: "1010", name: "B.TECH — Silver Plan (6 Month)",   tier: "Silver",     validity: "6 M",  amount: "₹5,200",  renewLink: BT },
+  { code: "1011", name: "B.TECH — Silver Plan (3 Month)",   tier: "Silver",     validity: "3 M",  amount: "₹2,700",  renewLink: BT },
+  { code: "1012", name: "B.TECH — Silver Plan (1 Month)",   tier: "Silver",     validity: "1 M",  amount: "₹1,000",  renewLink: BT },
   // ── Diploma ──
-  { code: "1013", name: "DIPLOMA — Diamond Plan (12 Month)",tier: "Diamond",    validity: "12 M", amount: "₹20,000", renewLink: DIP },
-  { code: "1014", name: "DIPLOMA — Diamond Plan (6 Month)", tier: "Diamond",    validity: "6 M",  amount: "₹12,000", renewLink: DIP },
-  { code: "1015", name: "DIPLOMA — Diamond Plan (3 Month)", tier: "Diamond",    validity: "3 M",  amount: "₹6,200",  renewLink: DIP },
-  { code: "1016", name: "DIPLOMA — Diamond Plan (1 Month)", tier: "Diamond",    validity: "1 M",  amount: "₹2,400",  renewLink: DIP },
-  { code: "1017", name: "DIPLOMA — Gold Plan (12 Month)",   tier: "Gold",       validity: "12 M", amount: "₹14,000", renewLink: DIP },
-  { code: "1018", name: "DIPLOMA — Gold Plan (6 Month)",    tier: "Gold",       validity: "6 M",  amount: "₹8,000",  renewLink: DIP },
-  { code: "1019", name: "DIPLOMA — Gold Plan (3 Month)",    tier: "Gold",       validity: "3 M",  amount: "₹4,200",  renewLink: DIP },
-  { code: "1020", name: "DIPLOMA — Gold Plan (1 Month)",    tier: "Gold",       validity: "1 M",  amount: "₹1,600",  renewLink: DIP },
-  { code: "1021", name: "DIPLOMA — Silver Plan (12 Month)", tier: "Silver",     validity: "12 M", amount: "₹7,000",  renewLink: DIP },
-  { code: "1022", name: "DIPLOMA — Silver Plan (6 Month)",  tier: "Silver",     validity: "6 M",  amount: "₹4,000",  renewLink: DIP },
-  { code: "1023", name: "DIPLOMA — Silver Plan (3 Month)",  tier: "Silver",     validity: "3 M",  amount: "₹2,100",  renewLink: DIP },
-  { code: "1024", name: "DIPLOMA — Silver Plan (1 Month)",  tier: "Silver",     validity: "1 M",  amount: "₹800",    renewLink: DIP },
+  { code: "1013", name: "DIPLOMA — Diamond Plan (12 Month)", tier: "Diamond", validity: "12 M", amount: "₹20,000", renewLink: DIP },
+  { code: "1014", name: "DIPLOMA — Diamond Plan (6 Month)",  tier: "Diamond", validity: "6 M",  amount: "₹12,000", renewLink: DIP },
+  { code: "1015", name: "DIPLOMA — Diamond Plan (3 Month)",  tier: "Diamond", validity: "3 M",  amount: "₹6,200",  renewLink: DIP },
+  { code: "1016", name: "DIPLOMA — Diamond Plan (1 Month)",  tier: "Diamond", validity: "1 M",  amount: "₹2,400",  renewLink: DIP },
+  { code: "1017", name: "DIPLOMA — Gold Plan (12 Month)",    tier: "Gold",    validity: "12 M", amount: "₹14,000", renewLink: DIP },
+  { code: "1018", name: "DIPLOMA — Gold Plan (6 Month)",     tier: "Gold",    validity: "6 M",  amount: "₹8,000",  renewLink: DIP },
+  { code: "1019", name: "DIPLOMA — Gold Plan (3 Month)",     tier: "Gold",    validity: "3 M",  amount: "₹4,200",  renewLink: "https://rzp.io/rzp/diploma-gold-three-month" },
+  { code: "1020", name: "DIPLOMA — Gold Plan (1 Month)",     tier: "Gold",    validity: "1 M",  amount: "₹1,600",  renewLink: "https://rzp.io/rzp/diploma-gold-one-month"   },
+  { code: "1021", name: "DIPLOMA — Silver Plan (12 Month)",  tier: "Silver",  validity: "12 M", amount: "₹7,000",  renewLink: DIP },
+  { code: "1022", name: "DIPLOMA — Silver Plan (6 Month)",   tier: "Silver",  validity: "6 M",  amount: "₹4,000",  renewLink: "https://rzp.io/rzp/diploma-silver-six-month"   },
+  { code: "1023", name: "DIPLOMA — Silver Plan (3 Month)",   tier: "Silver",  validity: "3 M",  amount: "₹2,100",  renewLink: "https://rzp.io/rzp/diploma-silver-three-month" },
+  { code: "1024", name: "DIPLOMA — Silver Plan (1 Month)",   tier: "Silver",  validity: "1 M",  amount: "₹800",    renewLink: "https://rzp.io/rzp/diploma-silver-one-month"   },
   // ── ITI ──
-  { code: "1025", name: "ITI — Diamond Plan (12 Month)",    tier: "Diamond",    validity: "12 M", amount: "₹15,500", renewLink: ITI },
-  { code: "1026", name: "ITI — Diamond Plan (6 Month)",     tier: "Diamond",    validity: "6 M",  amount: "₹9,000",  renewLink: ITI },
-  { code: "1027", name: "ITI — Diamond Plan (3 Month)",     tier: "Diamond",    validity: "3 M",  amount: "₹4,800",  renewLink: ITI },
-  { code: "1028", name: "ITI — Diamond Plan (1 Month)",     tier: "Diamond",    validity: "1 M",  amount: "₹1,800",  renewLink: ITI },
-  { code: "1029", name: "ITI — Gold Plan (12 Month)",       tier: "Gold",       validity: "12 M", amount: "₹10,500", renewLink: ITI },
-  { code: "1030", name: "ITI — Gold Plan (6 Month)",        tier: "Gold",       validity: "6 M",  amount: "₹6,000",  renewLink: ITI },
-  { code: "1031", name: "ITI — Gold Plan (3 Month)",        tier: "Gold",       validity: "3 M",  amount: "₹3,200",  renewLink: ITI },
-  { code: "1032", name: "ITI — Gold Plan (1 Month)",        tier: "Gold",       validity: "1 M",  amount: "₹1,200",  renewLink: ITI },
-  { code: "1033", name: "ITI — Silver Plan (12 Month)",     tier: "Silver",     validity: "12 M", amount: "₹5,500",  renewLink: ITI },
-  { code: "1034", name: "ITI — Silver Plan (6 Month)",      tier: "Silver",     validity: "6 M",  amount: "₹3,000",  renewLink: ITI },
-  { code: "1035", name: "ITI — Silver Plan (3 Month)",      tier: "Silver",     validity: "3 M",  amount: "₹1,600",  renewLink: ITI },
-  { code: "1036", name: "ITI — Silver Plan (1 Month)",      tier: "Silver",     validity: "1 M",  amount: "₹600",    renewLink: ITI },
+  { code: "1025", name: "ITI — Diamond Plan (12 Month)", tier: "Diamond", validity: "12 M", amount: "₹15,500", renewLink: "https://rzp.io/rzp/iti-diamond-twelve-months" },
+  { code: "1026", name: "ITI — Diamond Plan (6 Month)",  tier: "Diamond", validity: "6 M",  amount: "₹9,000",  renewLink: "https://rzp.io/rzp/iti-diamond-six-months"    },
+  { code: "1027", name: "ITI — Diamond Plan (3 Month)",  tier: "Diamond", validity: "3 M",  amount: "₹4,800",  renewLink: "https://rzp.io/rzp/iti-diamond-three-months"  },
+  { code: "1028", name: "ITI — Diamond Plan (1 Month)",  tier: "Diamond", validity: "1 M",  amount: "₹1,800",  renewLink: "https://rzp.io/rzp/iti-diamond-one-month"     },
+  { code: "1029", name: "ITI — Gold Plan (12 Month)",    tier: "Gold",    validity: "12 M", amount: "₹10,500", renewLink: "https://rzp.io/rzp/iti-gold-twelve-months"    },
+  { code: "1030", name: "ITI — Gold Plan (6 Month)",     tier: "Gold",    validity: "6 M",  amount: "₹6,000",  renewLink: "https://rzp.io/rzp/iti-gold-six-months"       },
+  { code: "1031", name: "ITI — Gold Plan (3 Month)",     tier: "Gold",    validity: "3 M",  amount: "₹3,200",  renewLink: "https://rzp.io/rzp/iti-gold-three-months"     },
+  { code: "1032", name: "ITI — Gold Plan (1 Month)",     tier: "Gold",    validity: "1 M",  amount: "₹1,200",  renewLink: "https://rzp.io/rzp/iti-gold-one-months"       },
+  { code: "1033", name: "ITI — Silver Plan (12 Month)",  tier: "Silver",  validity: "12 M", amount: "₹5,500",  renewLink: "https://rzp.io/rzp/iti-silver-twelve-months"  },
+  { code: "1034", name: "ITI — Silver Plan (6 Month)",   tier: "Silver",  validity: "6 M",  amount: "₹3,000",  renewLink: "https://rzp.io/rzp/iti-silver-six-months"     },
+  { code: "1035", name: "ITI — Silver Plan (3 Month)",   tier: "Silver",  validity: "3 M",  amount: "₹1,600",  renewLink: "https://rzp.io/rzp/iti-silver-three-months"   },
+  { code: "1036", name: "ITI — Silver Plan (1 Month)",   tier: "Silver",  validity: "1 M",  amount: "₹600",    renewLink: "https://rzp.io/rzp/iti-silver-one-month"      },
   // ── Special ──
   { code: "1037", name: "Overseer Live (ITI Level) — Batch 1", tier: "Live Batch", validity: "1 M", amount: "₹1,000", renewLink: ITI },
   { code: "1038", name: "KWA Grade II Course",                  tier: "Grade II",   validity: "1 M", amount: "₹1,000", renewLink: ITI },
@@ -107,6 +107,14 @@ const CONDITIONS = [
     border:"rgba(56,189,248,0.28)",
     title: "Support During Office Hours Only",
     body:  "Renewal support is available only during office hours: 10 AM – 5 PM (Mon – Sat). Queries outside these hours will be addressed the next business day.",
+  },
+  {
+    icon: "💻",
+    color: "#f59e0b",
+    bg:    "rgba(245,158,11,0.10)",
+    border:"rgba(245,158,11,0.28)",
+    title: "Renewal via Website Only — Not Available on App",
+    body:  "Course renewal must be completed through the CivilEzy website (civilezy.in). Renewal is not available through the CivilEzy mobile app.",
   },
 ];
 
@@ -525,24 +533,70 @@ export default function CourseRenewal() {
               marginBottom: "40px",
             }}
           >
-            {["Login", "Dashboard", "Membership", "Select Membership"].map((step, i, arr) => (
+            {[
+              { label: "Login", href: "https://learn.civilezy.in/en/signup" },
+              { label: "Dashboard", href: null },
+              { label: "Membership", href: null },
+              { label: "Select Membership", href: null },
+            ].map((step, i, arr) => (
               <>
-                <span
-                  key={step}
-                  style={{
-                    padding: "8px 20px",
-                    borderRadius: "8px",
-                    background: "rgba(255,133,52,0.12)",
-                    border: "1px solid rgba(255,133,52,0.28)",
-                    color: "#FF8534",
-                    fontSize: "0.85rem",
-                    fontWeight: 700,
-                    fontFamily: "var(--font-rajdhani), Rajdhani, sans-serif",
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  {step}
-                </span>
+                {step.href ? (
+                  <a
+                    key={step.label}
+                    href={step.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: "8px 20px",
+                      borderRadius: "8px",
+                      background: "rgba(255,133,52,0.18)",
+                      border: "1px solid rgba(255,133,52,0.45)",
+                      color: "#FF8534",
+                      fontSize: "0.85rem",
+                      fontWeight: 700,
+                      fontFamily: "var(--font-rajdhani), Rajdhani, sans-serif",
+                      letterSpacing: "0.05em",
+                      textDecoration: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      transition: "background 0.15s, box-shadow 0.15s",
+                      boxShadow: "0 2px 12px rgba(255,133,52,0.18)",
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,133,52,0.28)";
+                      (e.currentTarget as HTMLAnchorElement).style.boxShadow  = "0 4px 18px rgba(255,133,52,0.35)";
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLAnchorElement).style.background = "rgba(255,133,52,0.18)";
+                      (e.currentTarget as HTMLAnchorElement).style.boxShadow  = "0 2px 12px rgba(255,133,52,0.18)";
+                    }}
+                  >
+                    {step.label}
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </a>
+                ) : (
+                  <span
+                    key={step.label}
+                    style={{
+                      padding: "8px 20px",
+                      borderRadius: "8px",
+                      background: "rgba(255,133,52,0.12)",
+                      border: "1px solid rgba(255,133,52,0.28)",
+                      color: "#FF8534",
+                      fontSize: "0.85rem",
+                      fontWeight: 700,
+                      fontFamily: "var(--font-rajdhani), Rajdhani, sans-serif",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    {step.label}
+                  </span>
+                )}
                 {i < arr.length - 1 && (
                   <span key={`arrow-${i}`} style={{ color: "rgba(255,255,255,0.3)", fontSize: "1.1rem" }}>→</span>
                 )}
