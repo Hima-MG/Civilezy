@@ -279,6 +279,18 @@ export default function Navbar() {
               Blog
             </Link>
           </li>
+
+          {/* Renewal */}
+          <li style={{ listStyle: "none" }}>
+            <Link
+              href="/renew"
+              style={navLinkStyle(pathname?.startsWith("/renew") ?? false)}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "#FF8534"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = (pathname?.startsWith("/renew") ?? false) ? "#FF8534" : "rgba(255,255,255,0.85)"; }}
+            >
+              Renewal
+            </Link>
+          </li>
         </ul>
 
         {/* ── Login + Hamburger ── */}
@@ -461,6 +473,17 @@ export default function Navbar() {
               style={{ display: "block", color: (pathname?.startsWith("/blog") ?? false) ? "#FF8534" : "rgba(255,255,255,0.85)", textDecoration: "none", fontSize: "16px", fontWeight: (pathname?.startsWith("/blog") ?? false) ? 700 : 500, padding: "14px 0", fontFamily: "Nunito, sans-serif" }}
             >
               Blog
+            </Link>
+          </li>
+
+          {/* Renewal */}
+          <li style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <Link
+              href="/renew"
+              onClick={() => setMenuOpen(false)}
+              style={{ display: "block", color: (pathname?.startsWith("/renew") ?? false) ? "#FF8534" : "rgba(255,255,255,0.85)", textDecoration: "none", fontSize: "16px", fontWeight: (pathname?.startsWith("/renew") ?? false) ? 700 : 500, padding: "14px 0", fontFamily: "Nunito, sans-serif" }}
+            >
+              Renewal
             </Link>
           </li>
         </ul>
