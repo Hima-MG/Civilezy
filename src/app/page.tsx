@@ -2,7 +2,6 @@ import Hero               from "@/components/sections/Hero";
 import PainSection         from "@/components/sections/PainSection";
 import SolutionSection     from "@/components/sections/SolutionSection";
 import LevelsSection       from "@/components/sections/LevelsSection";
-import EbooksSection       from "@/components/sections/EbooksSection";
 import GameArenaSection    from "@/components/sections/GameArenaSection";
 // import QuizModesSection from "@/components/sections/QuizModesSection";
 
@@ -25,7 +24,6 @@ export default function Home() {
       <PainSection />
       <SolutionSection />
       <LevelsSection />
-      <EbooksSection />
       <GameArenaSection />
       {/* <QuizModesSection /> */}
       <ComparisonSection />

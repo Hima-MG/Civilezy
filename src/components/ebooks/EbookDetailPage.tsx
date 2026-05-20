@@ -104,299 +104,354 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
           </nav>
         </div>
 
-        {/* ── Hero ── */}
+        {/* ── Premium Hero Banner ── */}
         <section
           style={{
-            background: "linear-gradient(135deg, #091729 0%, #0B1E3D 60%, #0D2347 100%)",
-            borderBottom: "1px solid rgba(245,158,11,0.15)",
-            padding: "56px 5% 60px",
+            background: "linear-gradient(160deg, #020B17 0%, #071526 35%, #0C2040 70%, #091729 100%)",
+            position: "relative",
+            overflow: "hidden",
+            borderBottom: "1px solid rgba(245,158,11,0.1)",
           }}
         >
-          <div style={{ maxWidth: "1100px", margin: "0 auto" }} className="hero-grid">
-            {/* Left: book cover */}
-            <div className="hero-cover">
-              <HeroCover ebook={ebook} />
-              {/* Countdown */}
+          {/* Blueprint grid */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute", inset: 0,
+              backgroundImage:
+                "linear-gradient(rgba(245,158,11,0.025) 1px, transparent 1px)," +
+                "linear-gradient(90deg, rgba(245,158,11,0.025) 1px, transparent 1px)",
+              backgroundSize: "55px 55px",
+              pointerEvents: "none",
+            }}
+          />
+          {/* Ambient glow */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: "10%", right: "25%",
+              width: "600px", height: "600px",
+              borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(245,158,11,0.055) 0%, transparent 65%)",
+              pointerEvents: "none",
+            }}
+          />
+
+          {/* Hero content */}
+          <div className="dp-hero-wrap">
+
+            {/* LEFT */}
+            <div className="dp-hero-left">
+              {/* Exam date pill */}
+              {ebook.examDate && (
+                <div
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: "8px",
+                    background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.28)",
+                    borderRadius: "8px", padding: "5px 14px",
+                    fontSize: "11px", fontWeight: 700, letterSpacing: "0.5px",
+                    color: "#FCD34D", fontFamily: "Nunito, sans-serif", marginBottom: "18px",
+                  }}
+                >
+                  📅 EXAM ON&nbsp;<strong>JUNE 30</strong>&nbsp;·&nbsp;{ebook.subtitle.toUpperCase()}
+                </div>
+              )}
+
+              {/* NEW LAUNCH badge */}
+              {ebook.isNew && (
+                <div
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: "8px",
+                    background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.28)",
+                    borderRadius: "20px", padding: "4px 14px",
+                    fontSize: "11px", fontWeight: 800, letterSpacing: "1px",
+                    color: "#34D399", fontFamily: "Nunito, sans-serif", marginBottom: "24px",
+                  }}
+                >
+                  <span className="dp-pulse" />
+                  🚀 NEW LAUNCH
+                </div>
+              )}
+
+              {/* Main heading */}
+              <h1 className="dp-hero-title">
+                {ebook.title.replace("E-Book", "")}
+                <br />
+                <span className="dp-hero-title-gold">E-Book</span>
+              </h1>
+
+              {/* Subtitle */}
               <div
                 style={{
-                  marginTop: "20px",
-                  background: "rgba(239,68,68,0.1)",
-                  border: "1px solid rgba(239,68,68,0.3)",
-                  borderRadius: "16px",
-                  padding: "16px",
-                  textAlign: "center",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: 800,
-                    color: "#F87171",
-                    letterSpacing: "1px",
-                    fontFamily: "Nunito, sans-serif",
-                    marginBottom: "10px",
-                  }}
-                >
-                  ⏰ EXAM COUNTDOWN — JUNE 30
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: "10px",
-                  }}
-                >
-                  {[
-                    { val: timeLeft.days,    label: "Days"    },
-                    { val: timeLeft.hours,   label: "Hours"   },
-                    { val: timeLeft.minutes, label: "Mins"    },
-                    { val: timeLeft.seconds, label: "Secs"    },
-                  ].map(({ val, label }) => (
-                    <div key={label} style={{ textAlign: "center" }}>
-                      <div
-                        style={{
-                          background: "rgba(239,68,68,0.15)",
-                          borderRadius: "8px",
-                          padding: "8px 10px",
-                          minWidth: "44px",
-                          fontFamily: "Rajdhani, sans-serif",
-                          fontSize: "22px",
-                          fontWeight: 700,
-                          color: "#FCA5A5",
-                          lineHeight: 1,
-                        }}
-                      >
-                        {String(val).padStart(2, "0")}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "9px",
-                          color: "rgba(252,165,165,0.6)",
-                          fontFamily: "Nunito, sans-serif",
-                          marginTop: "4px",
-                          fontWeight: 700,
-                          letterSpacing: "0.5px",
-                        }}
-                      >
-                        {label}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Right: info */}
-            <div className="hero-info">
-              {/* Badges */}
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "18px" }}>
-                {ebook.isNew && (
-                  <span style={badgeStyle("green")}>NEW</span>
-                )}
-                {ebook.examBadge && (
-                  <span style={badgeStyle("amber")}>{ebook.examBadge}</span>
-                )}
-                <span style={badgeStyle("blue")}>{ebook.badge}</span>
-              </div>
-
-              <h1
-                style={{
-                  fontFamily: "Rajdhani, sans-serif",
-                  fontSize: "clamp(30px,4vw,48px)",
-                  fontWeight: 700,
-                  color: "#ffffff",
-                  lineHeight: 1.1,
-                  margin: "0 0 8px",
-                }}
-              >
-                {ebook.title}
-              </h1>
-              <p
-                style={{
+                  display: "inline-block",
+                  borderLeft: "3px solid #F59E0B",
+                  paddingLeft: "14px",
                   fontFamily: "Nunito, sans-serif",
-                  fontSize: "18px",
-                  color: "#F59E0B",
-                  fontWeight: 700,
-                  margin: "0 0 6px",
+                  fontSize: "clamp(14px, 1.8vw, 18px)",
+                  fontWeight: 800,
+                  color: "#ffffff",
+                  marginBottom: "14px",
+                  lineHeight: 1.4,
                 }}
               >
                 For {ebook.subtitle}
-              </p>
+              </div>
+
+              {/* Level */}
+              <div
+                style={{
+                  fontFamily: "Nunito, sans-serif", fontSize: "13px",
+                  color: "rgba(255,255,255,0.45)", marginBottom: "18px",
+                  display: "flex", alignItems: "center", gap: "6px",
+                }}
+              >
+                🎓 {ebook.level}
+              </div>
+
+              {/* Tagline */}
               <p
                 style={{
-                  fontFamily: "Nunito, sans-serif",
-                  fontSize: "14px",
-                  color: "rgba(255,255,255,0.5)",
-                  margin: "0 0 20px",
-                  fontStyle: "italic",
+                  fontFamily: "Nunito, sans-serif", fontSize: "14px",
+                  color: "rgba(255,255,255,0.4)", fontStyle: "italic",
+                  marginBottom: "24px",
                 }}
               >
                 &ldquo;{ebook.tagline}&rdquo;
               </p>
 
-              {/* Quick stats */}
-              <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: "10px",
-                  marginBottom: "24px",
-                }}
-              >
-                {[
-                  { icon: "📚", text: `${ebook.modules.length} Modules` },
-                  { icon: "📝", text: "20 Model Exams" },
-                  { icon: "📅", text: ebook.validity },
-                  { icon: "🎯", text: ebook.targetExams.join(" & ") },
-                ].map(({ icon, text }) => (
-                  <div
-                    key={text}
+              {/* Feature pills */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "28px" }}>
+                {ebook.features.map((f) => (
+                  <span
+                    key={f}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      background: "rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "8px",
-                      padding: "6px 12px",
-                      fontSize: "13px",
-                      color: "rgba(255,255,255,0.75)",
+                      background: "rgba(245,158,11,0.08)",
+                      border: "1px solid rgba(245,158,11,0.22)",
+                      color: "#F59E0B",
                       fontFamily: "Nunito, sans-serif",
+                      fontSize: "11px", fontWeight: 700,
+                      padding: "5px 13px", borderRadius: "20px",
                     }}
                   >
-                    <span>{icon}</span>
-                    <span>{text}</span>
-                  </div>
+                    ✓ {f}
+                  </span>
                 ))}
               </div>
 
-              {/* Price block */}
+              {/* Countdown */}
               <div
                 style={{
-                  background: "rgba(245,158,11,0.08)",
-                  border: "1px solid rgba(245,158,11,0.2)",
-                  borderRadius: "14px",
-                  padding: "18px 20px",
-                  marginBottom: "24px",
-                  display: "inline-flex",
-                  flexDirection: "column",
-                  gap: "4px",
+                  display: "inline-flex", alignItems: "center", gap: "12px",
+                  background: "rgba(239,68,68,0.08)",
+                  border: "1px solid rgba(239,68,68,0.25)",
+                  borderRadius: "12px", padding: "10px 18px",
                 }}
               >
-                <div
+                <span
                   style={{
-                    fontFamily: "Rajdhani, sans-serif",
-                    fontSize: "42px",
-                    fontWeight: 700,
-                    color: "#F59E0B",
-                    lineHeight: 1,
+                    fontFamily: "Nunito, sans-serif", fontSize: "11px",
+                    fontWeight: 800, color: "#F87171", letterSpacing: "0.5px",
                   }}
                 >
-                  {ebook.priceDisplay}
-                </div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "rgba(255,255,255,0.45)",
-                    fontFamily: "Nunito, sans-serif",
-                  }}
-                >
-                  {ebook.validity} &nbsp;·&nbsp; One-time payment
-                </div>
-              </div>
-
-              {/* CTA buttons */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px", maxWidth: "400px" }}>
-                <a
-                  href={ebook.previewLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "block",
-                    textAlign: "center",
-                    background: "linear-gradient(135deg, #F59E0B, #D97706)",
-                    color: "#1A0F00",
-                    fontFamily: "Nunito, sans-serif",
-                    fontSize: "16px",
-                    fontWeight: 800,
-                    padding: "15px 0",
-                    borderRadius: "50px",
-                    textDecoration: "none",
-                    boxShadow: "0 6px 24px rgba(245,158,11,0.4)",
-                    transition: "transform 0.2s, box-shadow 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 10px 32px rgba(245,158,11,0.55)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 6px 24px rgba(245,158,11,0.4)";
-                  }}
-                >
-                  👁&nbsp; View Free Preview
-                </a>
-                <a
-                  href={ebook.purchaseLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "block",
-                    textAlign: "center",
-                    background: "linear-gradient(135deg, #FF6200, #FF8534)",
-                    color: "#ffffff",
-                    fontFamily: "Nunito, sans-serif",
-                    fontSize: "15px",
-                    fontWeight: 700,
-                    padding: "14px 0",
-                    borderRadius: "50px",
-                    textDecoration: "none",
-                    boxShadow: "0 6px 24px rgba(255,98,0,0.35)",
-                    transition: "transform 0.2s, box-shadow 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 10px 32px rgba(255,98,0,0.5)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 6px 24px rgba(255,98,0,0.35)";
-                  }}
-                >
-                  Purchase E-Book — {ebook.priceDisplay} →
-                </a>
-                <a
-                  href={waUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    color: "rgba(255,255,255,0.7)",
-                    fontFamily: "Nunito, sans-serif",
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    padding: "12px 0",
-                    borderRadius: "50px",
-                    textDecoration: "none",
-                    transition: "border-color 0.2s, color 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(37,211,102,0.5)";
-                    e.currentTarget.style.color = "#25D366";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
-                    e.currentTarget.style.color = "rgba(255,255,255,0.7)";
-                  }}
-                >
-                  <WhatsAppIcon /> Chat on WhatsApp
-                </a>
+                  ⏰ EXAM COUNTDOWN
+                </span>
+                {[
+                  { val: timeLeft.days, label: "Days" },
+                  { val: timeLeft.hours, label: "Hrs" },
+                  { val: timeLeft.minutes, label: "Mins" },
+                  { val: timeLeft.seconds, label: "Secs" },
+                ].map(({ val, label }) => (
+                  <div key={label} style={{ textAlign: "center" }}>
+                    <div
+                      style={{
+                        fontFamily: "Rajdhani, sans-serif", fontSize: "20px",
+                        fontWeight: 700, color: "#FCA5A5", lineHeight: 1,
+                      }}
+                    >
+                      {String(val).padStart(2, "0")}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "9px", color: "rgba(252,165,165,0.6)",
+                        fontFamily: "Nunito, sans-serif", fontWeight: 700,
+                      }}
+                    >
+                      {label}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
+
+            {/* RIGHT */}
+            <div className="dp-hero-right">
+              {/* Glow */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: "absolute", bottom: 0, left: "50%",
+                  transform: "translateX(-50%)",
+                  width: "85%", height: "75%",
+                  background: "radial-gradient(ellipse, rgba(245,158,11,0.18) 0%, transparent 70%)",
+                  borderRadius: "50%",
+                }}
+              />
+              {/* CEO image */}
+              <img
+                src="/ceo-banner.png"
+                alt="CivilEzy Founder"
+                className="dp-ceo-img"
+                onError={(e) => { e.currentTarget.style.display = "none"; }}
+              />
+              {/* Floating book mockup */}
+              <div className="dp-book">
+                <div
+                  style={{
+                    position: "absolute", top: 0, left: 0, right: 0,
+                    height: "3px",
+                    background: "linear-gradient(90deg, #F59E0B, #FCD34D)",
+                  }}
+                />
+                <div
+                  style={{
+                    fontSize: "8px", fontWeight: 800, letterSpacing: "2px",
+                    color: "#F59E0B", fontFamily: "Nunito, sans-serif", marginBottom: "8px",
+                  }}
+                >
+                  CIVILEZY
+                </div>
+                <div
+                  style={{
+                    fontFamily: "Rajdhani, sans-serif", fontSize: "15px",
+                    fontWeight: 700, color: "#fff", lineHeight: 1.2, marginBottom: "6px",
+                  }}
+                >
+                  {ebook.title}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "Nunito, sans-serif", fontSize: "10px",
+                    color: "rgba(255,255,255,0.5)", lineHeight: 1.4,
+                  }}
+                >
+                  For {ebook.subtitle}
+                </div>
+              </div>
+              {/* SYLLABUS BASED badge */}
+              <div className="dp-syllabus-badge">
+                <div
+                  style={{
+                    fontFamily: "Nunito, sans-serif", fontSize: "8px",
+                    fontWeight: 800, color: "#F59E0B", letterSpacing: "0.5px",
+                    lineHeight: 1.5, textAlign: "center",
+                  }}
+                >
+                  SYLLABUS<br />BASED
+                </div>
+                <div style={{ color: "#34D399", fontSize: "13px", fontWeight: 700 }}>✓</div>
+              </div>
+            </div>
+          </div>
+
+          {/* CTA Bar */}
+          <div className="dp-cta-bar">
+            <a
+              href={ebook.previewLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="dp-btn-preview"
+            >
+              <span style={{ fontSize: "18px" }}>👁</span>
+              <span>
+                <span className="dp-btn-main">View Free Preview</span>
+                <span className="dp-btn-sub">Try before you buy!</span>
+              </span>
+            </a>
+
+            <div className="dp-cta-sep" />
+
+            <div className="dp-cta-info">
+              <span
+                style={{
+                  fontFamily: "Nunito, sans-serif", fontSize: "10px",
+                  fontWeight: 700, color: "rgba(255,255,255,0.38)", letterSpacing: "0.8px",
+                }}
+              >
+                FEE
+              </span>
+              <span
+                style={{
+                  fontFamily: "Rajdhani, sans-serif", fontSize: "26px",
+                  fontWeight: 700, color: "#ffffff", lineHeight: 1,
+                }}
+              >
+                {ebook.priceDisplay}{" "}
+                <span
+                  style={{
+                    fontSize: "12px", fontFamily: "Nunito, sans-serif",
+                    color: "rgba(255,255,255,0.38)",
+                  }}
+                >
+                  ONLY
+                </span>
+              </span>
+            </div>
+
+            <div className="dp-cta-sep" />
+
+            <div className="dp-cta-info">
+              <span
+                style={{
+                  fontFamily: "Nunito, sans-serif", fontSize: "10px",
+                  fontWeight: 700, color: "rgba(255,255,255,0.38)", letterSpacing: "0.8px",
+                }}
+              >
+                VALIDITY UP TO
+              </span>
+              <span
+                style={{
+                  fontFamily: "Rajdhani, sans-serif", fontSize: "22px",
+                  fontWeight: 700, color: "#ffffff", lineHeight: 1,
+                  display: "flex", alignItems: "center", gap: "6px",
+                }}
+              >
+                <span style={{ fontSize: "14px" }}>🛡</span> 30-06-2026
+              </span>
+            </div>
+
+            <div className="dp-cta-sep" />
+
+            <a
+              href={ebook.purchaseLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="dp-btn-purchase"
+            >
+              <span style={{ fontSize: "18px" }}>🛒</span>
+              <span>
+                <span className="dp-btn-main">Purchase E-Book</span>
+                <span className="dp-btn-sub">Get instant access now!</span>
+              </span>
+            </a>
+          </div>
+
+          {/* Trust row */}
+          <div className="dp-trust-bar">
+            <span className="dp-trust-item">🛡 Trusted by Civil Engineering PSC Aspirants</span>
+            <span className="dp-trust-sep" />
+            <span className="dp-trust-item">🏆 Designed for Fast Revision and Maximum Results</span>
+            <span className="dp-trust-sep" />
+            <span className="dp-trust-item">
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#34D399", textDecoration: "none", fontWeight: 700 }}
+              >
+                💬 WhatsApp Support: 9072345630
+              </a>
+            </span>
           </div>
         </section>
 
@@ -932,13 +987,209 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
       </div>
 
       <style>{`
-        .hero-grid {
-          display: grid;
-          grid-template-columns: 320px 1fr;
-          gap: 52px;
-          align-items: start;
+        /* ── Premium Hero ── */
+        @keyframes dpPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.35; transform: scale(0.7); }
         }
-        .hero-cover { position: sticky; top: 90px; }
+        @keyframes dpFloat {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        .dp-pulse {
+          display: inline-block;
+          width: 6px; height: 6px;
+          border-radius: 50%;
+          background: #34D399;
+          animation: dpPulse 1.4s ease-in-out infinite;
+          flex-shrink: 0;
+        }
+        .dp-hero-wrap {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 64px 5% 0;
+          display: grid;
+          grid-template-columns: 1fr 460px;
+          gap: 40px;
+          align-items: center;
+          position: relative;
+          z-index: 1;
+        }
+        .dp-hero-left { padding: 20px 0 56px; }
+        .dp-hero-title {
+          font-family: Rajdhani, sans-serif;
+          font-size: clamp(40px, 5.5vw, 68px);
+          font-weight: 700;
+          color: #ffffff;
+          line-height: 1.02;
+          margin: 0 0 18px;
+          text-transform: uppercase;
+          letter-spacing: -0.5px;
+        }
+        .dp-hero-title-gold {
+          background: linear-gradient(135deg, #F59E0B, #FCD34D);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        .dp-hero-right {
+          position: relative;
+          height: 500px;
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+        }
+        .dp-ceo-img {
+          height: 100%;
+          width: auto;
+          max-width: 100%;
+          object-fit: contain;
+          object-position: bottom;
+          position: relative;
+          z-index: 2;
+          filter: drop-shadow(0 0 50px rgba(245,158,11,0.12));
+        }
+        .dp-book {
+          position: absolute;
+          right: -10px; bottom: 80px;
+          width: 130px;
+          background: linear-gradient(145deg, #0B1E3D, #162F5A);
+          border: 1px solid rgba(245,158,11,0.45);
+          border-radius: 10px;
+          padding: 16px 14px;
+          overflow: hidden;
+          z-index: 3;
+          box-shadow: 0 20px 50px rgba(0,0,0,0.55);
+          animation: dpFloat 3.2s ease-in-out infinite;
+        }
+        .dp-syllabus-badge {
+          position: absolute;
+          top: 24px; right: 16px;
+          width: 70px; height: 70px;
+          border-radius: 50%;
+          background: rgba(10,25,55,0.92);
+          border: 2px dashed rgba(245,158,11,0.5);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          z-index: 4;
+          gap: 2px;
+          backdrop-filter: blur(4px);
+        }
+        /* CTA Bar */
+        .dp-cta-bar {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 16px;
+          background: rgba(0,0,0,0.28);
+          border-top: 1px solid rgba(245,158,11,0.1);
+          padding: 20px 5%;
+          position: relative;
+          z-index: 1;
+          flex-wrap: wrap;
+        }
+        .dp-cta-sep {
+          width: 1px; height: 52px;
+          background: rgba(255,255,255,0.1);
+          flex-shrink: 0;
+        }
+        .dp-cta-info {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 3px;
+          padding: 0 16px;
+        }
+        .dp-btn-preview {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          background: #ffffff;
+          color: #0B1E3D;
+          padding: 12px 24px;
+          border-radius: 50px;
+          text-decoration: none;
+          transition: transform 0.22s, box-shadow 0.22s;
+          box-shadow: 0 4px 20px rgba(255,255,255,0.12);
+          white-space: nowrap;
+        }
+        .dp-btn-preview:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,255,255,0.22); }
+        .dp-btn-purchase {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          background: linear-gradient(135deg, #F59E0B, #D97706);
+          color: #1A0A00;
+          padding: 12px 24px;
+          border-radius: 50px;
+          text-decoration: none;
+          transition: transform 0.22s, box-shadow 0.22s;
+          box-shadow: 0 4px 20px rgba(245,158,11,0.38);
+          white-space: nowrap;
+        }
+        .dp-btn-purchase:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(245,158,11,0.55); }
+        .dp-btn-main {
+          display: block;
+          font-family: Nunito, sans-serif;
+          font-size: 14px;
+          font-weight: 800;
+        }
+        .dp-btn-sub {
+          display: block;
+          font-family: Nunito, sans-serif;
+          font-size: 11px;
+          font-weight: 600;
+          opacity: 0.72;
+        }
+        /* Trust bar */
+        .dp-trust-bar {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 20px;
+          padding: 14px 5%;
+          border-top: 1px solid rgba(255,255,255,0.06);
+          flex-wrap: wrap;
+          position: relative;
+          z-index: 1;
+        }
+        .dp-trust-item {
+          font-family: Nunito, sans-serif;
+          font-size: 11px;
+          font-weight: 600;
+          color: rgba(255,255,255,0.35);
+          text-align: center;
+        }
+        .dp-trust-sep {
+          width: 1px; height: 16px;
+          background: rgba(255,255,255,0.1);
+          flex-shrink: 0;
+        }
+        /* Responsive hero */
+        @media (max-width: 920px) {
+          .dp-hero-wrap {
+            grid-template-columns: 1fr;
+            padding: 48px 5% 0;
+            gap: 0;
+          }
+          .dp-hero-right { height: 320px; order: -1; }
+          .dp-hero-left { padding: 0 0 36px; }
+          .dp-book { right: 8px; bottom: 36px; width: 110px; }
+          .dp-cta-sep { display: none; }
+          .dp-cta-bar { gap: 20px; }
+          .dp-cta-info { padding: 0 8px; }
+          .dp-trust-sep { display: none; }
+        }
+        @media (max-width: 600px) {
+          .dp-hero-right { height: 250px; }
+          .dp-hero-title { font-size: 38px; }
+          .dp-book { width: 96px; right: 0; bottom: 24px; }
+          .dp-syllabus-badge { width: 56px; height: 56px; top: 8px; right: 4px; }
+          .dp-btn-preview, .dp-btn-purchase { padding: 11px 16px; }
+        }
+        /* ── Rest of page ── */
         .modules-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
