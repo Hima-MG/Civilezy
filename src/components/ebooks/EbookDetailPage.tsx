@@ -231,7 +231,7 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
                   fontStyle: "italic",
                 }}
               >
-                "{ebook.tagline}"
+                &ldquo;{ebook.tagline}&rdquo;
               </p>
 
               {/* Quick stats */}
@@ -647,7 +647,7 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
                 marginBottom: "28px",
               }}
             >
-              Civilezy is Kerala's dedicated Civil Engineering PSC coaching platform. Our content is
+              Civilezy is Kerala&apos;s dedicated Civil Engineering PSC coaching platform. Our content is
               crafted by experienced civil engineering educators who understand exactly what the PSC
               exam demands.
             </p>
@@ -813,7 +813,7 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
                 marginBottom: "32px",
               }}
             >
-              The exam is on <strong style={{ color: "#F59E0B" }}>June 30</strong>. Don't leave revision to the last day —
+              The exam is on <strong style={{ color: "#F59E0B" }}>June 30</strong>. Don&apos;t leave revision to the last day —
               get your structured guide now and study with confidence.
             </p>
             <div
@@ -1117,7 +1117,7 @@ function HeroCover({ ebook }: { ebook: EbookData }) {
           fontStyle: "italic",
         }}
       >
-        "{ebook.tagline}"
+        &ldquo;{ebook.tagline}&rdquo;
       </div>
     </div>
   );

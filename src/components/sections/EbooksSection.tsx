@@ -255,7 +255,7 @@ export default function EbooksSection() {
                 fontStyle: "italic",
               }}
             >
-              "{featured.tagline}"
+              &ldquo;{featured.tagline}&rdquo;
             </p>
 
             {/* Feature list */}
