@@ -53,7 +53,7 @@ export const EBOOKS: EbookData[] = [
       "20 Model Exams Available",
     ],
     previewLink:
-      "https://learn.civilezy.in/checkout/?product_id=6085&product_type=membership&price_id=285895",
+      "https://learn.civilezy.in/student/courses/43387/watch?lesson_id=620443",
     purchaseLink:
       "https://learn.civilezy.in/checkout?product_id=6085&product_type=membership&price_id=285895",
     tagline: "Smart Revision Today, Success Tomorrow!",
