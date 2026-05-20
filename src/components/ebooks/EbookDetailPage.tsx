@@ -284,6 +284,16 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
               </div>
             </div>
 
+            {/* RIGHT — CEO Image */}
+            <div className="dp-hero-right">
+              <img
+                src="/ceo-banner.png"
+                alt="Civilezy founder"
+                className="dp-ceo-img"
+                onError={(e) => { e.currentTarget.style.display = "none"; }}
+              />
+            </div>
+
           </div>
 
           {/* CTA Bar */}
@@ -933,13 +943,31 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
           flex-shrink: 0;
         }
         .dp-hero-wrap {
-          max-width: 900px;
+          max-width: 1100px;
           margin: 0 auto;
           padding: 64px 5% 0;
           position: relative;
           z-index: 1;
+          display: grid;
+          grid-template-columns: 1fr 420px;
+          gap: 40px;
+          align-items: center;
         }
         .dp-hero-left { padding: 20px 0 56px; }
+        .dp-hero-right {
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          padding-bottom: 0;
+        }
+        .dp-ceo-img {
+          width: 100%;
+          max-width: 420px;
+          height: auto;
+          display: block;
+          object-fit: contain;
+          object-position: bottom center;
+        }
         .dp-hero-title {
           font-family: Rajdhani, sans-serif;
           font-size: clamp(40px, 5.5vw, 68px);
@@ -1048,7 +1076,11 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
         }
         /* Responsive hero */
         @media (max-width: 920px) {
-          .dp-hero-wrap { padding: 48px 5% 0; }
+          .dp-hero-wrap {
+            grid-template-columns: 1fr;
+            padding: 48px 5% 0;
+          }
+          .dp-hero-right { display: none; }
           .dp-cta-sep { display: none; }
           .dp-cta-bar { gap: 20px; }
           .dp-cta-info { padding: 0 8px; }
