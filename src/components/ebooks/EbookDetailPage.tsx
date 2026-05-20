@@ -284,74 +284,6 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
               </div>
             </div>
 
-            {/* RIGHT */}
-            <div className="dp-hero-right">
-              {/* Glow */}
-              <div
-                aria-hidden="true"
-                style={{
-                  position: "absolute", bottom: 0, left: "50%",
-                  transform: "translateX(-50%)",
-                  width: "85%", height: "75%",
-                  background: "radial-gradient(ellipse, rgba(245,158,11,0.18) 0%, transparent 70%)",
-                  borderRadius: "50%",
-                }}
-              />
-              {/* CEO image */}
-              <img
-                src="/ceo-banner.png"
-                alt="CivilEzy Founder"
-                className="dp-ceo-img"
-                onError={(e) => { e.currentTarget.style.display = "none"; }}
-              />
-              {/* Floating book mockup */}
-              <div className="dp-book">
-                <div
-                  style={{
-                    position: "absolute", top: 0, left: 0, right: 0,
-                    height: "3px",
-                    background: "linear-gradient(90deg, #F59E0B, #FCD34D)",
-                  }}
-                />
-                <div
-                  style={{
-                    fontSize: "8px", fontWeight: 800, letterSpacing: "2px",
-                    color: "#F59E0B", fontFamily: "Nunito, sans-serif", marginBottom: "8px",
-                  }}
-                >
-                  CIVILEZY
-                </div>
-                <div
-                  style={{
-                    fontFamily: "Rajdhani, sans-serif", fontSize: "15px",
-                    fontWeight: 700, color: "#fff", lineHeight: 1.2, marginBottom: "6px",
-                  }}
-                >
-                  {ebook.title}
-                </div>
-                <div
-                  style={{
-                    fontFamily: "Nunito, sans-serif", fontSize: "10px",
-                    color: "rgba(255,255,255,0.5)", lineHeight: 1.4,
-                  }}
-                >
-                  For {ebook.subtitle}
-                </div>
-              </div>
-              {/* SYLLABUS BASED badge */}
-              <div className="dp-syllabus-badge">
-                <div
-                  style={{
-                    fontFamily: "Nunito, sans-serif", fontSize: "8px",
-                    fontWeight: 800, color: "#F59E0B", letterSpacing: "0.5px",
-                    lineHeight: 1.5, textAlign: "center",
-                  }}
-                >
-                  SYLLABUS<br />BASED
-                </div>
-                <div style={{ color: "#34D399", fontSize: "13px", fontWeight: 700 }}>✓</div>
-              </div>
-            </div>
           </div>
 
           {/* CTA Bar */}
@@ -992,10 +924,6 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.35; transform: scale(0.7); }
         }
-        @keyframes dpFloat {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
         .dp-pulse {
           display: inline-block;
           width: 6px; height: 6px;
@@ -1005,13 +933,9 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
           flex-shrink: 0;
         }
         .dp-hero-wrap {
-          max-width: 1200px;
+          max-width: 900px;
           margin: 0 auto;
           padding: 64px 5% 0;
-          display: grid;
-          grid-template-columns: 1fr 460px;
-          gap: 40px;
-          align-items: center;
           position: relative;
           z-index: 1;
         }
@@ -1031,51 +955,6 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-        }
-        .dp-hero-right {
-          position: relative;
-          height: 500px;
-          display: flex;
-          align-items: flex-end;
-          justify-content: center;
-        }
-        .dp-ceo-img {
-          height: 100%;
-          width: auto;
-          max-width: 100%;
-          object-fit: contain;
-          object-position: bottom;
-          position: relative;
-          z-index: 2;
-          filter: drop-shadow(0 0 50px rgba(245,158,11,0.12));
-        }
-        .dp-book {
-          position: absolute;
-          right: -10px; bottom: 80px;
-          width: 130px;
-          background: linear-gradient(145deg, #0B1E3D, #162F5A);
-          border: 1px solid rgba(245,158,11,0.45);
-          border-radius: 10px;
-          padding: 16px 14px;
-          overflow: hidden;
-          z-index: 3;
-          box-shadow: 0 20px 50px rgba(0,0,0,0.55);
-          animation: dpFloat 3.2s ease-in-out infinite;
-        }
-        .dp-syllabus-badge {
-          position: absolute;
-          top: 24px; right: 16px;
-          width: 70px; height: 70px;
-          border-radius: 50%;
-          background: rgba(10,25,55,0.92);
-          border: 2px dashed rgba(245,158,11,0.5);
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          z-index: 4;
-          gap: 2px;
-          backdrop-filter: blur(4px);
         }
         /* CTA Bar */
         .dp-cta-bar {
@@ -1169,24 +1048,14 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
         }
         /* Responsive hero */
         @media (max-width: 920px) {
-          .dp-hero-wrap {
-            grid-template-columns: 1fr;
-            padding: 48px 5% 0;
-            gap: 0;
-          }
-          .dp-hero-right { height: 320px; order: -1; }
-          .dp-hero-left { padding: 0 0 36px; }
-          .dp-book { right: 8px; bottom: 36px; width: 110px; }
+          .dp-hero-wrap { padding: 48px 5% 0; }
           .dp-cta-sep { display: none; }
           .dp-cta-bar { gap: 20px; }
           .dp-cta-info { padding: 0 8px; }
           .dp-trust-sep { display: none; }
         }
         @media (max-width: 600px) {
-          .dp-hero-right { height: 250px; }
           .dp-hero-title { font-size: 38px; }
-          .dp-book { width: 96px; right: 0; bottom: 24px; }
-          .dp-syllabus-badge { width: 56px; height: 56px; top: 8px; right: 4px; }
           .dp-btn-preview, .dp-btn-purchase { padding: 11px 16px; }
         }
         /* ── Rest of page ── */
