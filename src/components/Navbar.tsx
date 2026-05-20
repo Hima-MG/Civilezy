@@ -280,6 +280,28 @@ export default function Navbar() {
             </Link>
           </li>
 
+          {/* E-Books */}
+          <li style={{ listStyle: "none" }}>
+            <Link
+              href="/ebooks"
+              style={{
+                ...navLinkStyle(pathname?.startsWith("/ebooks") ?? false),
+                ...(!(pathname?.startsWith("/ebooks") ?? false) && {
+                  color: "#F59E0B",
+                  borderBottom: "2px solid transparent",
+                }),
+                ...(pathname?.startsWith("/ebooks") && {
+                  color: "#F59E0B",
+                  borderBottom: "2px solid #F59E0B",
+                }),
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = "#F59E0B"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = (pathname?.startsWith("/ebooks") ?? false) ? "#F59E0B" : "#F59E0B"; }}
+            >
+              E-Books ✨
+            </Link>
+          </li>
+
           {/* Renewal */}
           <li style={{ listStyle: "none" }}>
             <Link
@@ -353,7 +375,7 @@ export default function Navbar() {
           borderBottom:  "1px solid rgba(255,98,0,0.2)",
           padding:       "0 5%",
           overflow:      "hidden",
-          maxHeight:     menuOpen ? "560px" : "0",
+          maxHeight:     menuOpen ? "620px" : "0",
           opacity:       menuOpen ? 1 : 0,
           pointerEvents: menuOpen ? "auto" : "none",
           transition:    "max-height 0.35s ease, opacity 0.3s ease",
@@ -473,6 +495,17 @@ export default function Navbar() {
               style={{ display: "block", color: (pathname?.startsWith("/blog") ?? false) ? "#FF8534" : "rgba(255,255,255,0.85)", textDecoration: "none", fontSize: "16px", fontWeight: (pathname?.startsWith("/blog") ?? false) ? 700 : 500, padding: "14px 0", fontFamily: "Nunito, sans-serif" }}
             >
               Blog
+            </Link>
+          </li>
+
+          {/* E-Books */}
+          <li style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <Link
+              href="/ebooks"
+              onClick={() => setMenuOpen(false)}
+              style={{ display: "block", color: "#F59E0B", textDecoration: "none", fontSize: "16px", fontWeight: (pathname?.startsWith("/ebooks") ?? false) ? 700 : 500, padding: "14px 0", fontFamily: "Nunito, sans-serif" }}
+            >
+              E-Books ✨
             </Link>
           </li>
 

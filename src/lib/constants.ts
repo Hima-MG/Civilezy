@@ -32,6 +32,11 @@ export const EXTERNAL_URLS = {
     surveyor: "https://learn.civilezy.in/en/checkout/?product_id=4733&price_id=271684&product_type=membership",
   },
 
+  ebook: {
+    overseerGR1Preview:  "https://learn.civilezy.in/checkout/?product_id=6085&product_type=membership&price_id=285895",
+    overseerGR1Purchase: "https://learn.civilezy.in/checkout?product_id=6085&product_type=membership&price_id=285895",
+  },
+
   social: {
     telegram:  "https://t.me/civilezy_psc",
     whatsapp:  `https://wa.me/${WHATSAPP_NUMBER}`,
