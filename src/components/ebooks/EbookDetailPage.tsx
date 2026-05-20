@@ -112,50 +112,37 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
           <div aria-hidden="true" className="ph-bg-glow-1" />
           <div aria-hidden="true" className="ph-bg-glow-2" />
 
-          {/* ── Cinematic right visual — absolute on section, not in flex flow ── */}
-          <div className="ph-right-visual">
+          {/* ── z:1 — Atmospheric stage glow behind character ── */}
+          <div className="ph-char-glow" aria-hidden="true" />
 
-            {/* Layer 1: Stage glow — warm amber ellipse behind character */}
-            <div className="ph-char-glow" aria-hidden="true" />
+          {/* ── z:1 — CEO: cinematic character, behind everything ── */}
+          <Image
+            src="/ceo-banner.png"
+            alt="Civilezy Expert"
+            width={900}
+            height={900}
+            priority
+            className="ph-ceo-full"
+          />
 
-            {/* Layer 2: CEO character — large, sharp, impactful */}
-            <Image
-              src="/ceo-banner.png"
-              alt="Civilezy Expert"
-              width={900}
-              height={900}
-              priority
-              className="ph-ceo-full"
-            />
+          {/* ── z:2 — Blend layers ── */}
+          <div className="ph-ground-vignette" aria-hidden="true" />
+          <div className="ph-img-fade" aria-hidden="true" />
 
-            {/* Layer 3: Ground vignette — dark floor anchors character */}
-            <div className="ph-ground-vignette" aria-hidden="true" />
-
-            {/* Layer 4: Soft left-edge blend — MUCH softer, CEO stays visible */}
-            <div className="ph-img-fade" aria-hidden="true" />
-
-            {/* ─── Premium UI overlays ─── z-index 6, above all layers ─── */}
-
-            {/* Top-right: Exam badge */}
-            <div className="ph-ov-exam-badge" aria-hidden="true">
-              <span className="ph-ov-eb-dot" />
-              <span>KERALA PSC · JUNE 2026</span>
-            </div>
-
-            {/* Bottom-right: Floating ebook info card */}
-            <div className="ph-ov-ebook-card" aria-hidden="true">
-              <span className="ph-ov-ec-icon">📘</span>
-              <div className="ph-ov-ec-body">
-                <div className="ph-ov-ec-title">Quick Revision E-Book</div>
-                <div className="ph-ov-ec-sub">10 Modules · 20 Model Exams</div>
-              </div>
-              <div className="ph-ov-ec-price">₹2,000</div>
-            </div>
-
-            {/* Right edge: vertical brand accent */}
-            <div className="ph-ov-vert-label" aria-hidden="true">CIVILEZY · 2026</div>
-
+          {/* ── z:5 — Floating UI overlays (above content) ── */}
+          <div className="ph-ov-exam-badge" aria-hidden="true">
+            <span className="ph-ov-eb-dot" />
+            <span>KERALA PSC · JUNE 2026</span>
           </div>
+          <div className="ph-ov-ebook-card" aria-hidden="true">
+            <span className="ph-ov-ec-icon">📘</span>
+            <div className="ph-ov-ec-body">
+              <div className="ph-ov-ec-title">Quick Revision E-Book</div>
+              <div className="ph-ov-ec-sub">10 Modules · 20 Model Exams</div>
+            </div>
+            <div className="ph-ov-ec-price">₹2,000</div>
+          </div>
+          <div className="ph-ov-vert-label" aria-hidden="true">CIVILEZY · 2026</div>
 
           <div className="ph-wrap">
 
@@ -823,74 +810,72 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
         /* Blue blob removed — was causing shade mismatch */
         .ph-bg-glow-2 { display: none; }
 
-        /* ━━━ HERO: LAYOUT ━━━ */
+        /* ━━━ HERO: LAYOUT — unified cinematic canvas ━━━ */
         .ph-section { min-height: 92vh; }
         .ph-wrap {
-          max-width: 1500px; margin: 0 auto;
-          padding: 0 2%;
+          max-width: 1400px; margin: 0 auto;
+          padding: 0 6%;
           position: relative; z-index: 3;
           display: flex; align-items: center;
           min-height: 92vh;
         }
+        /* Content block — center-left, floats above the cinematic background */
         .ph-left {
-          width: 46%; max-width: 700px; flex-shrink: 0;
+          width: 52%; max-width: 660px; flex-shrink: 0;
           display: flex; flex-direction: column; justify-content: center;
-          padding: 80px 60px 80px 16px;
+          padding: 80px 40px 80px 0;
           position: relative; z-index: 4;
         }
-        /* ━━━ HERO: CHARACTER VISUAL ━━━ */
-        /* Direct child of ph-section — absolutely positioned cinematic foreground */
-        /* !important beats compiled external CSS (e.g. app/layout.css cached rules) */
-        .ph-right-visual {
-          position: absolute !important;
-          right: 0 !important; top: 0 !important; bottom: 0 !important;
-          width: 58% !important;
-          z-index: 2 !important; overflow: hidden !important;
-          pointer-events: none !important;
-          flex: none !important;
-          align-self: auto !important;
-        }
-        /* Layer 1: Warm amber stage glow — depth behind character */
+        /* ━━━ HERO: CINEMATIC LAYER STACK ━━━ */
+        /* All layers are direct children of ph-section — no containers */
+
+        /* z:1 — Atmospheric warm glow fills right portion */
         .ph-char-glow {
-          position: absolute;
-          right: -5%; bottom: -10%; top: 15%;
-          width: 85%; border-radius: 50%;
-          background: radial-gradient(ellipse at 58% 80%,
-            rgba(245,158,11,0.11) 0%,
-            rgba(245,158,11,0.055) 36%,
-            rgba(59,130,246,0.03) 62%,
-            transparent 74%);
+          position: absolute; inset: 0;
+          background: radial-gradient(ellipse at 78% 52%,
+            rgba(245,158,11,0.10) 0%,
+            rgba(245,158,11,0.04) 38%,
+            rgba(59,130,246,0.02) 60%,
+            transparent 72%);
           pointer-events: none; z-index: 1;
         }
-        /* Layer 2: Character — tall, right-anchored, bleeds bottom */
+
+        /* z:1 — CEO: cinematic character, BEHIND content, emerges right */
         .ph-ceo-full {
           position: absolute;
-          right: -2%; bottom: -5%;
-          height: 112%; width: auto;
-          max-width: none; display: block;
-          z-index: 2;
+          right: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          height: 110%;
+          width: auto;
+          max-width: none;
+          display: block;
+          z-index: 1;
         }
-        /* Layer 3: Ground vignette — blends bottom edge into section bg */
+
+        /* z:2 — Ground vignette — section floor, anchors character feet */
         .ph-ground-vignette {
           position: absolute; bottom: 0; left: 0; right: 0;
-          height: 22%; z-index: 3; pointer-events: none;
-          background: linear-gradient(to top, #020817 0%, rgba(2,8,23,0.55) 45%, transparent 100%);
+          height: 20%; z-index: 2; pointer-events: none;
+          background: linear-gradient(to top, #020817 0%, rgba(2,8,23,0.5) 48%, transparent 100%);
         }
-        /* Layer 4: Left-edge blend only — removes hard partition, CEO fully visible */
+
+        /* z:2 — Left-to-right blend — content zone readable, CEO emerges on right */
         .ph-img-fade {
-          position: absolute; inset: 0; z-index: 4; pointer-events: none;
+          position: absolute; inset: 0; z-index: 2; pointer-events: none;
           background: linear-gradient(
             to right,
             #020817 0%,
-            rgba(2,8,23,0.86) 9%,
-            rgba(2,8,23,0.52) 19%,
-            rgba(2,8,23,0.14) 32%,
-            transparent 46%
+            rgba(2,8,23,0.94) 22%,
+            rgba(2,8,23,0.72) 40%,
+            rgba(2,8,23,0.30) 58%,
+            rgba(2,8,23,0.06) 72%,
+            transparent 82%
           );
         }
 
-        /* ━━━ HERO: CINEMATIC OVERLAY ELEMENTS (z-index 6 — above all layers) ━━━ */
-        /* Exam badge — top-right glassmorphism pill */
+        /* ━━━ HERO: FLOATING UI OVERLAYS (z:5 — above content) ━━━ */
+        /* Positioned relative to ph-section full-width hero */
         .ph-ov-exam-badge {
           position: absolute; top: 44px; right: 44px;
           display: inline-flex; align-items: center; gap: 8px;
@@ -900,14 +885,13 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
           font-family: Nunito, sans-serif; font-size: 11px;
           font-weight: 800; letter-spacing: 0.9px;
           color: rgba(245,158,11,0.92); text-transform: uppercase;
-          z-index: 6; white-space: nowrap;
+          z-index: 5; white-space: nowrap;
           box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(245,158,11,0.06);
         }
         .ph-ov-eb-dot {
           width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
           background: #F59E0B; animation: phDotPulse 1.5s ease-in-out infinite;
         }
-        /* Ebook card — bottom-right glassmorphism card, gently floating */
         .ph-ov-ebook-card {
           position: absolute; bottom: 44px; right: 44px;
           display: flex; align-items: center; gap: 14px;
@@ -916,7 +900,7 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
           border-top: 1px solid rgba(245,158,11,0.36);
           border-radius: 20px; padding: 16px 20px;
           min-width: 270px; max-width: 340px;
-          z-index: 6;
+          z-index: 5;
           box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,158,11,0.05);
           animation: phBadgeFloat 4s ease-in-out infinite;
         }
@@ -934,14 +918,13 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
           font-family: Rajdhani, sans-serif; font-size: 22px;
           font-weight: 800; color: #F59E0B; white-space: nowrap; flex-shrink: 0;
         }
-        /* Vertical brand accent — right edge, ultra-subtle */
         .ph-ov-vert-label {
           position: absolute; right: 12px; top: 50%;
           transform: translateY(-50%) rotate(90deg);
           font-family: Rajdhani, sans-serif; font-size: 9px;
           font-weight: 700; color: rgba(245,158,11,0.18);
           letter-spacing: 4px; text-transform: uppercase;
-          z-index: 6; white-space: nowrap;
+          z-index: 5; white-space: nowrap;
         }
 
         /* ━━━ HERO: BADGES ━━━ */
@@ -1103,19 +1086,13 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
         .ph-info-wa:hover { color: #6EE7B7; }
 
         /* ━━━ HERO: RESPONSIVE ━━━ */
-        @media (max-width: 1400px) {
-          .ph-right-visual { width: 60%; }
-          .ph-ov-ebook-card { min-width: 240px; }
-        }
         @media (max-width: 1200px) {
-          .ph-right-visual { width: 62%; }
-          .ph-left { width: 48%; }
+          .ph-left { width: 54%; }
           .ph-ov-exam-badge { top: 28px; right: 28px; }
           .ph-ov-ebook-card { right: 28px; bottom: 28px; min-width: 220px; padding: 13px 16px; }
         }
         @media (max-width: 1024px) {
-          .ph-right-visual { width: 64%; }
-          .ph-left { width: 52%; }
+          .ph-left { width: 60%; }
           .ph-ov-exam-badge { top: 20px; right: 20px; font-size: 10px; padding: 7px 14px; }
           .ph-ov-ebook-card { right: 20px; bottom: 20px; min-width: 0; gap: 10px; padding: 12px 14px; }
           .ph-ov-ec-icon { font-size: 22px; }
@@ -1123,25 +1100,25 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
           .ph-ov-vert-label { display: none; }
         }
         @media (max-width: 860px) {
-          /* Stack: content above, character below as tall cinematic strip */
+          /* Mobile: content stacks above, CEO fills strip below */
           .ph-section { min-height: auto; padding-bottom: 380px; }
           .ph-wrap { min-height: auto; padding: 52px 5% 40px; }
           .ph-left { width: 100%; max-width: 100%; padding: 0; }
-          .ph-right-visual { top: auto; bottom: 0; width: 100% !important; height: 380px; }
+          /* CEO: centered, fills the bottom strip */
           .ph-ceo-full {
-            bottom: 0; right: 50%; height: 100%; width: auto;
+            top: auto; bottom: 0; right: 50%;
             transform: translateX(50%);
+            height: 380px; width: auto;
           }
-          /* On mobile, blend top-to-bottom so content above reads over character below */
+          /* Mobile fade: top-to-bottom so text above is readable over character below */
           .ph-img-fade {
             background: linear-gradient(to bottom,
               #020817 0%,
               rgba(2,8,23,0.82) 16%,
-              rgba(2,8,23,0.28) 48%,
+              rgba(2,8,23,0.28) 52%,
               transparent 100%
             );
           }
-          .ph-ground-vignette { display: block; height: 25%; }
           .ph-ov-exam-badge { display: none; }
           .ph-ov-vert-label { display: none; }
           .ph-ov-ebook-card {
@@ -1156,7 +1133,7 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
           .ph-cta-row { flex-direction: column; gap: 12px; }
           .ph-btn-preview, .ph-btn-buy { justify-content: center; padding: 14px 20px; }
           .ph-section { padding-bottom: 280px; }
-          .ph-right-visual { height: 280px; }
+          .ph-ceo-full { height: 280px; }
           .ph-ov-ebook-card { display: none; }
         }
         /* ── Rest of page ── */
