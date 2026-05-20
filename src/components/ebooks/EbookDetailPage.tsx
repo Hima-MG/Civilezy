@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { type EbookData } from "@/data/ebookData";
 import { getWhatsAppUrl } from "@/lib/constants";
@@ -104,296 +105,152 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
           </nav>
         </div>
 
-        {/* ── Premium Hero Banner ── */}
-        <section
-          style={{
-            background: "linear-gradient(160deg, #020B17 0%, #071526 35%, #0C2040 70%, #091729 100%)",
-            position: "relative",
-            overflow: "hidden",
-            borderBottom: "1px solid rgba(245,158,11,0.1)",
-          }}
-        >
-          {/* Blueprint grid */}
-          <div
-            aria-hidden="true"
-            style={{
-              position: "absolute", inset: 0,
-              backgroundImage:
-                "linear-gradient(rgba(245,158,11,0.025) 1px, transparent 1px)," +
-                "linear-gradient(90deg, rgba(245,158,11,0.025) 1px, transparent 1px)",
-              backgroundSize: "55px 55px",
-              pointerEvents: "none",
-            }}
-          />
-          {/* Ambient glow */}
-          <div
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              top: "10%", right: "25%",
-              width: "600px", height: "600px",
-              borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(245,158,11,0.055) 0%, transparent 65%)",
-              pointerEvents: "none",
-            }}
-          />
+        {/* ── Premium Hero ── */}
+        <section className="ph-section">
+          {/* Background layers */}
+          <div aria-hidden="true" className="ph-bg-grid" />
+          <div aria-hidden="true" className="ph-bg-glow-1" />
+          <div aria-hidden="true" className="ph-bg-glow-2" />
 
-          {/* Hero content */}
-          <div className="dp-hero-wrap">
+          {/* ── Cinematic right visual — absolute on section, not in flex flow ── */}
+          <div className="ph-right-visual">
 
-            {/* LEFT */}
-            <div className="dp-hero-left">
-              {/* Exam date pill */}
-              {ebook.examDate && (
-                <div
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: "8px",
-                    background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.28)",
-                    borderRadius: "8px", padding: "5px 14px",
-                    fontSize: "11px", fontWeight: 700, letterSpacing: "0.5px",
-                    color: "#FCD34D", fontFamily: "Nunito, sans-serif", marginBottom: "18px",
-                  }}
-                >
-                  📅 EXAM ON&nbsp;<strong>JUNE 30</strong>&nbsp;·&nbsp;{ebook.subtitle.toUpperCase()}
-                </div>
-              )}
+            {/* Layer 1: Stage glow — warm amber ellipse behind character */}
+            <div className="ph-char-glow" aria-hidden="true" />
 
-              {/* NEW LAUNCH badge */}
-              {ebook.isNew && (
-                <div
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: "8px",
-                    background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.28)",
-                    borderRadius: "20px", padding: "4px 14px",
-                    fontSize: "11px", fontWeight: 800, letterSpacing: "1px",
-                    color: "#34D399", fontFamily: "Nunito, sans-serif", marginBottom: "24px",
-                  }}
-                >
-                  <span className="dp-pulse" />
-                  🚀 NEW LAUNCH
-                </div>
-              )}
+            {/* Layer 2: CEO character — large, sharp, impactful */}
+            <Image
+              src="/ceo-banner.png"
+              alt="Civilezy Expert"
+              width={900}
+              height={900}
+              priority
+              className="ph-ceo-full"
+            />
+
+            {/* Layer 3: Ground vignette — dark floor anchors character */}
+            <div className="ph-ground-vignette" aria-hidden="true" />
+
+            {/* Layer 4: Soft left-edge blend — MUCH softer, CEO stays visible */}
+            <div className="ph-img-fade" aria-hidden="true" />
+
+            {/* ─── Premium UI overlays ─── z-index 6, above all layers ─── */}
+
+            {/* Top-right: Exam badge */}
+            <div className="ph-ov-exam-badge" aria-hidden="true">
+              <span className="ph-ov-eb-dot" />
+              <span>KERALA PSC · JUNE 2026</span>
+            </div>
+
+            {/* Bottom-right: Floating ebook info card */}
+            <div className="ph-ov-ebook-card" aria-hidden="true">
+              <span className="ph-ov-ec-icon">📘</span>
+              <div className="ph-ov-ec-body">
+                <div className="ph-ov-ec-title">Quick Revision E-Book</div>
+                <div className="ph-ov-ec-sub">10 Modules · 20 Model Exams</div>
+              </div>
+              <div className="ph-ov-ec-price">₹2,000</div>
+            </div>
+
+            {/* Right edge: vertical brand accent */}
+            <div className="ph-ov-vert-label" aria-hidden="true">CIVILEZY · 2026</div>
+
+          </div>
+
+          <div className="ph-wrap">
+
+            {/* ━━━ LEFT ━━━ */}
+            <div className="ph-left">
+
+              {/* Badges row */}
+              <div className="ph-badges-row">
+                {ebook.isNew && (
+                  <span className="ph-badge-launch">
+                    <span className="ph-dot" />
+                    🚀 NEW LAUNCH
+                  </span>
+                )}
+                {ebook.examBadge && (
+                  <span className="ph-badge-exam">{ebook.examBadge}</span>
+                )}
+              </div>
+
+              {/* Exam strip */}
+              <div className="ph-exam-strip">
+                📅 EXAM ON&nbsp;<strong>JUNE 30</strong>&nbsp;·&nbsp;{ebook.subtitle.toUpperCase()}
+              </div>
 
               {/* Main heading */}
-              <h1 className="dp-hero-title">
-                {ebook.title.replace("E-Book", "")}
-                <br />
-                <span className="dp-hero-title-gold">E-Book</span>
+              <h1 className="ph-h1">
+                <span className="ph-h1-white">QUICK REVISION</span>
+                <span className="ph-h1-gold">E-BOOK</span>
               </h1>
 
-              {/* Subtitle */}
-              <div
-                style={{
-                  display: "inline-block",
-                  borderLeft: "3px solid #F59E0B",
-                  paddingLeft: "14px",
-                  fontFamily: "Nunito, sans-serif",
-                  fontSize: "clamp(14px, 1.8vw, 18px)",
-                  fontWeight: 800,
-                  color: "#ffffff",
-                  marginBottom: "14px",
-                  lineHeight: 1.4,
-                }}
-              >
-                For {ebook.subtitle}
+              {/* Subtitle with accent bar */}
+              <div className="ph-for-line">
+                <div className="ph-for-bar" />
+                <span>For <strong>{ebook.subtitle}</strong></span>
               </div>
 
-              {/* Level */}
-              <div
-                style={{
-                  fontFamily: "Nunito, sans-serif", fontSize: "13px",
-                  color: "rgba(255,255,255,0.45)", marginBottom: "18px",
-                  display: "flex", alignItems: "center", gap: "6px",
-                }}
-              >
-                🎓 {ebook.level}
-              </div>
+              <p className="ph-level">🎓 {ebook.level}</p>
+              <p className="ph-tagline">&ldquo;{ebook.tagline}&rdquo;</p>
 
-              {/* Tagline */}
-              <p
-                style={{
-                  fontFamily: "Nunito, sans-serif", fontSize: "14px",
-                  color: "rgba(255,255,255,0.4)", fontStyle: "italic",
-                  marginBottom: "24px",
-                }}
-              >
-                &ldquo;{ebook.tagline}&rdquo;
-              </p>
-
-              {/* Feature pills */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "28px" }}>
-                {ebook.features.map((f) => (
-                  <span
-                    key={f}
-                    style={{
-                      background: "rgba(245,158,11,0.08)",
-                      border: "1px solid rgba(245,158,11,0.22)",
-                      color: "#F59E0B",
-                      fontFamily: "Nunito, sans-serif",
-                      fontSize: "11px", fontWeight: 700,
-                      padding: "5px 13px", borderRadius: "20px",
-                    }}
-                  >
-                    ✓ {f}
-                  </span>
+              {/* Feature grid 2×2 */}
+              <div className="ph-feat-grid">
+                {[
+                  { icon: "📘", label: "Syllabus Based" },
+                  { icon: "⚡", label: "Save Time, Study Smart" },
+                  { icon: "🎯", label: "Perfect for Fast Preparation" },
+                  { icon: "📝", label: "20 Model Exams" },
+                ].map(({ icon, label }) => (
+                  <div key={label} className="ph-feat-card">
+                    <span className="ph-feat-icon">{icon}</span>
+                    <span className="ph-feat-label">{label}</span>
+                  </div>
                 ))}
               </div>
 
               {/* Countdown */}
-              <div
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: "12px",
-                  background: "rgba(239,68,68,0.08)",
-                  border: "1px solid rgba(239,68,68,0.25)",
-                  borderRadius: "12px", padding: "10px 18px",
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: "Nunito, sans-serif", fontSize: "11px",
-                    fontWeight: 800, color: "#F87171", letterSpacing: "0.5px",
-                  }}
-                >
-                  ⏰ EXAM COUNTDOWN
-                </span>
-                {[
-                  { val: timeLeft.days, label: "Days" },
-                  { val: timeLeft.hours, label: "Hrs" },
-                  { val: timeLeft.minutes, label: "Mins" },
-                  { val: timeLeft.seconds, label: "Secs" },
-                ].map(({ val, label }) => (
-                  <div key={label} style={{ textAlign: "center" }}>
-                    <div
-                      style={{
-                        fontFamily: "Rajdhani, sans-serif", fontSize: "20px",
-                        fontWeight: 700, color: "#FCA5A5", lineHeight: 1,
-                      }}
-                    >
-                      {String(val).padStart(2, "0")}
+              <div className="ph-countdown">
+                <span className="ph-cd-label">⏰ EXAM COUNTDOWN</span>
+                <div className="ph-cd-units">
+                  {[
+                    { val: timeLeft.days, unit: "Days" },
+                    { val: timeLeft.hours, unit: "Hrs" },
+                    { val: timeLeft.minutes, unit: "Mins" },
+                    { val: timeLeft.seconds, unit: "Secs" },
+                  ].map(({ val, unit }) => (
+                    <div key={unit} className="ph-cd-block">
+                      <span className="ph-cd-num">{String(val).padStart(2, "0")}</span>
+                      <span className="ph-cd-unit">{unit}</span>
                     </div>
-                    <div
-                      style={{
-                        fontSize: "9px", color: "rgba(252,165,165,0.6)",
-                        fontFamily: "Nunito, sans-serif", fontWeight: 700,
-                      }}
-                    >
-                      {label}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
+
+              {/* CTA buttons */}
+              <div className="ph-cta-row">
+                <a href={ebook.previewLink} target="_blank" rel="noopener noreferrer" className="ph-btn-preview">
+                  <span>👁</span> View Free Preview
+                </a>
+                <a href={ebook.purchaseLink} target="_blank" rel="noopener noreferrer" className="ph-btn-buy">
+                  <span>🛒</span> Purchase E-Book
+                </a>
+              </div>
+
+              {/* Info row */}
+              <div className="ph-info-row">
+                <span className="ph-info-pill">💰 ₹2,000 Only</span>
+                <span className="ph-info-dot" />
+                <span className="ph-info-text">📆 Valid Upto 30-06-2026</span>
+                <span className="ph-info-dot" />
+                <a href={waUrl} target="_blank" rel="noopener noreferrer" className="ph-info-wa">
+                  💬 WhatsApp: 9072345630
+                </a>
+              </div>
+
             </div>
 
-            {/* RIGHT — CEO Image */}
-            <div className="dp-hero-right">
-              <img
-                src="/ceo-banner.png"
-                alt="Civilezy founder"
-                className="dp-ceo-img"
-                onError={(e) => { e.currentTarget.style.display = "none"; }}
-              />
-            </div>
-
-          </div>
-
-          {/* CTA Bar */}
-          <div className="dp-cta-bar">
-            <a
-              href={ebook.previewLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="dp-btn-preview"
-            >
-              <span style={{ fontSize: "18px" }}>👁</span>
-              <span>
-                <span className="dp-btn-main">View Free Preview</span>
-                <span className="dp-btn-sub">Try before you buy!</span>
-              </span>
-            </a>
-
-            <div className="dp-cta-sep" />
-
-            <div className="dp-cta-info">
-              <span
-                style={{
-                  fontFamily: "Nunito, sans-serif", fontSize: "10px",
-                  fontWeight: 700, color: "rgba(255,255,255,0.38)", letterSpacing: "0.8px",
-                }}
-              >
-                FEE
-              </span>
-              <span
-                style={{
-                  fontFamily: "Rajdhani, sans-serif", fontSize: "26px",
-                  fontWeight: 700, color: "#ffffff", lineHeight: 1,
-                }}
-              >
-                {ebook.priceDisplay}{" "}
-                <span
-                  style={{
-                    fontSize: "12px", fontFamily: "Nunito, sans-serif",
-                    color: "rgba(255,255,255,0.38)",
-                  }}
-                >
-                  ONLY
-                </span>
-              </span>
-            </div>
-
-            <div className="dp-cta-sep" />
-
-            <div className="dp-cta-info">
-              <span
-                style={{
-                  fontFamily: "Nunito, sans-serif", fontSize: "10px",
-                  fontWeight: 700, color: "rgba(255,255,255,0.38)", letterSpacing: "0.8px",
-                }}
-              >
-                VALIDITY UP TO
-              </span>
-              <span
-                style={{
-                  fontFamily: "Rajdhani, sans-serif", fontSize: "22px",
-                  fontWeight: 700, color: "#ffffff", lineHeight: 1,
-                  display: "flex", alignItems: "center", gap: "6px",
-                }}
-              >
-                <span style={{ fontSize: "14px" }}>🛡</span> 30-06-2026
-              </span>
-            </div>
-
-            <div className="dp-cta-sep" />
-
-            <a
-              href={ebook.purchaseLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="dp-btn-purchase"
-            >
-              <span style={{ fontSize: "18px" }}>🛒</span>
-              <span>
-                <span className="dp-btn-main">Purchase E-Book</span>
-                <span className="dp-btn-sub">Get instant access now!</span>
-              </span>
-            </a>
-          </div>
-
-          {/* Trust row */}
-          <div className="dp-trust-bar">
-            <span className="dp-trust-item">🛡 Trusted by Civil Engineering PSC Aspirants</span>
-            <span className="dp-trust-sep" />
-            <span className="dp-trust-item">🏆 Designed for Fast Revision and Maximum Results</span>
-            <span className="dp-trust-sep" />
-            <span className="dp-trust-item">
-              <a
-                href={waUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#34D399", textDecoration: "none", fontWeight: 700 }}
-              >
-                💬 WhatsApp Support: 9072345630
-              </a>
-            </span>
           </div>
         </section>
 
@@ -929,166 +786,378 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
       </div>
 
       <style>{`
-        /* ── Premium Hero ── */
-        @keyframes dpPulse {
+        /* ━━━ HERO: ANIMATIONS ━━━ */
+        @keyframes phDotPulse {
           0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.35; transform: scale(0.7); }
+          50% { opacity: 0.25; transform: scale(0.55); }
         }
-        .dp-pulse {
+        @keyframes phBookFloat {
+          0%, 100% { transform: translateY(0) rotate(-7deg); }
+          50% { transform: translateY(-14px) rotate(-7deg); }
+        }
+        @keyframes phBadgeFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-7px); }
+        }
+
+        /* ━━━ HERO: SECTION + BACKGROUNDS ━━━ */
+        .ph-section {
+          position: relative; overflow: hidden;
+          background: linear-gradient(135deg, #020817 0%, #04152d 45%, #071a35 100%);
+          border-bottom: 1px solid rgba(245,158,11,0.07);
+        }
+        .ph-bg-grid {
+          position: absolute; inset: 0; pointer-events: none;
+          background-image:
+            linear-gradient(rgba(245,158,11,0.018) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(245,158,11,0.018) 1px, transparent 1px);
+          background-size: 64px 64px;
+        }
+        /* Subtle warm glow only — no visible circles */
+        .ph-bg-glow-1 {
+          position: absolute; top: -20%; right: 2%;
+          width: 900px; height: 900px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(245,158,11,0.032) 0%, transparent 58%);
+          pointer-events: none;
+        }
+        /* Blue blob removed — was causing shade mismatch */
+        .ph-bg-glow-2 { display: none; }
+
+        /* ━━━ HERO: LAYOUT ━━━ */
+        .ph-section { min-height: 92vh; }
+        .ph-wrap {
+          max-width: 1500px; margin: 0 auto;
+          padding: 0 2%;
+          position: relative; z-index: 3;
+          display: flex; align-items: center;
+          min-height: 92vh;
+        }
+        .ph-left {
+          width: 46%; max-width: 700px; flex-shrink: 0;
+          display: flex; flex-direction: column; justify-content: center;
+          padding: 80px 60px 80px 16px;
+          position: relative; z-index: 4;
+        }
+        /* ━━━ HERO: CHARACTER VISUAL ━━━ */
+        /* Direct child of ph-section — absolutely positioned cinematic foreground */
+        /* !important beats compiled external CSS (e.g. app/layout.css cached rules) */
+        .ph-right-visual {
+          position: absolute !important;
+          right: 0 !important; top: 0 !important; bottom: 0 !important;
+          width: 58% !important;
+          z-index: 2 !important; overflow: hidden !important;
+          pointer-events: none !important;
+          flex: none !important;
+          align-self: auto !important;
+        }
+        /* Layer 1: Warm amber stage glow — depth behind character */
+        .ph-char-glow {
+          position: absolute;
+          right: -5%; bottom: -10%; top: 15%;
+          width: 85%; border-radius: 50%;
+          background: radial-gradient(ellipse at 58% 80%,
+            rgba(245,158,11,0.11) 0%,
+            rgba(245,158,11,0.055) 36%,
+            rgba(59,130,246,0.03) 62%,
+            transparent 74%);
+          pointer-events: none; z-index: 1;
+        }
+        /* Layer 2: Character — tall, right-anchored, bleeds bottom */
+        .ph-ceo-full {
+          position: absolute;
+          right: -2%; bottom: -5%;
+          height: 112%; width: auto;
+          max-width: none; display: block;
+          z-index: 2;
+        }
+        /* Layer 3: Ground vignette — dark floor strip, anchors character */
+        .ph-ground-vignette {
+          position: absolute; bottom: 0; left: 0; right: 0;
+          height: 18%; z-index: 3; pointer-events: none;
+          background: linear-gradient(to top, rgba(2,8,23,0.52) 0%, transparent 100%);
+        }
+        /* Layer 4: Soft left-edge blend — MUCH softer than before, CEO stays visible */
+        .ph-img-fade {
+          position: absolute; inset: 0; z-index: 4; pointer-events: none;
+          background: linear-gradient(
+            to right,
+            #020817 0%,
+            rgba(2,8,23,0.92) 28%,
+            rgba(2,8,23,0.78) 46%,
+            rgba(2,8,23,0.42) 64%,
+            rgba(2,8,23,0.12) 82%,
+            transparent 100%
+          );
+        }
+
+        /* ━━━ HERO: CINEMATIC OVERLAY ELEMENTS (z-index 6 — above all layers) ━━━ */
+        /* Exam badge — top-right glassmorphism pill */
+        .ph-ov-exam-badge {
+          position: absolute; top: 44px; right: 44px;
+          display: inline-flex; align-items: center; gap: 8px;
+          background: rgba(4,21,45,0.72); backdrop-filter: blur(14px);
+          border: 1px solid rgba(245,158,11,0.28);
+          border-radius: 30px; padding: 8px 18px;
+          font-family: Nunito, sans-serif; font-size: 11px;
+          font-weight: 800; letter-spacing: 0.9px;
+          color: rgba(245,158,11,0.92); text-transform: uppercase;
+          z-index: 6; white-space: nowrap;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(245,158,11,0.06);
+        }
+        .ph-ov-eb-dot {
+          width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+          background: #F59E0B; animation: phDotPulse 1.5s ease-in-out infinite;
+        }
+        /* Ebook card — bottom-right glassmorphism card, gently floating */
+        .ph-ov-ebook-card {
+          position: absolute; bottom: 44px; right: 44px;
+          display: flex; align-items: center; gap: 14px;
+          background: rgba(4,21,45,0.76); backdrop-filter: blur(18px);
+          border: 1px solid rgba(245,158,11,0.18);
+          border-top: 1px solid rgba(245,158,11,0.36);
+          border-radius: 20px; padding: 16px 20px;
+          min-width: 270px; max-width: 340px;
+          z-index: 6;
+          box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,158,11,0.05);
+          animation: phBadgeFloat 4s ease-in-out infinite;
+        }
+        .ph-ov-ec-icon { font-size: 28px; flex-shrink: 0; line-height: 1; }
+        .ph-ov-ec-body { flex: 1; min-width: 0; }
+        .ph-ov-ec-title {
+          font-family: Rajdhani, sans-serif; font-size: 14px;
+          font-weight: 700; color: #ffffff; line-height: 1.2; margin-bottom: 3px;
+        }
+        .ph-ov-ec-sub {
+          font-family: Nunito, sans-serif; font-size: 11px;
+          color: rgba(255,255,255,0.42); font-weight: 600; white-space: nowrap;
+        }
+        .ph-ov-ec-price {
+          font-family: Rajdhani, sans-serif; font-size: 22px;
+          font-weight: 800; color: #F59E0B; white-space: nowrap; flex-shrink: 0;
+        }
+        /* Vertical brand accent — right edge, ultra-subtle */
+        .ph-ov-vert-label {
+          position: absolute; right: 12px; top: 50%;
+          transform: translateY(-50%) rotate(90deg);
+          font-family: Rajdhani, sans-serif; font-size: 9px;
+          font-weight: 700; color: rgba(245,158,11,0.18);
+          letter-spacing: 4px; text-transform: uppercase;
+          z-index: 6; white-space: nowrap;
+        }
+
+        /* ━━━ HERO: BADGES ━━━ */
+        .ph-badges-row {
+          display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap;
+        }
+        .ph-badge-launch {
+          display: inline-flex; align-items: center; gap: 8px;
+          background: rgba(16,185,129,0.09); border: 1px solid rgba(16,185,129,0.24);
+          border-radius: 30px; padding: 6px 16px;
+          font-size: 11px; font-weight: 800; letter-spacing: 0.9px;
+          color: #34D399; font-family: Nunito, sans-serif; text-transform: uppercase;
+        }
+        .ph-dot {
+          width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+          background: #34D399; animation: phDotPulse 1.5s ease-in-out infinite;
+        }
+        .ph-badge-exam {
           display: inline-block;
-          width: 6px; height: 6px;
-          border-radius: 50%;
-          background: #34D399;
-          animation: dpPulse 1.4s ease-in-out infinite;
-          flex-shrink: 0;
+          background: rgba(245,158,11,0.09); border: 1px solid rgba(245,158,11,0.22);
+          border-radius: 30px; padding: 6px 14px;
+          font-size: 11px; font-weight: 700; color: #FCD34D; font-family: Nunito, sans-serif;
         }
-        .dp-hero-wrap {
-          max-width: 1100px;
-          margin: 0 auto;
-          padding: 64px 5% 0;
-          position: relative;
-          z-index: 1;
-          display: grid;
-          grid-template-columns: 1fr 420px;
-          gap: 40px;
-          align-items: center;
+        .ph-exam-strip {
+          display: inline-block; margin-bottom: 28px;
+          font-family: Nunito, sans-serif; font-size: 12px;
+          font-weight: 600; color: rgba(245,158,11,0.72); letter-spacing: 0.4px;
         }
-        .dp-hero-left { padding: 20px 0 56px; }
-        .dp-hero-right {
-          display: flex;
-          align-items: flex-end;
-          justify-content: center;
-          padding-bottom: 0;
+
+        /* ━━━ HERO: HEADING ━━━ */
+        .ph-h1 {
+          display: flex; flex-direction: column;
+          margin: 0 0 26px; line-height: 0.95;
         }
-        .dp-ceo-img {
-          width: 100%;
-          max-width: 420px;
-          height: auto;
-          display: block;
-          object-fit: contain;
-          object-position: bottom center;
+        .ph-h1-white {
+          font-family: Rajdhani, sans-serif; display: block;
+          font-size: clamp(46px, 5.8vw, 80px);
+          font-weight: 800; color: #ffffff;
+          text-transform: uppercase; letter-spacing: -2px;
         }
-        .dp-hero-title {
-          font-family: Rajdhani, sans-serif;
-          font-size: clamp(40px, 5.5vw, 68px);
-          font-weight: 700;
-          color: #ffffff;
-          line-height: 1.02;
-          margin: 0 0 18px;
-          text-transform: uppercase;
-          letter-spacing: -0.5px;
+        .ph-h1-gold {
+          font-family: Rajdhani, sans-serif; display: block;
+          font-size: clamp(46px, 5.8vw, 80px);
+          font-weight: 800; text-transform: uppercase; letter-spacing: -2px;
+          background: linear-gradient(135deg, #F59E0B 0%, #FDE68A 50%, #F59E0B 100%);
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
         }
-        .dp-hero-title-gold {
-          background: linear-gradient(135deg, #F59E0B, #FCD34D);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+
+        /* ━━━ HERO: SUB-CONTENT ━━━ */
+        .ph-for-line {
+          display: flex; align-items: center; gap: 14px; margin-bottom: 8px;
+          font-family: Nunito, sans-serif; font-size: clamp(15px, 1.8vw, 18px);
+          font-weight: 700; color: rgba(255,255,255,0.9);
         }
-        /* CTA Bar */
-        .dp-cta-bar {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 16px;
-          background: rgba(0,0,0,0.28);
-          border-top: 1px solid rgba(245,158,11,0.1);
-          padding: 20px 5%;
-          position: relative;
-          z-index: 1;
-          flex-wrap: wrap;
+        .ph-for-bar {
+          width: 4px; height: 24px; border-radius: 4px; flex-shrink: 0;
+          background: linear-gradient(180deg, #F59E0B, #FCD34D);
         }
-        .dp-cta-sep {
-          width: 1px; height: 52px;
-          background: rgba(255,255,255,0.1);
-          flex-shrink: 0;
+        .ph-level {
+          font-family: Nunito, sans-serif; font-size: 13px;
+          color: rgba(255,255,255,0.35); margin: 0 0 8px; padding-left: 18px;
         }
-        .dp-cta-info {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 3px;
-          padding: 0 16px;
+        .ph-tagline {
+          font-family: Nunito, sans-serif; font-size: 14px; font-style: italic;
+          color: rgba(255,255,255,0.3); margin: 0 0 34px; padding-left: 18px;
         }
-        .dp-btn-preview {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          background: #ffffff;
-          color: #0B1E3D;
-          padding: 12px 24px;
-          border-radius: 50px;
-          text-decoration: none;
-          transition: transform 0.22s, box-shadow 0.22s;
-          box-shadow: 0 4px 20px rgba(255,255,255,0.12);
-          white-space: nowrap;
+
+        /* ━━━ HERO: FEATURE CARDS ━━━ */
+        .ph-feat-grid {
+          display: grid; grid-template-columns: 1fr 1fr;
+          gap: 10px; margin-bottom: 28px;
         }
-        .dp-btn-preview:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,255,255,0.22); }
-        .dp-btn-purchase {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          background: linear-gradient(135deg, #F59E0B, #D97706);
-          color: #1A0A00;
-          padding: 12px 24px;
-          border-radius: 50px;
-          text-decoration: none;
-          transition: transform 0.22s, box-shadow 0.22s;
-          box-shadow: 0 4px 20px rgba(245,158,11,0.38);
-          white-space: nowrap;
+        .ph-feat-card {
+          display: flex; align-items: center; gap: 12px;
+          background: rgba(255,255,255,0.025);
+          border: 1px solid rgba(245,158,11,0.1);
+          border-radius: 14px; padding: 14px 16px;
+          transition: all 0.24s ease; cursor: default;
         }
-        .dp-btn-purchase:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(245,158,11,0.55); }
-        .dp-btn-main {
-          display: block;
-          font-family: Nunito, sans-serif;
-          font-size: 14px;
-          font-weight: 800;
+        .ph-feat-card:hover {
+          background: rgba(245,158,11,0.07);
+          border-color: rgba(245,158,11,0.28);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 28px rgba(245,158,11,0.1);
         }
-        .dp-btn-sub {
-          display: block;
-          font-family: Nunito, sans-serif;
-          font-size: 11px;
-          font-weight: 600;
-          opacity: 0.72;
+        .ph-feat-icon { font-size: 20px; flex-shrink: 0; line-height: 1; }
+        .ph-feat-label {
+          font-family: Nunito, sans-serif; font-size: 13px;
+          font-weight: 700; color: rgba(255,255,255,0.82); line-height: 1.3;
         }
-        /* Trust bar */
-        .dp-trust-bar {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 20px;
-          padding: 14px 5%;
-          border-top: 1px solid rgba(255,255,255,0.06);
-          flex-wrap: wrap;
-          position: relative;
-          z-index: 1;
+
+        /* ━━━ HERO: COUNTDOWN ━━━ */
+        .ph-countdown {
+          display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+          background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.18);
+          border-radius: 16px; padding: 12px 20px; margin-bottom: 34px;
+          width: fit-content;
         }
-        .dp-trust-item {
-          font-family: Nunito, sans-serif;
-          font-size: 11px;
-          font-weight: 600;
-          color: rgba(255,255,255,0.35);
-          text-align: center;
+        .ph-cd-label {
+          font-family: Nunito, sans-serif; font-size: 11px;
+          font-weight: 800; color: #F87171; letter-spacing: 0.5px; white-space: nowrap;
         }
-        .dp-trust-sep {
-          width: 1px; height: 16px;
-          background: rgba(255,255,255,0.1);
-          flex-shrink: 0;
+        .ph-cd-units { display: flex; gap: 10px; }
+        .ph-cd-block { text-align: center; min-width: 38px; }
+        .ph-cd-num {
+          display: block; font-family: Rajdhani, sans-serif;
+          font-size: 24px; font-weight: 700; color: #FCA5A5; line-height: 1;
         }
-        /* Responsive hero */
-        @media (max-width: 920px) {
-          .dp-hero-wrap {
-            grid-template-columns: 1fr;
-            padding: 48px 5% 0;
+        .ph-cd-unit {
+          display: block; font-size: 9px; font-weight: 700;
+          color: rgba(252,165,165,0.5); font-family: Nunito, sans-serif;
+          text-transform: uppercase; letter-spacing: 0.3px;
+        }
+
+        /* ━━━ HERO: CTA BUTTONS ━━━ */
+        .ph-cta-row { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+        .ph-btn-preview {
+          display: inline-flex; align-items: center; gap: 9px;
+          background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%);
+          color: #0D0700; font-family: Nunito, sans-serif;
+          font-size: 15px; font-weight: 800; letter-spacing: 0.2px;
+          padding: 15px 32px; border-radius: 50px; text-decoration: none;
+          box-shadow: 0 6px 32px rgba(245,158,11,0.45);
+          transition: transform 0.22s ease, box-shadow 0.22s ease; white-space: nowrap;
+        }
+        .ph-btn-preview:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(245,158,11,0.62); }
+        .ph-btn-buy {
+          display: inline-flex; align-items: center; gap: 9px;
+          background: linear-gradient(135deg, #E8430A 0%, #FF7034 100%);
+          color: #ffffff; font-family: Nunito, sans-serif;
+          font-size: 15px; font-weight: 700;
+          padding: 15px 32px; border-radius: 50px; text-decoration: none;
+          box-shadow: 0 6px 32px rgba(232,67,10,0.38);
+          transition: transform 0.22s ease, box-shadow 0.22s ease; white-space: nowrap;
+        }
+        .ph-btn-buy:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(232,67,10,0.56); }
+
+        /* ━━━ HERO: INFO ROW ━━━ */
+        .ph-info-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .ph-info-pill {
+          display: inline-flex; align-items: center;
+          background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.18);
+          border-radius: 20px; padding: 4px 12px;
+          font-family: Nunito, sans-serif; font-size: 12px;
+          font-weight: 700; color: #FCD34D;
+        }
+        .ph-info-dot {
+          width: 3px; height: 3px; border-radius: 50%;
+          background: rgba(255,255,255,0.16); flex-shrink: 0;
+        }
+        .ph-info-text {
+          font-family: Nunito, sans-serif; font-size: 12px;
+          font-weight: 600; color: rgba(255,255,255,0.3);
+        }
+        .ph-info-wa {
+          font-family: Nunito, sans-serif; font-size: 12px;
+          font-weight: 700; color: #34D399; text-decoration: none; transition: color 0.2s;
+        }
+        .ph-info-wa:hover { color: #6EE7B7; }
+
+        /* ━━━ HERO: RESPONSIVE ━━━ */
+        @media (max-width: 1400px) {
+          .ph-right-visual { width: 60%; }
+          .ph-ov-ebook-card { min-width: 240px; }
+        }
+        @media (max-width: 1200px) {
+          .ph-right-visual { width: 62%; }
+          .ph-left { width: 48%; }
+          .ph-ov-exam-badge { top: 28px; right: 28px; }
+          .ph-ov-ebook-card { right: 28px; bottom: 28px; min-width: 220px; padding: 13px 16px; }
+        }
+        @media (max-width: 1024px) {
+          .ph-right-visual { width: 64%; }
+          .ph-left { width: 52%; }
+          .ph-ov-exam-badge { top: 20px; right: 20px; font-size: 10px; padding: 7px 14px; }
+          .ph-ov-ebook-card { right: 20px; bottom: 20px; min-width: 0; gap: 10px; padding: 12px 14px; }
+          .ph-ov-ec-icon { font-size: 22px; }
+          .ph-ov-ec-price { font-size: 18px; }
+          .ph-ov-vert-label { display: none; }
+        }
+        @media (max-width: 860px) {
+          /* Stack: content above, character below as tall cinematic strip */
+          .ph-section { min-height: auto; padding-bottom: 380px; }
+          .ph-wrap { min-height: auto; padding: 52px 5% 40px; }
+          .ph-left { width: 100%; max-width: 100%; padding: 0; }
+          .ph-right-visual { top: auto; bottom: 0; width: 100% !important; height: 380px; }
+          .ph-ceo-full {
+            bottom: 0; right: 50%; height: 100%; width: auto;
+            transform: translateX(50%);
           }
-          .dp-hero-right { display: none; }
-          .dp-cta-sep { display: none; }
-          .dp-cta-bar { gap: 20px; }
-          .dp-cta-info { padding: 0 8px; }
-          .dp-trust-sep { display: none; }
+          .ph-img-fade {
+            background: linear-gradient(to bottom,
+              #020817 0%,
+              rgba(2,8,23,0.88) 18%,
+              rgba(2,8,23,0.38) 52%,
+              transparent 100%
+            );
+          }
+          .ph-ground-vignette { display: none; }
+          .ph-ov-exam-badge { display: none; }
+          .ph-ov-vert-label { display: none; }
+          .ph-ov-ebook-card {
+            bottom: 12px; right: 12px; left: 12px;
+            min-width: 0; max-width: none; border-radius: 14px;
+            padding: 12px 16px; animation: none;
+          }
         }
-        @media (max-width: 600px) {
-          .dp-hero-title { font-size: 38px; }
-          .dp-btn-preview, .dp-btn-purchase { padding: 11px 16px; }
+        @media (max-width: 640px) {
+          .ph-h1-white, .ph-h1-gold { font-size: 40px; letter-spacing: -0.5px; }
+          .ph-feat-grid { grid-template-columns: 1fr; gap: 8px; }
+          .ph-cta-row { flex-direction: column; gap: 12px; }
+          .ph-btn-preview, .ph-btn-buy { justify-content: center; padding: 14px 20px; }
+          .ph-section { padding-bottom: 280px; }
+          .ph-right-visual { height: 280px; }
+          .ph-ov-ebook-card { display: none; }
         }
         /* ── Rest of page ── */
         .modules-grid {
