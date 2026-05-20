@@ -870,23 +870,22 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
           max-width: none; display: block;
           z-index: 2;
         }
-        /* Layer 3: Ground vignette — dark floor strip, anchors character */
+        /* Layer 3: Ground vignette — blends bottom edge into section bg */
         .ph-ground-vignette {
           position: absolute; bottom: 0; left: 0; right: 0;
-          height: 18%; z-index: 3; pointer-events: none;
-          background: linear-gradient(to top, rgba(2,8,23,0.52) 0%, transparent 100%);
+          height: 22%; z-index: 3; pointer-events: none;
+          background: linear-gradient(to top, #020817 0%, rgba(2,8,23,0.55) 45%, transparent 100%);
         }
-        /* Layer 4: Soft left-edge blend — MUCH softer than before, CEO stays visible */
+        /* Layer 4: Left-edge blend only — removes hard partition, CEO fully visible */
         .ph-img-fade {
           position: absolute; inset: 0; z-index: 4; pointer-events: none;
           background: linear-gradient(
             to right,
             #020817 0%,
-            rgba(2,8,23,0.92) 28%,
-            rgba(2,8,23,0.78) 46%,
-            rgba(2,8,23,0.42) 64%,
-            rgba(2,8,23,0.12) 82%,
-            transparent 100%
+            rgba(2,8,23,0.86) 9%,
+            rgba(2,8,23,0.52) 19%,
+            rgba(2,8,23,0.14) 32%,
+            transparent 46%
           );
         }
 
@@ -1133,15 +1132,16 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
             bottom: 0; right: 50%; height: 100%; width: auto;
             transform: translateX(50%);
           }
+          /* On mobile, blend top-to-bottom so content above reads over character below */
           .ph-img-fade {
             background: linear-gradient(to bottom,
               #020817 0%,
-              rgba(2,8,23,0.88) 18%,
-              rgba(2,8,23,0.38) 52%,
+              rgba(2,8,23,0.82) 16%,
+              rgba(2,8,23,0.28) 48%,
               transparent 100%
             );
           }
-          .ph-ground-vignette { display: none; }
+          .ph-ground-vignette { display: block; height: 25%; }
           .ph-ov-exam-badge { display: none; }
           .ph-ov-vert-label { display: none; }
           .ph-ov-ebook-card {
