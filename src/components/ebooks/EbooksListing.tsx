@@ -317,7 +317,7 @@ export default function EbooksListing() {
           .eb-heading-white, .eb-heading-gold { font-size: 40px; letter-spacing: -1px; }
           .eb-ceo-img { height: 250px; }
           .eb-cta-row { flex-direction: column; }
-          .eb-btn-know, .eb-btn-preview { justify-content: center; text-align: center; }
+          .eb-btn-know, .eb-btn-preview { justify-content: center; text-align: center; width: 100%; }
         }
 
         /* ━━━ COMING SOON CARD ━━━ */

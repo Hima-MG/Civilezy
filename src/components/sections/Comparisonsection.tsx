@@ -257,7 +257,11 @@ export default function ComparisonSection() {
       </div>
 
       {/* Mobile Hint */}
-      <p style={styles.scrollHint}>← Scroll horizontally on mobile →</p>
+      <p className="comp-scroll-hint" style={styles.scrollHint}>← Scroll horizontally on mobile →</p>
+
+      <style>{`
+        @media (min-width: 700px) { .comp-scroll-hint { display: none !important; } }
+      `}</style>
     </section>
   );
 }

@@ -125,7 +125,7 @@ export default function WhatsAppWidget() {
             border: "1px solid rgba(255,255,255,0.1)",
             borderRadius: "20px",
             padding: "16px",
-            width: "290px",
+            width: "min(290px, calc(100vw - 40px))",
             boxShadow: "0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(37,211,102,0.08)",
           }}
         >
@@ -251,8 +251,8 @@ export default function WhatsAppWidget() {
           50%      { opacity: 0.4; transform: scale(0.8); }
         }
         @media (max-width: 640px) {
-          /* Shift up on mobile so it doesn't overlap footer */
-          .wa-widget-root { bottom: 20px !important; right: 20px !important; }
+          /* Shift up on mobile so it sits above the sticky CTA bar (~70px) */
+          .wa-widget-root { bottom: 80px !important; right: 16px !important; }
         }
       `}</style>
     </>

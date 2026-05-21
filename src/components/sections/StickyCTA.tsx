@@ -144,15 +144,7 @@ export default function StickyCTA() {
           0%, 100% { opacity: 1; transform: scale(1);    }
           50%       { opacity: 0.5; transform: scale(0.75); }
         }
-
-        @media (max-width: 640px) {
-          .sticky-cta-inner   { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
-          .sticky-cta-buttons { width: 100%; flex-direction: column !important; gap: 8px !important; }
-          .sticky-cta-buttons a,
-          .sticky-cta-buttons button { width: 100% !important; justify-content: center !important; }
-          .sticky-cta-text div:first-child { font-size: 15px !important; }
-        }
-
+        /* Mobile handled by globals.css — compact button-only bar */
         @media (max-width: 900px) and (min-width: 641px) {
           .sticky-cta-text div:nth-child(2) { font-size: 15px !important; }
         }

@@ -113,6 +113,7 @@ export default function FinalCTASection() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Start Demo Course — opens in new tab"
+            className="final-cta-btn"
             style={{
               background:     "linear-gradient(135deg, #FF6200, #FF4500)",
               color:          "white",
@@ -126,7 +127,9 @@ export default function FinalCTASection() {
               boxShadow:      "0 6px 30px rgba(255,98,0,0.5)",
               transition:     "transform 0.2s, box-shadow 0.2s",
               textDecoration: "none",
-              display:        "inline-block",
+              display:        "inline-flex",
+              alignItems:     "center",
+              justifyContent: "center",
             }}
             onMouseEnter={onPrimaryEnter}
             onMouseLeave={onPrimaryLeave}
@@ -139,6 +142,7 @@ export default function FinalCTASection() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Join the CivilEzy Telegram community — opens in new tab"
+            className="final-cta-btn"
             style={{
               background:     "transparent",
               color:          "white",
@@ -153,6 +157,7 @@ export default function FinalCTASection() {
               textDecoration: "none",
               display:        "inline-flex",
               alignItems:     "center",
+              justifyContent: "center",
               gap:            "8px",
             }}
             onMouseEnter={onSecondaryEnter}
@@ -161,6 +166,16 @@ export default function FinalCTASection() {
             📱 Join Telegram Community
           </a>
         </div>
+
+        <style>{`
+          @media (max-width: 480px) {
+            .final-cta-btn {
+              width: 100% !important;
+              justify-content: center !important;
+              text-align: center !important;
+            }
+          }
+        `}</style>
 
         {/* Trust signals */}
         <p

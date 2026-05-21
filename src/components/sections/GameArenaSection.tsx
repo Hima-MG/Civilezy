@@ -165,7 +165,7 @@ export default function GameArenaSection() {
                   >
                     <span aria-hidden="true" style={{ fontSize:"24px", flexShrink:0 }}>{t.icon}</span>
                     <div style={{ flex:1 }}>
-                      <div style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"18px", fontWeight:700, color: isActive ? "#FF6200" : isReached ? "#fff" : "rgba(255,255,255,0.6)", display:"flex", alignItems:"center", gap:"8px", flexWrap:"wrap" }}>
+                      <div style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"clamp(14px,4vw,18px)", fontWeight:700, color: isActive ? "#FF6200" : isReached ? "#fff" : "rgba(255,255,255,0.6)", display:"flex", alignItems:"center", gap:"8px", flexWrap:"wrap" }}>
                         {t.name}
                         {isActive && (
                           <span style={{ fontSize:"11px", background:"#FF6200", color:"white", padding:"2px 8px", borderRadius:"10px", fontFamily:"Nunito, sans-serif", fontWeight:700, animation:"pulse 2s ease-in-out infinite" }}>
@@ -213,7 +213,7 @@ export default function GameArenaSection() {
             )}
 
             {/* Stat mini-cards */}
-            <div style={{ display:"flex", gap:"10px", flexWrap:"wrap" }} aria-label="Your current stats">
+            <div className="arena-stat-cards" style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:"10px" }} aria-label="Your current stats">
               {statMini.map(c => (
                 <div
                   key={c.label}
@@ -253,6 +253,9 @@ export default function GameArenaSection() {
       <style>{`
         @media (max-width: 900px) {
           #arena-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+        }
+        @media (max-width: 480px) {
+          .arena-stat-cards { grid-template-columns: repeat(2,1fr) !important; }
         }
         @keyframes pulse {
           0%, 100% { opacity: 1; }

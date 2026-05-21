@@ -145,11 +145,41 @@ h1, h2, h3, h4, h5 {
   .sticky-cta-buttons button { width: 100% !important; justify-content: center !important; }
 }
 
-/* ─── Mobile hero CTA buttons ────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .sticky-cta {
-    display: none;
+/* ─── Sticky CTA — compact on mobile (text hidden, buttons only) ─────── */
+@media (max-width: 640px) {
+  .sticky-cta-text    { display: none !important; }
+  .sticky-cta-inner   { justify-content: center !important; flex-direction: row !important; align-items: center !important; gap: 8px !important; }
+  .sticky-cta-buttons { flex-direction: row !important; width: auto !important; gap: 8px !important; }
+  .sticky-cta-buttons a,
+  .sticky-cta-buttons button {
+    width: auto !important;
+    flex: 1 !important;
+    font-size: 13px !important;
+    padding: 10px 14px !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
   }
+  .sticky-cta { padding: 10px 4% !important; }
+}
+@media (max-width: 360px) {
+  .sticky-cta-buttons a,
+  .sticky-cta-buttons button { font-size: 12px !important; padding: 9px 10px !important; }
+}
+
+/* ─── Hero domain selector — 2×2 grid on small screens ──────────────── */
+@media (max-width: 480px) {
+  .hero-domain-selector { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ─── Hero floating badges — keep inside viewport on mobile ──────────── */
+@media (max-width: 899px) {
+  .hero-rank-badge   { top: 8px !important; right: 8px !important; font-size: 12px !important; }
+  .hero-online-badge { bottom: 8px !important; left: 8px !important; font-size: 12px !important; }
+}
+
+/* ─── Hero stats row — tighter gap on mobile ─────────────────────────── */
+@media (max-width: 480px) {
+  .hero-stats-row { gap: 16px !important; }
 }
 
 /* ─── Section padding – mobile first ─────────────────────────────────── */
@@ -172,6 +202,9 @@ h1, h2, h3, h4, h5 {
 /* ─── Overflow guard ─────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
 img, video { max-width: 100%; height: auto; }
+
+/* ─── Prevent any child from causing horizontal scroll ──────────────── */
+html, body { overflow-x: hidden; max-width: 100%; }
 
 /* ─── Global touch & interaction safety ─────────────────────────────── */
 /* Eliminates the 300ms tap delay on mobile Safari/Chrome for all
@@ -208,6 +241,10 @@ select {
 }
 @media (max-width: 768px) {
   .course-sticky-cta { display: block !important; }
+}
+@media (max-width: 400px) {
+  .course-price-teaser { display: flex !important; flex-direction: column !important; align-items: flex-start !important; }
+  .course-price-teaser span:last-child { margin-left: 0 !important; }
 }
 @media (max-width: 640px) {
   .stats-grid          { grid-template-columns: repeat(2,1fr) !important; }

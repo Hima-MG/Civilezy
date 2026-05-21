@@ -213,7 +213,8 @@ export default function PricingSection() {
           <div
             role="tablist"
             aria-label="Select your course level"
-            style={{ display:"inline-flex", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:"50px", padding:"5px", gap:"4px" }}
+            className="pricing-tabs-row"
+            style={{ display:"inline-flex", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:"50px", padding:"5px", gap:"4px", flexWrap:"wrap", justifyContent:"center" }}
           >
             {COURSE_KEYS.map(key => {
               const c       = COURSES[key];
@@ -225,6 +226,7 @@ export default function PricingSection() {
                   aria-selected={isActive}
                   aria-controls="pricing-panel"
                   onClick={() => setActive(key)}
+                  className="pricing-tab-btn"
                   style={{ position:"relative", display:"inline-flex", alignItems:"center", gap:"6px", padding:"10px 20px", borderRadius:"50px", border:"none", fontFamily:"Nunito, sans-serif", fontSize:"14px", fontWeight:700, cursor:"pointer", transition:"all 0.25s", background:isActive?"linear-gradient(135deg,#FF6200,#FF8534)":"transparent", color:isActive?"white":"rgba(255,255,255,0.55)", boxShadow:isActive?"0 4px 16px rgba(255,98,0,0.35)":"none", whiteSpace:"nowrap" }}
                 >
                   <span aria-hidden="true">{c.emoji}</span>
@@ -245,20 +247,21 @@ export default function PricingSection() {
             role="status"
             aria-live="polite"
             aria-label={`Showing plans for ${course.label} PSC Preparation`}
-            style={{ display:"inline-flex", alignItems:"center", gap:"10px", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:"14px", padding:"10px 20px" }}
+            className="pricing-course-label"
+            style={{ display:"inline-flex", alignItems:"flex-start", gap:"10px", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:"14px", padding:"10px 20px", maxWidth:"100%", textAlign:"left", flexWrap:"wrap" }}
           >
-            <span aria-hidden="true" style={{ fontSize:"22px" }}>{course.emoji}</span>
-            <div style={{ textAlign:"left" }}>
+            <span aria-hidden="true" style={{ fontSize:"22px", flexShrink:0 }}>{course.emoji}</span>
+            <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"18px", fontWeight:700 }}>{course.label} PSC Preparation</div>
-              <div style={{ fontSize:"12px", color:"rgba(255,255,255,0.45)" }}>{course.tagline}</div>
-            </div>
-            <div
-              aria-label={`Exam pools: ${course.pools.join(", ")}`}
-              style={{ marginLeft:"12px", display:"flex", gap:"6px", flexWrap:"wrap" }}
-            >
-              {course.pools.map(p => (
-                <span key={p} aria-hidden="true" style={{ background:"rgba(255,98,0,0.12)", border:"1px solid rgba(255,98,0,0.25)", borderRadius:"20px", padding:"2px 10px", fontSize:"11px", fontWeight:700, color:"#FF8534" }}>{p}</span>
-              ))}
+              <div style={{ fontSize:"12px", color:"rgba(255,255,255,0.45)", lineHeight:1.5 }}>{course.tagline}</div>
+              <div
+                aria-label={`Exam pools: ${course.pools.join(", ")}`}
+                style={{ marginTop:"8px", display:"flex", gap:"6px", flexWrap:"wrap" }}
+              >
+                {course.pools.map(p => (
+                  <span key={p} aria-hidden="true" style={{ background:"rgba(255,98,0,0.12)", border:"1px solid rgba(255,98,0,0.25)", borderRadius:"20px", padding:"2px 10px", fontSize:"11px", fontWeight:700, color:"#FF8534" }}>{p}</span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -327,6 +330,12 @@ export default function PricingSection() {
         @media (max-width: 640px) {
           .pricing-cards-grid { grid-template-columns: 1fr !important; }
           .features-grid      { grid-template-columns: 1fr !important; }
+          .pricing-tabs-row   { border-radius: 20px !important; }
+          .pricing-tab-btn    { padding: 9px 14px !important; font-size: 13px !important; }
+          .pricing-course-label { text-align: left !important; }
+        }
+        @media (max-width: 400px) {
+          .pricing-tab-btn { padding: 8px 10px !important; font-size: 12px !important; gap: 4px !important; }
         }
         @media (max-width: 900px) {
           .features-grid { grid-template-columns: repeat(2,1fr) !important; }

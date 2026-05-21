@@ -61,7 +61,7 @@ export default function Footer() {
         <div className="footer-layout">
 
           {/* ── Brand column ── */}
-          <div style={{ maxWidth:"280px" }}>
+          <div className="footer-brand-col" style={{ maxWidth:"280px" }}>
             <Link
               href="/"
               aria-label="CivilEzy home"
@@ -179,7 +179,8 @@ export default function Footer() {
           .footer-layout { grid-template-columns: 1fr 1fr; }
         }
         @media (max-width: 600px) {
-          .footer-layout { grid-template-columns: 1fr; }
+          .footer-layout { grid-template-columns: 1fr; gap: 28px; }
+          .footer-brand-col { max-width: 100% !important; }
         }
       `}</style>
     </>

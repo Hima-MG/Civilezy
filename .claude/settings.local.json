@@ -26,7 +26,11 @@
       "Bash(python -c \"import sys,json; logs=json.load\\(sys.stdin\\); errors=[l for l in logs if 'error' in l.get\\('type',''\\).lower\\(\\) or 'Error' in l.get\\('text',''\\)]; [print\\(e['text'][:300]\\) for e in errors[-10:]]\")",
       "Bash(python -c \"import sys,json; logs=json.load\\(sys.stdin\\); recent=[l for l in logs[-30:]]; [print\\(l.get\\('type',''\\), l.get\\('text',''\\)[:200]\\) for l in recent]\")",
       "Bash(head -30 src/lib/firebase.ts)",
-      "Bash(head -30 src/lib/firestore.ts)"
+      "Bash(head -30 src/lib/firestore.ts)",
+      "PowerShell($basePath = \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\"; Get-ChildItem -Path $basePath -Depth 0 | Select-Object Name, @{N='Type';E={if\\($_.PSIsContainer\\){'Dir'}else{'File'}}} | Format-Table -AutoSize)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\" -Recurse -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)"
     ]
   }
 }

@@ -88,7 +88,7 @@ function HeroSection({ data }: { data: CourseData }) {
           </div>
 
           {/* Price teaser */}
-          <div style={{ display: "inline-flex", alignItems: "baseline", gap: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "14px", padding: "14px 22px", marginBottom: "32px" }}>
+          <div className="course-price-teaser" style={{ display: "inline-flex", alignItems: "baseline", gap: "10px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "14px", padding: "14px 22px", marginBottom: "32px", maxWidth: "100%", flexWrap: "wrap" }}>
             <span style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "36px", fontWeight: 700, ...S.gradText }}>{fmt(p.monthly)}</span>
             <span style={{ color: "rgba(255,255,255,0.45)", fontSize: "15px" }}>/month</span>
             <span style={{ fontSize: "13px", color: "#32C864", fontWeight: 700, marginLeft: "8px" }}>

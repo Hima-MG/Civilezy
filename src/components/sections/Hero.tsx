@@ -200,7 +200,7 @@ export default function Hero() {
         style={{ minHeight: "100vh", padding: "40px 5% 60px", position: "relative", overflow: "hidden", display: "flex", alignItems: "center" }}
         className="hero-section-pad"
       >
-        {/* Decorative backgrounds */}
+        {/* Decorative backgrounds — clipped by section overflow:hidden */}
         <div aria-hidden="true" style={{ position:"absolute", inset:0, zIndex:0, background:"radial-gradient(ellipse at 70% 50%,rgba(255,98,0,0.12) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(255,184,0,0.06) 0%,transparent 50%),linear-gradient(180deg,#0B1E3D 0%,#0A1B35 100%)" }} />
         <div aria-hidden="true" style={{ position:"absolute", inset:0, opacity:0.04, backgroundImage:"linear-gradient(rgba(255,98,0,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,98,0,0.5) 1px,transparent 1px)", backgroundSize:"60px 60px" }} />
 
@@ -258,7 +258,7 @@ export default function Hero() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Start Demo Course — opens in new tab"
-                className="hero-cta-btn"
+                className="hero-cta-btn hero-cta-primary"
                 style={{ background:"linear-gradient(135deg,#FF6200,#FF4500)", color:"white", border:"none", padding:"16px 32px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"17px", fontWeight:800, cursor:"pointer", boxShadow:"0 6px 30px rgba(255,98,0,0.5)", transition:"transform 0.2s, box-shadow 0.2s", display:"inline-flex", alignItems:"center", gap:"8px", textDecoration:"none" }}
                 onMouseEnter={onPrimaryEnter}
                 onMouseLeave={onPrimaryLeave}
@@ -270,7 +270,7 @@ export default function Hero() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="See how CivilEzy works — opens in new tab"
-                className="hero-cta-btn"
+                className="hero-cta-btn hero-cta-secondary"
                 style={{ background:"transparent", color:"#ffffff", border:"2px solid rgba(255,255,255,0.3)", padding:"14px 28px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"16px", fontWeight:600, cursor:"pointer", transition:"border-color 0.2s, background 0.2s", display:"inline-flex", alignItems:"center", gap:"8px", textDecoration:"none" }}
                 onMouseEnter={onSecondaryEnter}
                 onMouseLeave={onSecondaryLeave}
@@ -284,7 +284,7 @@ export default function Hero() {
             </p>
 
             {/* Stats */}
-            <dl style={{ display:"flex", gap:"28px", flexWrap:"wrap" }} aria-label="Platform statistics">
+            <dl className="hero-stats-row" style={{ display:"flex", gap:"28px", flexWrap:"wrap" }} aria-label="Platform statistics">
               {STATS.map(({ num, label }) => (
                 <div key={label} style={{ textAlign:"center" }}>
                   <dt style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"26px", fontWeight:700, background:"linear-gradient(135deg,#FF6200,#FFB800)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>
@@ -297,10 +297,10 @@ export default function Hero() {
           </div>
 
           {/* ═══ RIGHT SIDE — PSC Challenge Teaser ═══ */}
-          <div style={{ position:"relative", animation:"heroFadeUp 0.7s 0.2s ease both" }}>
+          <div style={{ position:"relative", animation:"heroFadeUp 0.7s 0.2s ease both", paddingTop:"24px", paddingBottom:"24px" }}>
 
             {/* Floating rank badge */}
-            <div aria-hidden="true" style={{ position:"absolute", top:"-16px", right:"-16px", background:"rgba(11,30,61,0.9)", border:"1px solid rgba(255,98,0,0.4)", borderRadius:"12px", padding:"8px 14px", fontSize:"13px", fontWeight:700, backdropFilter:"blur(8px)", boxShadow:"0 8px 24px rgba(0,0,0,0.4)", color:mounted ? rank.color : "#FFB800", zIndex:2, whiteSpace:"nowrap" }}>
+            <div aria-hidden="true" className="hero-rank-badge" style={{ position:"absolute", top:"-16px", right:"-16px", background:"rgba(11,30,61,0.9)", border:"1px solid rgba(255,98,0,0.4)", borderRadius:"12px", padding:"8px 14px", fontSize:"13px", fontWeight:700, backdropFilter:"blur(8px)", boxShadow:"0 8px 24px rgba(0,0,0,0.4)", color:mounted ? rank.color : "#FFB800", zIndex:2, whiteSpace:"nowrap" }}>
               {mounted ? `${rank.icon} Your Rank: ${rank.label}` : "🏆 Your Rank: —"}
             </div>
 
@@ -316,7 +316,7 @@ export default function Hero() {
               </p>
 
               {/* Domain selector */}
-              <div role="group" aria-label="Select exam category" style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"8px", marginBottom:"16px" }}>
+              <div role="group" aria-label="Select exam category" className="hero-domain-selector" style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"8px", marginBottom:"16px" }}>
                 {HERO_DOMAINS.map(d => (
                   <DomainBtn
                     key={d.id}
@@ -476,13 +476,26 @@ export default function Hero() {
             </div>
 
             {/* Floating online badge */}
-            <div aria-hidden="true" style={{ position:"absolute", bottom:"-16px", left:"-16px", background:"rgba(11,30,61,0.9)", border:"1px solid rgba(255,98,0,0.4)", borderRadius:"12px", padding:"8px 14px", fontSize:"13px", fontWeight:700, backdropFilter:"blur(8px)", boxShadow:"0 8px 24px rgba(0,0,0,0.4)", color:"#64C8FF", zIndex:2, display:"flex", alignItems:"center", gap:"6px", whiteSpace:"nowrap" }}>
+            <div aria-hidden="true" className="hero-online-badge" style={{ position:"absolute", bottom:"-16px", left:"-16px", background:"rgba(11,30,61,0.9)", border:"1px solid rgba(255,98,0,0.4)", borderRadius:"12px", padding:"8px 14px", fontSize:"13px", fontWeight:700, backdropFilter:"blur(8px)", boxShadow:"0 8px 24px rgba(0,0,0,0.4)", color:"#64C8FF", zIndex:2, display:"flex", alignItems:"center", gap:"6px", whiteSpace:"nowrap" }}>
               <span style={{ width:"8px", height:"8px", borderRadius:"50%", background:"#32C864", flexShrink:0, animation:"pulseDot 1.5s infinite" }} />
               👥 {mounted ? onlineUsers : 200} students learning now
             </div>
           </div>
         </div>
       </section>
+
+      <style>{`
+        /* ── Hero CTA buttons — full width on very small screens ── */
+        @media (max-width: 400px) {
+          .hero-ctas { flex-direction: column !important; }
+          .hero-cta-primary, .hero-cta-secondary {
+            width: 100% !important;
+            justify-content: center !important;
+            font-size: 15px !important;
+            padding: 14px 20px !important;
+          }
+        }
+      `}</style>
 
       {/* ── SEO: Structured crawlable question content ──
           Hidden visually but present in HTML for search engine indexing.

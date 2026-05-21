@@ -91,8 +91,10 @@ export default function LeadCapturePopup() {
           background: "linear-gradient(160deg, #0B1E3D 0%, #060D1A 100%)",
           border: "1px solid rgba(255,98,0,0.3)",
           borderRadius: "20px",
-          padding: "36px 32px",
+          padding: "clamp(20px, 5vw, 36px) clamp(16px, 5vw, 32px)",
           boxShadow: "0 32px 80px rgba(0,0,0,0.7)",
+          maxHeight: "90vh",
+          overflowY: "auto",
         }}
       >
         {/* Close */}
@@ -271,6 +273,6 @@ const inputStyle = {
   borderRadius: "10px",
   padding: "12px 14px",
   color: "#fff",
-  fontSize: "14px",
+  fontSize: "16px",   /* ≥16px prevents iOS auto-zoom on focus */
   outline: "none",
 };

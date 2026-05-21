@@ -110,9 +110,9 @@ export default function AnnouncementBar() {
   const cfg = TYPE_CFG[ann.type] ?? TYPE_CFG.update;
 
   const textContent = (
-    <div className="ann-content" style={{ display: "flex", alignItems: "center", gap: "10px", flex: 1, minWidth: 0 }}>
+    <div className="ann-content" style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1, minWidth: 0 }}>
       {/* Pulsing dot */}
-      <span style={{ position: "relative", display: "flex", flexShrink: 0 }}>
+      <span className="ann-pulse-wrap" style={{ position: "relative", display: "flex", flexShrink: 0 }}>
         <span className="ann-pulse-ring" style={{ position: "absolute", inset: "-3px", borderRadius: "50%", background: cfg.pulse }} />
         <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: cfg.text, display: "block", position: "relative", zIndex: 1 }} />
       </span>
@@ -120,13 +120,13 @@ export default function AnnouncementBar() {
       {/* Icon */}
       <span aria-hidden style={{ fontSize: "15px", lineHeight: 1, flexShrink: 0 }}>{cfg.icon}</span>
 
-      {/* Prefix badge */}
-      <span style={{ fontSize: "10px", fontWeight: 800, letterSpacing: "0.12em", color: cfg.text, background: "rgba(255,255,255,0.22)", padding: "2px 8px", borderRadius: "20px", flexShrink: 0, fontFamily: "Rajdhani, sans-serif", whiteSpace: "nowrap" }}>
+      {/* Prefix badge — hidden on very small screens */}
+      <span className="ann-prefix" style={{ fontSize: "10px", fontWeight: 800, letterSpacing: "0.12em", color: cfg.text, background: "rgba(255,255,255,0.22)", padding: "2px 8px", borderRadius: "20px", flexShrink: 0, fontFamily: "Rajdhani, sans-serif", whiteSpace: "nowrap" }}>
         {cfg.prefix}
       </span>
 
-      {/* Divider */}
-      <span style={{ width: "1px", height: "14px", background: "rgba(255,255,255,0.3)", flexShrink: 0 }} />
+      {/* Divider — hidden on very small screens */}
+      <span className="ann-divider" style={{ width: "1px", height: "14px", background: "rgba(255,255,255,0.3)", flexShrink: 0 }} />
 
       {/* Title */}
       <span className="ann-title" style={{ fontSize: "13px", fontWeight: 700, color: cfg.text, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", fontFamily: "Nunito, sans-serif" }}>
@@ -232,12 +232,16 @@ export default function AnnouncementBar() {
         }
         .ann-pulse-ring { animation: annPulse 1.6s ease-out infinite; }
 
-        @media (max-width: 600px) {
-          .ann-view-all { display: none !important; }
-          .ann-title    { font-size: 12px !important; }
+        /* "View All" stays visible on all screens — hide badge/divider to free space */
+        @media (max-width: 540px) {
+          .ann-prefix  { display: none !important; }
+          .ann-divider { display: none !important; }
+          .ann-title   { font-size: 12px !important; }
         }
         @media (max-width: 400px) {
-          [aria-label="Site announcement"] { padding: 0 8px !important; gap: 6px !important; }
+          [aria-label="Site announcement"] { padding: 0 8px !important; gap: 5px !important; }
+          .ann-pulse-wrap { display: none !important; }
+          .ann-view-all   { font-size: 11px !important; padding: 2px 8px !important; }
         }
       `}</style>
     </div>
