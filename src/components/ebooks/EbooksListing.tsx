@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { EBOOKS, type EbookData } from "@/data/ebookData";
 
 export default function EbooksListing() {
@@ -294,30 +295,58 @@ export default function EbooksListing() {
           .eb-content { max-width: 68%; padding: 44px 40px 44px 44px; }
         }
         @media (max-width: 720px) {
-          .eb-banner { min-height: 0; }
-          .eb-content { max-width: 100%; padding: 40px 24px 320px; }
-          .eb-ceo-img {
-            top: auto; bottom: 0; right: 50%;
-            transform: translateX(50%);
-            height: 300px; width: auto;
+          /* Side-by-side: content left, CEO right — same as desktop */
+          .eb-banner   { min-height: 440px; }
+          .eb-content  { max-width: 65%; padding: 36px 12px 36px 32px; }
+          .eb-highlights { display: none; }
+          .eb-ceo-img  {
+            top: 50%; right: 0; bottom: auto;
+            transform: translateY(-50%);
+            height: 112%; width: auto;
           }
+          /* Left-to-right fade so text stays readable over CEO */
           .eb-fade {
-            background: linear-gradient(to bottom,
-              #020817 0%,
-              rgba(2,8,23,0.88) 20%,
-              rgba(2,8,23,0.32) 56%,
-              transparent 100%
+            background: linear-gradient(to right,
+              rgba(2,8,23,1) 0%, rgba(2,8,23,0.96) 48%,
+              rgba(2,8,23,0.38) 68%, transparent 84%
             );
           }
           .eb-ground { display: none; }
-          .eb-highlights { grid-template-columns: 1fr; }
         }
         @media (max-width: 480px) {
-          .eb-content { padding: 32px 20px 270px; }
-          .eb-heading-white, .eb-heading-gold { font-size: 40px; letter-spacing: -1px; }
-          .eb-ceo-img { height: 250px; }
-          .eb-cta-row { flex-direction: column; }
-          .eb-btn-know, .eb-btn-preview { justify-content: center; text-align: center; width: 100%; }
+          .eb-banner   { min-height: 400px; }
+          .eb-content  { max-width: 65%; padding: 24px 10px 24px 20px; }
+          .eb-heading-white, .eb-heading-gold { font-size: 34px; letter-spacing: -1px; }
+          .eb-ceo-img  {
+            top: 50%; right: -20px; bottom: auto;
+            transform: translateY(-50%);
+            height: 110%; width: auto;
+          }
+          /* Hide tagline to keep content compact */
+          .eb-tagline  { display: none; }
+          .eb-cta-row  { flex-direction: column; gap: 8px; }
+          .eb-btn-know, .eb-btn-preview {
+            justify-content: center; text-align: center;
+            font-size: 14px; padding: 12px 16px; width: 100%;
+          }
+        }
+        @media (max-width: 414px) {
+          .eb-banner   { min-height: 360px; }
+          .eb-content  { padding: 20px 8px 20px 16px; }
+          .eb-heading-white, .eb-heading-gold { font-size: 30px; letter-spacing: -0.5px; }
+          .eb-ceo-img  { right: -25px; height: 108%; }
+        }
+        @media (max-width: 375px) {
+          .eb-heading-white, .eb-heading-gold { font-size: 27px; }
+          .eb-content  { padding: 18px 6px 18px 14px; }
+          .eb-ceo-img  { right: -28px; height: 106%; }
+        }
+        @media (max-width: 320px) {
+          .eb-banner   { min-height: 320px; }
+          .eb-heading-white, .eb-heading-gold { font-size: 24px; letter-spacing: 0; }
+          .eb-content  { padding: 16px 4px 16px 12px; }
+          .eb-badges   { display: none; }
+          .eb-ceo-img  { right: -30px; height: 104%; }
         }
 
         /* ━━━ COMING SOON CARD ━━━ */
@@ -339,6 +368,7 @@ export default function EbooksListing() {
    LARGE FEATURED BANNER COMPONENT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 function EbookFeaturedBanner({ ebook }: { ebook: EbookData }) {
+  const router = useRouter();
   const highlights = [
     `${ebook.modules.length} Comprehensive Modules`,
     "20 Model Exams Included",
@@ -348,10 +378,18 @@ function EbookFeaturedBanner({ ebook }: { ebook: EbookData }) {
   ];
 
   return (
-    <Link
-      href={`/ebooks/${ebook.slug}`}
+    // Use a div — <a> inside <a> is invalid HTML and causes hydration errors.
+    // Whole-banner click is handled via onClick; inner buttons use their own hrefs.
+    <div
       className="eb-banner"
+      role="article"
       aria-label={`${ebook.title} for ${ebook.subtitle} — Click to know more`}
+      style={{ cursor: "pointer" }}
+      onClick={(e) => {
+        if (!(e.target as HTMLElement).closest("a, button")) {
+          router.push(`/ebooks/${ebook.slug}`);
+        }
+      }}
     >
       {/* ── Background layers ── */}
       <div className="eb-bg-grid" aria-hidden="true" />
@@ -417,16 +455,9 @@ function EbookFeaturedBanner({ ebook }: { ebook: EbookData }) {
         {/* Tagline */}
         <p className="eb-tagline">&ldquo;{ebook.tagline}&rdquo;</p>
 
-        {/* CTAs — stopPropagation prevents double navigation */}
-        <div
-          className="eb-cta-row"
-          onClick={(e) => e.preventDefault()}
-        >
-          <Link
-            href={`/ebooks/${ebook.slug}`}
-            className="eb-btn-know"
-            onClick={(e) => e.stopPropagation()}
-          >
+        {/* CTAs */}
+        <div className="eb-cta-row">
+          <Link href={`/ebooks/${ebook.slug}`} className="eb-btn-know">
             Know More →
           </Link>
           <a
@@ -434,7 +465,6 @@ function EbookFeaturedBanner({ ebook }: { ebook: EbookData }) {
             target="_blank"
             rel="noopener noreferrer"
             className="eb-btn-preview"
-            onClick={(e) => e.stopPropagation()}
           >
             👁 Free Preview
           </a>
@@ -448,7 +478,7 @@ function EbookFeaturedBanner({ ebook }: { ebook: EbookData }) {
         </div>
 
       </div>
-    </Link>
+    </div>
   );
 }
 

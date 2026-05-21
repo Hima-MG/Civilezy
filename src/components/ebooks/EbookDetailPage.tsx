@@ -1100,41 +1100,83 @@ export default function EbookDetailPage({ ebook }: { ebook: EbookData }) {
           .ph-ov-vert-label { display: none; }
         }
         @media (max-width: 860px) {
-          /* Mobile: content stacks above, CEO fills strip below */
-          .ph-section { min-height: auto; padding-bottom: 380px; }
-          .ph-wrap { min-height: auto; padding: 52px 5% 40px; }
-          .ph-left { width: 100%; max-width: 100%; padding: 0; }
-          /* CEO: centered, fills the bottom strip */
+          /* SIDE-BY-SIDE: cinematic layout preserved — instructor stays right */
+          .ph-section { min-height: 650px; }
+          .ph-wrap { min-height: 650px; padding: 0 5%; }
+          .ph-left { width: 58%; max-width: 100%; padding: 40px 16px 40px 0; }
+          /* Instructor stays vertically centered on the right */
           .ph-ceo-full {
-            top: auto; bottom: 0; right: 50%;
-            transform: translateX(50%);
-            height: 380px; width: auto;
+            top: 50%; right: 0;
+            transform: translateY(-50%);
+            height: 95%; width: auto;
           }
-          /* Mobile fade: top-to-bottom so text above is readable over character below */
+          /* Keep left-to-right fade — text readable, instructor visible */
           .ph-img-fade {
-            background: linear-gradient(to bottom,
-              #020817 0%,
-              rgba(2,8,23,0.82) 16%,
-              rgba(2,8,23,0.28) 52%,
-              transparent 100%
+            background: linear-gradient(to right,
+              #020817 0%, rgba(2,8,23,0.96) 22%,
+              rgba(2,8,23,0.72) 42%, rgba(2,8,23,0.30) 60%,
+              rgba(2,8,23,0.06) 74%, transparent 84%
             );
           }
           .ph-ov-exam-badge { display: none; }
           .ph-ov-vert-label { display: none; }
+          /* Ebook card: compact, anchored bottom-right inside hero */
           .ph-ov-ebook-card {
-            bottom: 12px; right: 12px; left: 12px;
-            min-width: 0; max-width: none; border-radius: 14px;
-            padding: 12px 16px; animation: none;
+            bottom: 16px; right: 16px; left: auto;
+            min-width: 0; max-width: 200px;
+            border-radius: 14px; padding: 10px 14px; animation: none;
           }
+          .ph-ov-ec-title { font-size: 12px; }
+          .ph-ov-ec-sub   { font-size: 10px; }
         }
         @media (max-width: 640px) {
-          .ph-h1-white, .ph-h1-gold { font-size: 40px; letter-spacing: -0.5px; }
-          .ph-feat-grid { grid-template-columns: 1fr; gap: 8px; }
-          .ph-cta-row { flex-direction: column; gap: 12px; }
-          .ph-btn-preview, .ph-btn-buy { justify-content: center; padding: 14px 20px; }
-          .ph-section { padding-bottom: 280px; }
-          .ph-ceo-full { height: 280px; }
+          /* Keep cinematic side-by-side at phone width */
+          .ph-section { min-height: 650px; }
+          .ph-wrap { min-height: 650px; padding: 0 4%; }
+          .ph-left { width: 62%; padding: 28px 8px 28px 16px; }
+          .ph-h1-white, .ph-h1-gold { font-size: 38px; letter-spacing: -1px; }
+          /* Hide non-essential to keep content compact */
+          .ph-feat-grid { display: none !important; }
+          .ph-tagline   { display: none !important; }
+          .ph-countdown { display: none !important; }
+          /* Full-width stacked CTAs */
+          .ph-cta-row { flex-direction: column; gap: 10px; margin-bottom: 16px; }
+          .ph-btn-preview, .ph-btn-buy { justify-content: center; width: 100%; padding: 13px 20px; }
+          /* Tighter vertical spacing */
+          .ph-badges-row { margin-bottom: 12px; }
+          .ph-exam-strip { margin-bottom: 16px; }
+          .ph-h1        { margin-bottom: 14px; }
+          .ph-for-line  { margin-bottom: 6px; }
+          .ph-level     { margin-bottom: 12px; font-size: 13px; }
+          /* Instructor stays right, slightly reduced */
+          .ph-ceo-full { height: 88%; right: -5px; }
+          /* Ebook card: smaller but visible */
+          .ph-ov-ebook-card {
+            bottom: 10px; right: 8px; left: auto;
+            max-width: 160px; border-radius: 12px;
+            padding: 8px 10px; animation: none;
+          }
+          .ph-ov-ec-icon  { font-size: 18px; }
+          .ph-ov-ec-price { font-size: 15px; }
+        }
+        @media (max-width: 414px) {
+          .ph-h1-white, .ph-h1-gold { font-size: 32px; letter-spacing: -0.5px; }
+          .ph-left { padding: 24px 6px 24px 14px; }
+          /* Ebook card removed — too cramped at this width */
           .ph-ov-ebook-card { display: none; }
+          .ph-ceo-full { right: -10px; height: 86%; }
+        }
+        @media (max-width: 375px) {
+          .ph-h1-white, .ph-h1-gold { font-size: 28px; letter-spacing: -0.5px; }
+          .ph-left { width: 63%; padding: 20px 6px 20px 12px; }
+          .ph-ceo-full { height: 84%; right: -12px; }
+          .ph-info-wa { display: none; }
+        }
+        @media (max-width: 320px) {
+          .ph-h1-white, .ph-h1-gold { font-size: 24px; letter-spacing: 0; }
+          .ph-left { width: 65%; padding: 18px 4px 18px 10px; }
+          .ph-badges-row { display: none; }
+          .ph-ceo-full { height: 80%; right: -14px; }
         }
         /* ── Rest of page ── */
         .modules-grid {
