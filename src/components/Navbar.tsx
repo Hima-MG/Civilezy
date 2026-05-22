@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { EXTERNAL_URLS } from "@/lib/constants";
 import { useAnnouncementBar } from "@/contexts/AnnouncementContext";
+import { useSupportModal } from "@/contexts/SupportContext";
 
 const COURSE_ITEMS = [
   { label: "ITI Course",      href: "/courses/iti"      },
@@ -29,6 +30,7 @@ export default function Navbar() {
   const [scrolled,    setScrolled]    = useState(false);
 
   const { barHeight } = useAnnouncementBar();
+  const { openModal } = useSupportModal();
   const pathname = usePathname();
   const router   = useRouter();
 
@@ -316,7 +318,42 @@ export default function Navbar() {
         </ul>
 
         {/* ── Login + Hamburger ── */}
-        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {/* Report Technical Issue — desktop only */}
+          <button
+            onClick={openModal}
+            className="nav-support-btn"
+            aria-label="Report Technical Issue"
+            style={{
+              background:     "rgba(255,255,255,0.06)",
+              border:         "1px solid rgba(255,255,255,0.12)",
+              borderRadius:   "50px",
+              color:          "rgba(255,255,255,0.75)",
+              fontSize:       "13px",
+              fontWeight:     600,
+              padding:        "8px 16px",
+              cursor:         "pointer",
+              whiteSpace:     "nowrap",
+              display:        "flex",
+              alignItems:     "center",
+              gap:            "6px",
+              fontFamily:     "Nunito, sans-serif",
+              transition:     "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(255,133,52,0.12)";
+              e.currentTarget.style.borderColor = "rgba(255,133,52,0.35)";
+              e.currentTarget.style.color = "#FF8534";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
+              e.currentTarget.style.color = "rgba(255,255,255,0.75)";
+            }}
+          >
+            🛠️ Report Issue
+          </button>
+
           <a
             href={EXTERNAL_URLS.login}
             target="_blank"
@@ -519,6 +556,22 @@ export default function Navbar() {
               Renewal
             </Link>
           </li>
+
+          {/* Report Technical Issue */}
+          <li style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <button
+              onClick={() => { setMenuOpen(false); openModal(); }}
+              style={{
+                display: "flex", alignItems: "center", gap: "8px",
+                background: "none", border: "none", cursor: "pointer",
+                color: "rgba(255,133,52,0.9)", fontSize: "16px", fontWeight: 600,
+                padding: "14px 0", width: "100%", textAlign: "left",
+                fontFamily: "Nunito, sans-serif",
+              }}
+            >
+              🛠️ Report Technical Issue
+            </button>
+          </li>
         </ul>
 
         <div style={{ padding: "16px 0 20px" }}>
@@ -546,16 +599,18 @@ export default function Navbar() {
       </div>
 
       <style>{`
-        .nav-desktop   { display: flex; }
-        .nav-login     { display: block; }
-        .hamburger-btn { display: none; }
-        .mobile-menu   { display: none; }
+        .nav-desktop      { display: flex; }
+        .nav-login        { display: block; }
+        .nav-support-btn  { display: flex; }
+        .hamburger-btn    { display: none; }
+        .mobile-menu      { display: none; }
 
         @media (max-width: 900px) {
-          .nav-desktop   { display: none !important; }
-          .nav-login     { display: none !important; }
-          .hamburger-btn { display: flex !important; }
-          .mobile-menu   { display: block !important; }
+          .nav-desktop      { display: none !important; }
+          .nav-login        { display: none !important; }
+          .nav-support-btn  { display: none !important; }
+          .hamburger-btn    { display: flex !important; }
+          .mobile-menu      { display: block !important; }
         }
       `}</style>
     </>

@@ -7,8 +7,11 @@ import AnnouncementBar from "@/components/AnnouncementBar";
 import LayoutShell from "@/components/LayoutShell";
 import LeadCapturePopup from "@/components/LeadCapturePopup";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
+import TechnicalSupportModal from "@/components/support/TechnicalSupportModal";
+import FloatingSupportButton from "@/components/support/FloatingSupportButton";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AnnouncementProvider } from "@/contexts/AnnouncementContext";
+import { SupportProvider } from "@/contexts/SupportContext";
 
 export const metadata: Metadata = {
   title: {
@@ -118,12 +121,16 @@ export default function RootLayout({
       <body className="overflow-x-hidden">
         <AuthProvider>
           <AnnouncementProvider>
-            <AnnouncementBar />
-            <Navbar />
-            <LayoutShell>{children}</LayoutShell>
-            <StickyCTA />
-            <WhatsAppWidget />
-            <LeadCapturePopup />
+            <SupportProvider>
+              <AnnouncementBar />
+              <Navbar />
+              <LayoutShell>{children}</LayoutShell>
+              <StickyCTA />
+              <WhatsAppWidget />
+              <LeadCapturePopup />
+              <TechnicalSupportModal />
+              <FloatingSupportButton />
+            </SupportProvider>
           </AnnouncementProvider>
         </AuthProvider>
         <Analytics />

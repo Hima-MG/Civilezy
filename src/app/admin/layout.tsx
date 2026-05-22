@@ -11,6 +11,7 @@ const PASSPHRASE = "civilezy2026admin";
 const NAV_ITEMS = [
   { href: "/admin/questions",     label: "Questions",     icon: "📚" },
   { href: "/admin/announcements", label: "Announcements", icon: "📣" },
+  { href: "/admin/support",       label: "Support",       icon: "🛠️" },
 ] as const;
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

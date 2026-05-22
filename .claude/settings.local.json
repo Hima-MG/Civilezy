@@ -30,7 +30,10 @@
       "PowerShell($basePath = \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\"; Get-ChildItem -Path $basePath -Depth 0 | Select-Object Name, @{N='Type';E={if\\($_.PSIsContainer\\){'Dir'}else{'File'}}} | Format-Table -AutoSize)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\" -Recurse -File)",
       "Bash(Select-Object FullName)",
-      "Bash(Sort-Object FullName)"
+      "Bash(Sort-Object FullName)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\" -Force)",
+      "Bash(Select-Object Name, FullName)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\\\\app\\\\api\\\\send-ticket-email\" \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\\\\app\\\\api\\\\tickets\\\\confirm\" \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\\\\components\\\\support\" \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\\\\app\\\\admin\\\\support\\\\[ticketId]\" \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\\\\app\\\\support\\\\[ticketId]\")"
     ]
   }
 }
