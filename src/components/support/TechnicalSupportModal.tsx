@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSupportModal } from "@/contexts/SupportContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { createTicket, CATEGORIES, COURSE_OPTIONS, type TicketCategory } from "@/lib/tickets";
+import { CATEGORIES, COURSE_OPTIONS, type TicketCategory } from "@/lib/tickets";
 import { storage } from "@/lib/firebase";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -125,49 +125,66 @@ export default function TechnicalSupportModal() {
 
     setSubmitting(true);
     try {
+      // 1. Upload screenshot to Firebase Storage (client-side, non-fatal)
       let screenshotUrl: string | null = null;
-
       if (screenshot) {
-        setUploadProgress(true);
-        const path = `support_screenshots/${Date.now()}_${screenshot.name}`;
-        const sRef = storageRef(storage, path);
-        await uploadBytes(sRef, screenshot);
-        screenshotUrl = await getDownloadURL(sRef);
-        setUploadProgress(false);
+        try {
+          setUploadProgress(true);
+          const path = `support_screenshots/${Date.now()}_${screenshot.name}`;
+          const sRef = storageRef(storage, path);
+          await uploadBytes(sRef, screenshot);
+          screenshotUrl = await getDownloadURL(sRef);
+        } catch (uploadErr) {
+          console.warn("Screenshot upload failed, continuing without it:", uploadErr);
+        } finally {
+          setUploadProgress(false);
+        }
       }
 
-      const ticket = await createTicket({
-        studentName: form.studentName.trim(),
-        studentEmail: form.studentEmail.trim().toLowerCase(),
-        whatsappNumber: form.whatsappNumber.trim().replace(/\s/g, ""),
-        courseName: form.courseName,
-        category: form.category as TicketCategory,
-        description: form.description.trim(),
-        screenshotUrl,
-        studentUid: user?.uid ?? null,
+      // 2. Create ticket via server-side API (uses Admin SDK — bypasses Firestore rules)
+      const res = await fetch("/api/tickets/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentName: form.studentName.trim(),
+          studentEmail: form.studentEmail.trim().toLowerCase(),
+          whatsappNumber: form.whatsappNumber.trim().replace(/\s/g, ""),
+          courseName: form.courseName,
+          category: form.category as TicketCategory,
+          description: form.description.trim(),
+          screenshotUrl,
+          studentUid: user?.uid ?? null,
+        }),
       });
 
-      // Fire-and-forget email
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error ?? `HTTP ${res.status}`);
+      }
+
+      const { id, ticketId } = await res.json() as { id: string; ticketId: string };
+
+      // 3. Fire-and-forget email notifications
       fetch("/api/send-ticket-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "new_ticket",
           ticket: {
-            ticketId: ticket.ticketId,
-            id: ticket.id,
-            studentName: ticket.studentName,
-            studentEmail: ticket.studentEmail,
-            category: ticket.category,
-            courseName: ticket.courseName,
-            description: ticket.description,
+            ticketId,
+            id,
+            studentName: form.studentName.trim(),
+            studentEmail: form.studentEmail.trim().toLowerCase(),
+            category: form.category,
+            courseName: form.courseName,
+            description: form.description.trim(),
           },
         }),
       }).catch(() => {});
 
-      setSubmitted(ticket.ticketId);
+      setSubmitted(ticketId);
     } catch (err) {
-      console.error(err);
+      console.error("[submit ticket]", err);
       alert("Failed to submit ticket. Please try again.");
     } finally {
       setSubmitting(false);
