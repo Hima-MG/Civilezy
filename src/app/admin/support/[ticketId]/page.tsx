@@ -41,28 +41,30 @@ export default function AdminTicketDetailPage() {
   const showFlash = (msg: string, type: "ok" | "err" = "ok") => {
     setFlash(msg);
     setFlashType(type);
-    setTimeout(() => setFlash(""), 3500);
+    setTimeout(() => setFlash(""), 8000);
   };
 
   const fetchAll = useCallback(async () => {
     if (!ticketId) return;
     setLoading(true);
     try {
-      const [tRes, mRes] = await Promise.all([
-        fetch(`/api/tickets/detail?id=${ticketId}`),
-        fetch(`/api/tickets/messages?ticketId=${ticketId}`),
-      ]);
-
+      // Step 1: fetch the ticket by its Firestore doc ID (from the URL param)
+      const tRes = await fetch(`/api/tickets/detail?id=${ticketId}`);
       const tJson = await tRes.json() as { ticket?: ApiTicket; error?: string };
-      const mJson = await mRes.json() as { messages?: ApiMessage[]; error?: string };
 
       if (!tRes.ok) {
         if (tRes.status === 404) { router.push("/admin/support"); return; }
         throw new Error(tJson.error ?? `HTTP ${tRes.status}`);
       }
-      if (!mRes.ok) throw new Error(mJson.error ?? `HTTP ${mRes.status}`);
 
       const t = tJson.ticket!;
+      console.log("[admin-detail] ticket loaded — doc id:", t.id, " ticketId:", t.ticketId);
+
+      // Step 2: fetch messages using ticket.ticketId (TECH-XXXXXX), NOT the Firestore doc ID
+      const mRes = await fetch(`/api/tickets/messages?ticketId=${encodeURIComponent(t.ticketId)}`);
+      const mJson = await mRes.json() as { messages?: ApiMessage[]; error?: string };
+      if (!mRes.ok) throw new Error(mJson.error ?? `HTTP ${mRes.status}`);
+
       setTicket(t);
       setMessages(mJson.messages ?? []);
       setNewStatus(t.status);
@@ -70,7 +72,9 @@ export default function AdminTicketDetailPage() {
       setAssignedTo(t.assignedTo ?? "");
       setAdminNotes(t.adminNotes ?? "");
     } catch (err) {
-      showFlash(err instanceof Error ? err.message : "Failed to load ticket", "err");
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[admin-detail] fetchAll failed:", msg);
+      showFlash(msg, "err");
     } finally {
       setLoading(false);
     }
@@ -84,22 +88,19 @@ export default function AdminTicketDetailPage() {
 
   async function handleStatusUpdate() {
     if (!ticket) return;
+    console.log("[admin-detail] handleStatusUpdate — doc id:", ticket.id, "new status:", newStatus, "new priority:", newPriority);
     setSavingStatus(true);
     try {
+      const payload = { id: ticket.id, status: newStatus, priority: newPriority, assignedTo: assignedTo || null };
+      console.log("[admin-detail] PATCH /api/tickets/update →", payload);
       const res = await fetch("/api/tickets/update", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: ticket.id,
-          status: newStatus,
-          priority: newPriority,
-          assignedTo: assignedTo || null,
-        }),
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) {
-        const j = await res.json() as { error?: string };
-        throw new Error(j.error ?? `HTTP ${res.status}`);
-      }
+      const j = await res.json() as { ok?: boolean; error?: string };
+      console.log("[admin-detail] update response:", res.status, j);
+      if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
       setTicket((t) => t ? { ...t, status: newStatus, priority: newPriority, assignedTo: assignedTo || null } : t);
 
       // Email notifications
@@ -138,6 +139,7 @@ export default function AdminTicketDetailPage() {
 
   async function handleSaveNotes() {
     if (!ticket) return;
+    console.log("[admin-detail] handleSaveNotes — doc id:", ticket.id);
     setSavingNotes(true);
     try {
       const res = await fetch("/api/tickets/update", {
@@ -145,14 +147,15 @@ export default function AdminTicketDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: ticket.id, adminNotes }),
       });
-      if (!res.ok) {
-        const j = await res.json() as { error?: string };
-        throw new Error(j.error ?? `HTTP ${res.status}`);
-      }
+      const j = await res.json() as { ok?: boolean; error?: string };
+      console.log("[admin-detail] notes response:", res.status, j);
+      if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
       setTicket((t) => t ? { ...t, adminNotes } : t);
       showFlash("Notes saved");
     } catch (err) {
-      showFlash(err instanceof Error ? err.message : "Failed to save notes", "err");
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[admin-detail] save notes failed:", msg);
+      showFlash(msg, "err");
     } finally {
       setSavingNotes(false);
     }
@@ -160,13 +163,14 @@ export default function AdminTicketDetailPage() {
 
   async function handleSendReply() {
     if (!ticket || !replyText.trim()) return;
+    console.log("[admin-detail] handleSendReply — ticketId (TECH):", ticket.ticketId, "doc id:", ticket.id);
     setSendingReply(true);
     try {
       const res = await fetch("/api/tickets/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ticketId: ticket.ticketId,
+          ticketId: ticket.ticketId,   // human-readable TECH-XXXXXX
           senderType: "ADMIN",
           senderName: "Technical Team",
           message: replyText.trim(),
@@ -174,6 +178,7 @@ export default function AdminTicketDetailPage() {
         }),
       });
       const j = await res.json() as { message?: ApiMessage; error?: string };
+      console.log("[admin-detail] message POST response:", res.status, j);
       if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
 
       setMessages((prev) => [...prev, j.message!]);
@@ -193,7 +198,9 @@ export default function AdminTicketDetailPage() {
       }
       showFlash("Reply sent");
     } catch (err) {
-      showFlash(err instanceof Error ? err.message : "Failed to send reply", "err");
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[admin-detail] send reply failed:", msg);
+      showFlash(msg, "err");
     } finally {
       setSendingReply(false);
     }
@@ -217,14 +224,21 @@ export default function AdminTicketDetailPage() {
     <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto", fontFamily: "Nunito, sans-serif" }}>
       {/* Flash */}
       {flash && (
-        <div style={{
-          position: "fixed", top: "70px", right: "24px", zIndex: 9999,
-          background: flashType === "ok" ? "rgba(52,211,153,0.15)" : "rgba(248,113,113,0.15)",
-          border: `1px solid ${flashType === "ok" ? "rgba(52,211,153,0.3)" : "rgba(248,113,113,0.3)"}`,
-          borderRadius: "12px", padding: "12px 20px",
-          color: flashType === "ok" ? "#34d399" : "#f87171",
-          fontSize: "14px", fontFamily: "Nunito, sans-serif", maxWidth: "380px", wordBreak: "break-all",
-        }}>{flash}</div>
+        <div
+          onClick={() => setFlash("")}
+          style={{
+            position: "fixed", top: "70px", right: "24px", zIndex: 9999,
+            background: flashType === "ok" ? "rgba(52,211,153,0.15)" : "rgba(248,113,113,0.15)",
+            border: `1px solid ${flashType === "ok" ? "rgba(52,211,153,0.3)" : "rgba(248,113,113,0.3)"}`,
+            borderRadius: "12px", padding: "12px 20px",
+            color: flashType === "ok" ? "#34d399" : "#f87171",
+            fontSize: "14px", fontFamily: "Nunito, sans-serif", maxWidth: "440px", wordBreak: "break-all",
+            cursor: "pointer",
+          }}
+        >
+          {flash}
+          <span style={{ marginLeft: "10px", opacity: 0.6, fontSize: "12px" }}>(click to dismiss)</span>
+        </div>
       )}
 
       {/* Back + Header */}

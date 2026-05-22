@@ -320,24 +320,36 @@ export default function TechnicalSupportModal() {
           <form onSubmit={handleSubmit} noValidate style={{ padding: "24px 28px 28px" }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
               {/* Name */}
-              <Field label="Student Name" error={errors.studentName} style={{ gridColumn: "1" }}>
+              <Field
+                label={`Student Name${user ? " 🔒" : ""}`}
+                error={errors.studentName}
+                style={{ gridColumn: "1" }}
+              >
                 <Input
                   type="text"
                   placeholder="Your full name"
                   value={form.studentName}
                   onChange={set("studentName")}
                   hasError={!!errors.studentName}
+                  readOnly={!!user}
+                  locked={!!user}
                 />
               </Field>
 
               {/* Email */}
-              <Field label="Email Address" error={errors.studentEmail} style={{ gridColumn: "2" }}>
+              <Field
+                label={`Email Address${user ? " 🔒" : ""}`}
+                error={errors.studentEmail}
+                style={{ gridColumn: "2" }}
+              >
                 <Input
                   type="email"
                   placeholder="your@email.com"
                   value={form.studentEmail}
                   onChange={set("studentEmail")}
                   hasError={!!errors.studentEmail}
+                  readOnly={!!user}
+                  locked={!!user}
                 />
               </Field>
 
@@ -509,26 +521,28 @@ function Field({
 }
 
 function Input({
-  hasError, ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & { hasError?: boolean }) {
+  hasError, locked, ...props
+}: React.InputHTMLAttributes<HTMLInputElement> & { hasError?: boolean; locked?: boolean }) {
   return (
     <input
       {...props}
       style={{
         width: "100%", boxSizing: "border-box",
-        background: "rgba(0,0,0,0.3)",
-        border: `1px solid ${hasError ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.12)"}`,
+        background: locked ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.3)",
+        border: `1px solid ${hasError ? "rgba(248,113,113,0.6)" : locked ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.12)"}`,
         borderRadius: "12px", padding: "11px 14px",
-        color: "#fff", fontSize: "14px", outline: "none",
+        color: locked ? "rgba(255,255,255,0.5)" : "#fff",
+        fontSize: "14px", outline: "none",
         fontFamily: "Nunito, sans-serif",
+        cursor: locked ? "default" : "text",
         transition: "border-color 0.2s",
       }}
       onFocus={(e) => {
-        e.currentTarget.style.borderColor = hasError ? "rgba(248,113,113,0.8)" : "rgba(255,133,52,0.6)";
+        if (!locked) e.currentTarget.style.borderColor = hasError ? "rgba(248,113,113,0.8)" : "rgba(255,133,52,0.6)";
         props.onFocus?.(e);
       }}
       onBlur={(e) => {
-        e.currentTarget.style.borderColor = hasError ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.12)";
+        if (!locked) e.currentTarget.style.borderColor = hasError ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.12)";
         props.onBlur?.(e);
       }}
     />

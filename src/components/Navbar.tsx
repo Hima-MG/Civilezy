@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { EXTERNAL_URLS } from "@/lib/constants";
 import { useAnnouncementBar } from "@/contexts/AnnouncementContext";
 import { useSupportModal } from "@/contexts/SupportContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const COURSE_ITEMS = [
   { label: "ITI Course",      href: "/courses/iti"      },
@@ -30,7 +31,8 @@ export default function Navbar() {
   const [scrolled,    setScrolled]    = useState(false);
 
   const { barHeight } = useAnnouncementBar();
-  const { openModal } = useSupportModal();
+  const { openModal, unreadCount } = useSupportModal();
+  const { user } = useAuth();
   const pathname = usePathname();
   const router   = useRouter();
 
@@ -315,6 +317,31 @@ export default function Navbar() {
               Renewal
             </Link>
           </li>
+
+          {/* My Tickets — visible only when logged in */}
+          {user && (
+            <li style={{ listStyle: "none" }}>
+              <Link
+                href="/support"
+                style={{ ...navLinkStyle(pathname?.startsWith("/support") ?? false), display: "flex", alignItems: "center", gap: "6px" }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "#FF8534"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = (pathname?.startsWith("/support") ?? false) ? "#FF8534" : "rgba(255,255,255,0.85)"; }}
+              >
+                🎫 My Tickets
+                {unreadCount > 0 && (
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    minWidth: "18px", height: "18px", borderRadius: "9px",
+                    background: "#f87171", color: "#fff",
+                    fontSize: "10px", fontWeight: 800, padding: "0 4px",
+                    lineHeight: 1,
+                  }}>
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </Link>
+            </li>
+          )}
         </ul>
 
         {/* ── Login + Hamburger ── */}
@@ -572,6 +599,35 @@ export default function Navbar() {
               🛠️ Report Technical Issue
             </button>
           </li>
+
+          {/* My Tickets — visible only when logged in */}
+          {user && (
+            <li style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+              <Link
+                href="/support"
+                onClick={() => setMenuOpen(false)}
+                style={{
+                  display: "flex", alignItems: "center", gap: "8px",
+                  color: (pathname?.startsWith("/support") ?? false) ? "#FF8534" : "rgba(255,255,255,0.85)",
+                  textDecoration: "none", fontSize: "16px",
+                  fontWeight: (pathname?.startsWith("/support") ?? false) ? 700 : 500,
+                  padding: "14px 0", fontFamily: "Nunito, sans-serif",
+                }}
+              >
+                🎫 My Tickets
+                {unreadCount > 0 && (
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    minWidth: "20px", height: "20px", borderRadius: "10px",
+                    background: "#f87171", color: "#fff",
+                    fontSize: "11px", fontWeight: 800, padding: "0 4px",
+                  }}>
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </Link>
+            </li>
+          )}
         </ul>
 
         <div style={{ padding: "16px 0 20px" }}>
