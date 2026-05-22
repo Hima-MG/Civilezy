@@ -45,7 +45,8 @@
       "Bash(curl -s -X PATCH http://localhost:3000/api/tickets/update -H \"Content-Type: application/json\" -d \"{\\\\\"id\\\\\":\\\\\"yZ5fEj2uCHCuFhay0ywr\\\\\",\\\\\"status\\\\\":\\\\\"IN_PROGRESS\\\\\",\\\\\"priority\\\\\":\\\\\"HIGH\\\\\",\\\\\"assignedTo\\\\\":\\\\\"Test Admin\\\\\"}\")",
       "Bash(curl -s -X PATCH http://localhost:3000/api/tickets/update -H \"Content-Type: application/json\" -d \"{\\\\\"id\\\\\":\\\\\"yZ5fEj2uCHCuFhay0ywr\\\\\",\\\\\"adminNotes\\\\\":\\\\\"This is a test note\\\\\"}\")",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\)['ticket']; print\\('status:', d['status'], '| priority:', d['priority'], '| assignedTo:', d['assignedTo'], '| adminNotes:', d['adminNotes']\\)\")",
-      "Bash(curl -s \"http://localhost:3000/api/tickets/messages?ticketId=yZ5fEj2uCHCuFhay0ywr\")"
+      "Bash(curl -s \"http://localhost:3000/api/tickets/messages?ticketId=yZ5fEj2uCHCuFhay0ywr\")",
+      "Bash(node -e ' *)"
     ]
   }
 }

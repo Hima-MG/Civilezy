@@ -36,6 +36,11 @@ export async function POST(req: NextRequest) {
       description: string;
       screenshotUrl: string | null;
       studentUid: string | null;
+      // Rich attachments
+      attachments?: string[];
+      voiceNoteUrl?: string | null;
+      voiceDuration?: number | null;
+      screenRecordingUrl?: string | null;
     };
 
     const { studentName, studentEmail, whatsappNumber, courseName, category, description } = body;
@@ -63,6 +68,10 @@ export async function POST(req: NextRequest) {
       category,
       description: description.trim(),
       screenshotUrl: body.screenshotUrl ?? null,
+      attachments: body.attachments ?? [],
+      voiceNoteUrl: body.voiceNoteUrl ?? null,
+      voiceDuration: body.voiceDuration ?? null,
+      screenRecordingUrl: body.screenRecordingUrl ?? null,
       studentUid: body.studentUid ?? null,
       status: "OPEN" as TicketStatus,
       priority,

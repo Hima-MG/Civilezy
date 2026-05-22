@@ -1,14 +1,20 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import { useSupportModal } from "@/contexts/SupportContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { CATEGORIES, COURSE_OPTIONS, type TicketCategory } from "@/lib/tickets";
 import { storage } from "@/lib/firebase";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
+const MAX_SCREENSHOTS = 5;
+const MAX_SCREENSHOT_MB = 5;
+const MAX_SCREEN_REC_MB = 25;
+const MAX_VOICE_SECONDS = 180; // 3 minutes
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 interface FormState {
   studentName: string;
   studentEmail: string;
@@ -19,33 +25,94 @@ interface FormState {
 }
 
 const EMPTY: FormState = {
-  studentName: "",
-  studentEmail: "",
-  whatsappNumber: "",
-  courseName: "",
-  category: "",
-  description: "",
+  studentName: "", studentEmail: "", whatsappNumber: "",
+  courseName: "", category: "", description: "",
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function getSupportedMimeType(): string {
+  if (typeof window === "undefined" || !window.MediaRecorder) return "";
+  const types = [
+    "audio/webm;codecs=opus", "audio/webm",
+    "audio/ogg;codecs=opus", "audio/mp4",
+  ];
+  for (const t of types) {
+    try { if (MediaRecorder.isTypeSupported(t)) return t; } catch { /* skip */ }
+  }
+  return "";
+}
 
+function fmtTime(s: number): string {
+  const m = Math.floor(s / 60);
+  return `${m}:${(s % 60).toString().padStart(2, "0")}`;
+}
+
+async function uploadToStorage(
+  fileOrBlob: File | Blob, path: string
+): Promise<string | null> {
+  try {
+    const sRef = storageRef(storage, path);
+    await uploadBytes(sRef, fileOrBlob);
+    return await getDownloadURL(sRef);
+  } catch (err) {
+    console.warn(`[upload] failed for ${path}:`, err);
+    return null;
+  }
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 export default function TechnicalSupportModal() {
   const { isOpen, closeModal } = useSupportModal();
   const { user, profile } = useAuth();
 
+  // Form
   const [form, setForm] = useState<FormState>({ ...EMPTY });
   const [errors, setErrors] = useState<Partial<FormState>>({});
-  const [screenshot, setScreenshot] = useState<File | null>(null);
-  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState<string | null>(null); // ticketId on success
-  const [uploadProgress, setUploadProgress] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploadMsg, setUploadMsg] = useState("");
+  const [submitted, setSubmitted] = useState<string | null>(null);
 
-  // Pre-fill if user is logged in
+  // Screenshots
+  const [screenshots, setScreenshots] = useState<File[]>([]);
+  const [screenshotPreviews, setScreenshotPreviews] = useState<string[]>([]);
+  const imgInputRef = useRef<HTMLInputElement>(null);
+  const camInputRef = useRef<HTMLInputElement>(null);
+
+  // Voice recording
+  const [recState, setRecState] = useState<"idle" | "recording" | "recorded">("idle");
+  const [recTime, setRecTime] = useState(0);
+  const [voiceBlob, setVoiceBlob] = useState<Blob | null>(null);
+  const [voiceBlobUrl, setVoiceBlobUrl] = useState<string | null>(null);
+  const mediaRecRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const recTimeRef = useRef(0);
+
+  // Screen recording
+  const [screenRec, setScreenRec] = useState<File | null>(null);
+  const screenRecInputRef = useRef<HTMLInputElement>(null);
+
+  const canRecord =
+    typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
+
+  // ── Stop recording (stable ref — used inside intervals) ───────────────────
+  const doStop = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") {
+      mediaRecRef.current.stop();
+    }
+  }, []);
+
+  // Auto-stop at max duration
+  useEffect(() => {
+    if (recState === "recording" && recTime >= MAX_VOICE_SECONDS) doStop();
+  }, [recTime, recState, doStop]);
+
+  // Pre-fill from auth
   useEffect(() => {
     if (user && profile) {
-      setForm((f) => ({
+      setForm(f => ({
         ...f,
         studentName: profile.displayName ?? f.studentName,
         studentEmail: user.email ?? f.studentEmail,
@@ -53,23 +120,39 @@ export default function TechnicalSupportModal() {
     }
   }, [user, profile]);
 
-  // Reset on close
+  // Reset everything when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setTimeout(() => {
-        setForm(
-          user && profile
-            ? { ...EMPTY, studentName: profile.displayName ?? "", studentEmail: user.email ?? "" }
-            : { ...EMPTY }
-        );
+      const t = setTimeout(() => {
+        setForm(user && profile
+          ? { ...EMPTY, studentName: profile.displayName ?? "", studentEmail: user.email ?? "" }
+          : { ...EMPTY });
         setErrors({});
-        setScreenshot(null);
-        setScreenshotPreview(null);
         setSubmitted(null);
         setSubmitting(false);
+        setUploadMsg("");
+
+        // Screenshots cleanup
+        setScreenshotPreviews(prev => { prev.forEach(URL.revokeObjectURL); return []; });
+        setScreenshots([]);
+
+        // Voice cleanup
+        doStop();
+        streamRef.current?.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+        mediaRecRef.current = null;
+        recTimeRef.current = 0;
+        setVoiceBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null; });
+        setVoiceBlob(null);
+        setRecState("idle");
+        setRecTime(0);
+
+        // Screen rec cleanup
+        setScreenRec(null);
       }, 300);
+      return () => clearTimeout(t);
     }
-  }, [isOpen, user, profile]);
+  }, [isOpen, user, profile, doStop]);
 
   // Lock body scroll
   useEffect(() => {
@@ -77,24 +160,95 @@ export default function TechnicalSupportModal() {
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
-  const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const set = (k: keyof FormState) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+      setForm(f => ({ ...f, [k]: e.target.value }));
 
-  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Screenshot must be under 5 MB");
-      return;
+  // ── Screenshot handlers ───────────────────────────────────────────────────
+  function handleImagesSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    const remaining = MAX_SCREENSHOTS - screenshots.length;
+    const toAdd: File[] = [];
+    for (const f of files.slice(0, remaining)) {
+      if (!f.type.startsWith("image/")) { alert(`${f.name} is not an image`); continue; }
+      if (f.size > MAX_SCREENSHOT_MB * 1024 * 1024) {
+        alert(`${f.name} exceeds ${MAX_SCREENSHOT_MB} MB`); continue;
+      }
+      toAdd.push(f);
     }
-    if (!file.type.startsWith("image/")) {
-      alert("Please upload an image file");
-      return;
-    }
-    setScreenshot(file);
-    setScreenshotPreview(URL.createObjectURL(file));
+    if (toAdd.length === 0) return;
+    const newPreviews = toAdd.map(f => URL.createObjectURL(f));
+    setScreenshots(prev => [...prev, ...toAdd]);
+    setScreenshotPreviews(prev => [...prev, ...newPreviews]);
   }
 
+  function removeScreenshot(i: number) {
+    URL.revokeObjectURL(screenshotPreviews[i]);
+    setScreenshots(prev => prev.filter((_, idx) => idx !== i));
+    setScreenshotPreviews(prev => prev.filter((_, idx) => idx !== i));
+  }
+
+  // ── Voice handlers ────────────────────────────────────────────────────────
+  async function handleStartRecording() {
+    if (!canRecord) { alert("Voice recording is not supported in this browser."); return; }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      streamRef.current = stream;
+      chunksRef.current = [];
+      recTimeRef.current = 0;
+
+      const mimeType = getSupportedMimeType();
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      mediaRecRef.current = recorder;
+
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        const url = URL.createObjectURL(blob);
+        setVoiceBlob(blob);
+        setVoiceBlobUrl(url);
+        setRecState("recorded");
+        stream.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      };
+
+      recorder.start(1000);
+      setRecState("recording");
+      setRecTime(0);
+
+      timerRef.current = setInterval(() => {
+        recTimeRef.current += 1;
+        setRecTime(recTimeRef.current);
+      }, 1000);
+    } catch (err) {
+      console.error("[voice]", err);
+      alert("Could not access the microphone. Please allow microphone access and try again.");
+    }
+  }
+
+  function handleStopRecording() { doStop(); }
+
+  function handleReRecord() {
+    setVoiceBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null; });
+    setVoiceBlob(null);
+    setRecState("idle");
+    setRecTime(0);
+    recTimeRef.current = 0;
+  }
+
+  // ── Screen recording handler ───────────────────────────────────────────────
+  function handleScreenRecSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    if (f.size > MAX_SCREEN_REC_MB * 1024 * 1024) {
+      alert(`Screen recording must be under ${MAX_SCREEN_REC_MB} MB`); return;
+    }
+    setScreenRec(f);
+  }
+
+  // ── Validation ────────────────────────────────────────────────────────────
   function validate(): boolean {
     const e: Partial<FormState> = {};
     if (!form.studentName.trim()) e.studentName = "Name is required";
@@ -113,35 +267,44 @@ export default function TechnicalSupportModal() {
     if (!form.description.trim()) {
       e.description = "Description is required";
     } else if (form.description.trim().length < 20) {
-      e.description = "Please describe the issue in at least 20 characters";
+      e.description = "Describe the issue in at least 20 characters";
     }
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
+  // ── Submit ────────────────────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate() || submitting) return;
-
     setSubmitting(true);
-    try {
-      // 1. Upload screenshot to Firebase Storage (client-side, non-fatal)
-      let screenshotUrl: string | null = null;
-      if (screenshot) {
-        try {
-          setUploadProgress(true);
-          const path = `support_screenshots/${Date.now()}_${screenshot.name}`;
-          const sRef = storageRef(storage, path);
-          await uploadBytes(sRef, screenshot);
-          screenshotUrl = await getDownloadURL(sRef);
-        } catch (uploadErr) {
-          console.warn("Screenshot upload failed, continuing without it:", uploadErr);
-        } finally {
-          setUploadProgress(false);
-        }
-      }
+    const ts = Date.now();
 
-      // 2. Create ticket via server-side API (uses Admin SDK — bypasses Firestore rules)
+    try {
+      // Stop any in-progress recording before upload
+      doStop();
+
+      setUploadMsg("Uploading attachments…");
+
+      // Upload all in parallel — failures are non-fatal
+      const [imgResults, voiceUrl, screenUrl] = await Promise.all([
+        Promise.all(
+          screenshots.map((f, i) =>
+            uploadToStorage(f, `support_screenshots/${ts}_${i}_${encodeURIComponent(f.name)}`)
+          )
+        ),
+        (voiceBlob && recState === "recorded")
+          ? uploadToStorage(voiceBlob, `support_voice/${ts}_voice.webm`)
+          : Promise.resolve(null),
+        screenRec
+          ? uploadToStorage(screenRec, `support_screen/${ts}_${encodeURIComponent(screenRec.name)}`)
+          : Promise.resolve(null),
+      ]);
+
+      const attachments = imgResults.filter((u): u is string => !!u);
+
+      setUploadMsg("Submitting ticket…");
+
       const res = await fetch("/api/tickets/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -152,8 +315,12 @@ export default function TechnicalSupportModal() {
           courseName: form.courseName,
           category: form.category as TicketCategory,
           description: form.description.trim(),
-          screenshotUrl,
           studentUid: user?.uid ?? null,
+          screenshotUrl: attachments[0] ?? null,   // backward compat
+          attachments,
+          voiceNoteUrl: voiceUrl ?? null,
+          voiceDuration: recState === "recorded" ? recTimeRef.current : null,
+          screenRecordingUrl: screenUrl ?? null,
         }),
       });
 
@@ -164,15 +331,14 @@ export default function TechnicalSupportModal() {
 
       const { id, ticketId } = await res.json() as { id: string; ticketId: string };
 
-      // 3. Fire-and-forget email notifications
+      // Fire-and-forget email
       fetch("/api/send-ticket-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "new_ticket",
           ticket: {
-            ticketId,
-            id,
+            ticketId, id,
             studentName: form.studentName.trim(),
             studentEmail: form.studentEmail.trim().toLowerCase(),
             category: form.category,
@@ -185,86 +351,91 @@ export default function TechnicalSupportModal() {
       setSubmitted(ticketId);
     } catch (err) {
       console.error("[submit ticket]", err);
-      const msg = err instanceof Error ? err.message : String(err);
-      alert(`Failed to submit ticket.\n\nError: ${msg}`);
+      alert(`Failed to submit ticket.\n\nError: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setSubmitting(false);
-      setUploadProgress(false);
+      setUploadMsg("");
     }
   }
 
   if (!isOpen) return null;
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div
       onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
       style={{
         position: "fixed", inset: 0, zIndex: 9999,
-        background: "rgba(0,0,0,0.75)",
-        backdropFilter: "blur(6px)",
+        background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)",
         WebkitBackdropFilter: "blur(6px)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "16px",
-        overflowY: "auto",
+        display: "flex", alignItems: "flex-start", justifyContent: "center",
+        padding: "16px", overflowY: "auto",
       }}
     >
       <div
         style={{
-          background: "rgba(8,20,48,0.98)",
+          background: "rgba(8,20,48,0.99)",
           border: "1px solid rgba(255,98,0,0.25)",
           borderRadius: "24px",
-          width: "100%",
-          maxWidth: "560px",
-          maxHeight: "90vh",
-          overflowY: "auto",
-          boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,98,0,0.12)",
-          position: "relative",
-          margin: "auto",
+          width: "100%", maxWidth: "580px",
+          boxShadow: "0 32px 80px rgba(0,0,0,0.7)",
+          margin: "auto", position: "relative",
         }}
       >
-        {/* Header */}
+        {/* ── Header ── */}
         <div style={{
-          padding: "24px 28px 20px",
+          padding: "22px 26px 18px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
           display: "flex", alignItems: "center", justifyContent: "space-between",
           position: "sticky", top: 0,
-          background: "rgba(8,20,48,0.98)",
-          backdropFilter: "blur(12px)",
-          zIndex: 10,
-          borderRadius: "24px 24px 0 0",
+          background: "rgba(8,20,48,0.99)", backdropFilter: "blur(12px)",
+          borderRadius: "24px 24px 0 0", zIndex: 10,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div style={{
               width: "40px", height: "40px", borderRadius: "12px",
               background: "linear-gradient(135deg,#FF6200,#FF8534)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: "20px", flexShrink: 0,
+              display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0,
             }}>🛠️</div>
             <div>
               <div style={{ fontFamily: "Rajdhani, sans-serif", fontWeight: 700, fontSize: "18px", color: "#fff" }}>
                 Report Technical Issue
               </div>
-              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", marginTop: "2px" }}>
-                Our team will respond shortly
+              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
+                Our team responds within a few hours
               </div>
             </div>
           </div>
-          <button
-            onClick={closeModal}
-            style={{
-              background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "10px", color: "rgba(255,255,255,0.6)", cursor: "pointer",
-              width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: "18px", flexShrink: 0, transition: "all 0.2s",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.12)"; e.currentTarget.style.color = "#fff"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; }}
-            aria-label="Close"
-          >×</button>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            {user && (
+              <Link
+                href="/support"
+                onClick={closeModal}
+                style={{
+                  padding: "6px 14px", borderRadius: "8px",
+                  background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)",
+                  color: "#60a5fa", fontSize: "12px", fontWeight: 600, textDecoration: "none",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                🎫 My Tickets
+              </Link>
+            )}
+            <button
+              onClick={closeModal}
+              style={{
+                background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: "10px", color: "rgba(255,255,255,0.6)", cursor: "pointer",
+                width: "36px", height: "36px", display: "flex", alignItems: "center",
+                justifyContent: "center", fontSize: "18px", flexShrink: 0,
+              }}
+              aria-label="Close"
+            >×</button>
+          </div>
         </div>
 
+        {/* ── Success Screen ── */}
         {submitted ? (
-          /* ── Success Screen ── */
           <div style={{ padding: "40px 28px", textAlign: "center" }}>
             <div style={{
               width: "72px", height: "72px", borderRadius: "50%",
@@ -275,40 +446,39 @@ export default function TechnicalSupportModal() {
             <h2 style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "22px", fontWeight: 700, color: "#fff", margin: "0 0 8px" }}>
               Issue Submitted Successfully
             </h2>
-            <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.55)", margin: "0 0 24px", lineHeight: "1.6" }}>
-              Your ticket has been created. Our technical team will review it shortly.
+            <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)", margin: "0 0 24px", lineHeight: "1.6" }}>
+              Your ticket has been created. Our team will review it shortly.
             </p>
             <div style={{
               background: "rgba(96,165,250,0.08)", border: "1px solid rgba(96,165,250,0.25)",
               borderRadius: "16px", padding: "20px", marginBottom: "28px",
             }}>
-              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>
+              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>
                 Ticket ID
               </div>
               <div style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "28px", fontWeight: 700, color: "#60a5fa", letterSpacing: "1px" }}>
                 {submitted}
               </div>
             </div>
-            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", lineHeight: "1.6", marginBottom: "24px" }}>
-              A confirmation email has been sent to your inbox. Keep this ticket ID for future reference.
-            </p>
             <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
-              <a
-                href={`/support`}
+              <Link
+                href="/support"
+                onClick={closeModal}
                 style={{
-                  padding: "10px 22px", borderRadius: "50px",
-                  background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
-                  color: "rgba(255,255,255,0.8)", textDecoration: "none", fontSize: "14px", fontWeight: 600,
+                  padding: "11px 24px", borderRadius: "50px",
+                  background: "linear-gradient(135deg,#FF6200,#FF8534)",
+                  color: "#fff", textDecoration: "none", fontSize: "14px", fontWeight: 700,
+                  boxShadow: "0 4px 16px rgba(255,98,0,0.35)",
                 }}
               >
-                My Tickets
-              </a>
+                🎫 View My Tickets
+              </Link>
               <button
                 onClick={closeModal}
                 style={{
-                  padding: "10px 22px", borderRadius: "50px",
-                  background: "linear-gradient(135deg,#FF6200,#FF8534)",
-                  border: "none", color: "#fff", fontSize: "14px", fontWeight: 700, cursor: "pointer",
+                  padding: "11px 24px", borderRadius: "50px",
+                  background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
+                  color: "rgba(255,255,255,0.8)", fontSize: "14px", fontWeight: 600, cursor: "pointer",
                 }}
               >
                 Done
@@ -316,206 +486,334 @@ export default function TechnicalSupportModal() {
             </div>
           </div>
         ) : (
+
           /* ── Form ── */
-          <form onSubmit={handleSubmit} noValidate style={{ padding: "24px 28px 28px" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+          <form onSubmit={handleSubmit} noValidate style={{ padding: "22px 26px 26px" }}>
+
+            {/* Basic fields grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "6px" }}>
+
               {/* Name */}
-              <Field
-                label={`Student Name${user ? " 🔒" : ""}`}
-                error={errors.studentName}
-                style={{ gridColumn: "1" }}
-              >
-                <Input
-                  type="text"
-                  placeholder="Your full name"
-                  value={form.studentName}
-                  onChange={set("studentName")}
-                  hasError={!!errors.studentName}
-                  readOnly={!!user}
-                  locked={!!user}
-                />
+              <Field label={`Student Name${user ? " 🔒" : ""}`} error={errors.studentName}>
+                <Input type="text" placeholder="Your full name"
+                  value={form.studentName} onChange={set("studentName")}
+                  hasError={!!errors.studentName} readOnly={!!user} locked={!!user} />
               </Field>
 
               {/* Email */}
-              <Field
-                label={`Email Address${user ? " 🔒" : ""}`}
-                error={errors.studentEmail}
-                style={{ gridColumn: "2" }}
-              >
-                <Input
-                  type="email"
-                  placeholder="your@email.com"
-                  value={form.studentEmail}
-                  onChange={set("studentEmail")}
-                  hasError={!!errors.studentEmail}
-                  readOnly={!!user}
-                  locked={!!user}
-                />
+              <Field label={`Email Address${user ? " 🔒" : ""}`} error={errors.studentEmail}>
+                <Input type="email" placeholder="your@email.com"
+                  value={form.studentEmail} onChange={set("studentEmail")}
+                  hasError={!!errors.studentEmail} readOnly={!!user} locked={!!user} />
               </Field>
 
               {/* WhatsApp */}
-              <Field label="WhatsApp Number" error={errors.whatsappNumber} style={{ gridColumn: "1" }}>
-                <Input
-                  type="tel"
-                  placeholder="10-digit mobile number"
-                  value={form.whatsappNumber}
-                  onChange={set("whatsappNumber")}
-                  hasError={!!errors.whatsappNumber}
-                  maxLength={10}
-                />
+              <Field label="WhatsApp Number" error={errors.whatsappNumber}>
+                <Input type="tel" placeholder="10-digit mobile number"
+                  value={form.whatsappNumber} onChange={set("whatsappNumber")}
+                  hasError={!!errors.whatsappNumber} maxLength={10} />
               </Field>
 
               {/* Course */}
-              <Field label="Course Name" error={errors.courseName} style={{ gridColumn: "2" }}>
-                <Select
-                  value={form.courseName}
-                  onChange={set("courseName")}
-                  hasError={!!errors.courseName}
-                >
+              <Field label="Course" error={errors.courseName}>
+                <Select value={form.courseName} onChange={set("courseName")} hasError={!!errors.courseName}>
                   <option value="">Select course</option>
-                  {COURSE_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {COURSE_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                 </Select>
               </Field>
 
-              {/* Category */}
-              <Field label="Issue Category" error={errors.category as string} style={{ gridColumn: "1 / -1" }}>
-                <Select
-                  value={form.category}
-                  onChange={set("category")}
-                  hasError={!!errors.category}
-                >
-                  <option value="">Select category</option>
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </Select>
-              </Field>
-
-              {/* Description */}
-              <Field label="Issue Description" error={errors.description} style={{ gridColumn: "1 / -1" }}>
-                <textarea
-                  rows={4}
-                  placeholder="Describe the issue in detail — what happened, when, any error messages..."
-                  value={form.description}
-                  onChange={set("description")}
-                  style={{
-                    width: "100%", boxSizing: "border-box",
-                    background: "rgba(0,0,0,0.3)", border: `1px solid ${errors.description ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.12)"}`,
-                    borderRadius: "12px", padding: "12px 14px",
-                    color: "#fff", fontSize: "14px", outline: "none",
-                    fontFamily: "Nunito, sans-serif", lineHeight: "1.6", resize: "vertical",
-                    transition: "border-color 0.2s",
-                  }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = errors.description ? "rgba(248,113,113,0.8)" : "rgba(255,133,52,0.6)"; }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = errors.description ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.12)"; }}
-                />
-              </Field>
-
-              {/* Screenshot upload */}
+              {/* Category — full width */}
               <div style={{ gridColumn: "1 / -1" }}>
-                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.7px", marginBottom: "8px", fontFamily: "Nunito, sans-serif" }}>
-                  Screenshot <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional, max 5 MB)</span>
-                </div>
-                {screenshotPreview ? (
-                  <div style={{ position: "relative", display: "inline-block" }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={screenshotPreview}
-                      alt="Screenshot preview"
-                      style={{ maxWidth: "100%", maxHeight: "160px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.12)", objectFit: "contain" }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => { setScreenshot(null); setScreenshotPreview(null); if (fileRef.current) fileRef.current.value = ""; }}
-                      style={{
-                        position: "absolute", top: "6px", right: "6px",
-                        background: "rgba(0,0,0,0.7)", border: "none", borderRadius: "50%",
-                        color: "#fff", width: "24px", height: "24px", cursor: "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px",
-                      }}
-                    >×</button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileRef.current?.click()}
+                <Field label="Issue Category" error={errors.category as string}>
+                  <Select value={form.category} onChange={set("category")} hasError={!!errors.category}>
+                    <option value="">Select category</option>
+                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </Select>
+                </Field>
+              </div>
+
+              {/* Description — full width */}
+              <div style={{ gridColumn: "1 / -1" }}>
+                <Field label="Issue Description" error={errors.description}>
+                  <textarea
+                    rows={4}
+                    placeholder="Describe the issue — what happened, when it started, any error messages…"
+                    value={form.description}
+                    onChange={set("description")}
                     style={{
-                      width: "100%", padding: "18px",
-                      background: "rgba(255,255,255,0.03)", border: "2px dashed rgba(255,255,255,0.1)",
-                      borderRadius: "12px", color: "rgba(255,255,255,0.45)", cursor: "pointer",
-                      fontSize: "13px", fontFamily: "Nunito, sans-serif", transition: "all 0.2s",
-                      display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
+                      width: "100%", boxSizing: "border-box",
+                      background: "rgba(0,0,0,0.3)",
+                      border: `1px solid ${errors.description ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.12)"}`,
+                      borderRadius: "12px", padding: "12px 14px",
+                      color: "#fff", fontSize: "14px", outline: "none",
+                      fontFamily: "Nunito, sans-serif", lineHeight: "1.6", resize: "vertical",
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(255,133,52,0.4)"; e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "rgba(255,255,255,0.45)"; }}
-                  >
-                    <span style={{ fontSize: "24px" }}>📎</span>
-                    <span>Click to upload screenshot</span>
-                    <span style={{ fontSize: "11px", opacity: 0.7 }}>PNG, JPG, WEBP up to 5 MB</span>
+                    onFocus={e => { e.currentTarget.style.borderColor = errors.description ? "rgba(248,113,113,0.8)" : "rgba(255,133,52,0.6)"; }}
+                    onBlur={e => { e.currentTarget.style.borderColor = errors.description ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.12)"; }}
+                  />
+                </Field>
+              </div>
+            </div>
+
+            {/* ── Attachments section ── */}
+            <div style={{
+              border: "1px solid rgba(255,255,255,0.07)", borderRadius: "16px",
+              padding: "18px", marginTop: "8px", marginBottom: "18px",
+              background: "rgba(255,255,255,0.02)",
+            }}>
+              <div style={{
+                fontSize: "12px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase",
+                letterSpacing: "0.7px", marginBottom: "16px", fontFamily: "Nunito, sans-serif",
+              }}>
+                📎 Attachments <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(all optional)</span>
+              </div>
+
+              {/* ── Screenshots ── */}
+              <div style={{ marginBottom: "18px" }}>
+                <div style={attachLabelStyle}>
+                  📸 Screenshots
+                  <span style={attachCountStyle}>{screenshots.length}/{MAX_SCREENSHOTS}</span>
+                  <span style={attachHintStyle}>· JPG, PNG, WEBP · max {MAX_SCREENSHOT_MB} MB each</span>
+                </div>
+
+                {/* Thumbnail grid */}
+                {screenshotPreviews.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }}>
+                    {screenshotPreviews.map((url, i) => (
+                      <div key={i} style={{ position: "relative", flexShrink: 0 }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url} alt={`Screenshot ${i + 1}`}
+                          style={{
+                            width: "72px", height: "72px", objectFit: "cover",
+                            borderRadius: "10px", border: "1px solid rgba(255,255,255,0.12)",
+                            display: "block",
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeScreenshot(i)}
+                          style={{
+                            position: "absolute", top: "-7px", right: "-7px",
+                            width: "20px", height: "20px", borderRadius: "50%",
+                            background: "#f87171", border: "2px solid rgba(8,20,48,0.9)",
+                            color: "#fff", fontSize: "11px", fontWeight: 700,
+                            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                            lineHeight: 1,
+                          }}
+                          aria-label={`Remove screenshot ${i + 1}`}
+                        >×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {screenshots.length < MAX_SCREENSHOTS && (
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    <button type="button" onClick={() => imgInputRef.current?.click()} style={ghostBtnStyle}>
+                      + Add Photos
+                    </button>
+                    <button type="button" onClick={() => camInputRef.current?.click()} style={ghostBtnStyle}>
+                      📷 Camera
+                    </button>
+                  </div>
+                )}
+
+                {/* Hidden inputs */}
+                <input ref={imgInputRef} type="file" accept="image/*" multiple
+                  style={{ display: "none" }} onChange={handleImagesSelect} />
+                <input ref={camInputRef} type="file" accept="image/*"
+                  capture="environment"
+                  style={{ display: "none" }} onChange={handleImagesSelect} />
+              </div>
+
+              {/* ── Divider ── */}
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginBottom: "18px" }} />
+
+              {/* ── Voice Note ── */}
+              <div style={{ marginBottom: "18px" }}>
+                <div style={attachLabelStyle}>
+                  🎙️ Voice Note
+                  <span style={attachHintStyle}>· max {MAX_VOICE_SECONDS / 60} min</span>
+                </div>
+
+                {recState === "idle" && (
+                  <button type="button" onClick={handleStartRecording} style={ghostBtnStyle}>
+                    ● Record Voice Note
                   </button>
                 )}
+
+                {recState === "recording" && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                    <span style={{
+                      display: "inline-block", width: "10px", height: "10px",
+                      borderRadius: "50%", background: "#f87171", flexShrink: 0,
+                      animation: "vcPulse 1s ease-in-out infinite",
+                    }} />
+                    <span style={{ color: "#f87171", fontWeight: 700, fontSize: "15px", minWidth: "40px" }}>
+                      {fmtTime(recTime)}
+                    </span>
+                    <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "12px" }}>/ {fmtTime(MAX_VOICE_SECONDS)}</span>
+                    <button type="button" onClick={handleStopRecording} style={{
+                      ...ghostBtnStyle,
+                      background: "rgba(248,113,113,0.12)", borderColor: "rgba(248,113,113,0.3)",
+                      color: "#f87171",
+                    }}>
+                      ■ Stop
+                    </button>
+                  </div>
+                )}
+
+                {recState === "recorded" && voiceBlobUrl && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                    {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                    <audio
+                      controls
+                      src={voiceBlobUrl}
+                      style={{ flex: 1, minWidth: "180px", maxWidth: "100%", height: "36px" }}
+                    />
+                    <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap" }}>
+                      {fmtTime(recTimeRef.current)}
+                    </span>
+                    <button type="button" onClick={handleReRecord} style={{ ...ghostBtnStyle, color: "#f87171", borderColor: "rgba(248,113,113,0.3)" }}>
+                      🗑️ Re-record
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Divider ── */}
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginBottom: "18px" }} />
+
+              {/* ── Screen Recording ── */}
+              <div>
+                <div style={attachLabelStyle}>
+                  📹 Screen Recording
+                  <span style={attachHintStyle}>· .mp4 or .webm · max {MAX_SCREEN_REC_MB} MB</span>
+                </div>
+
+                {screenRec ? (
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: "10px",
+                    background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "10px", padding: "10px 14px",
+                  }}>
+                    <span style={{ fontSize: "20px" }}>🎬</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "13px", color: "#fff", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {screenRec.name}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>
+                        {(screenRec.size / (1024 * 1024)).toFixed(1)} MB
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => setScreenRec(null)}
+                      style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", fontSize: "18px", lineHeight: 1 }}>
+                      ×
+                    </button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => screenRecInputRef.current?.click()} style={ghostBtnStyle}>
+                    📹 Upload Screen Recording
+                  </button>
+                )}
+
                 <input
-                  ref={fileRef}
+                  ref={screenRecInputRef}
                   type="file"
-                  accept="image/*"
+                  accept=".mp4,.webm,video/mp4,video/webm"
                   style={{ display: "none" }}
-                  onChange={handleFile}
+                  onChange={handleScreenRecSelect}
                 />
               </div>
             </div>
 
-            {/* Submit */}
+            {/* ── Submit button ── */}
             <button
               type="submit"
               disabled={submitting}
               style={{
-                width: "100%", marginTop: "20px",
+                width: "100%",
                 background: submitting ? "rgba(255,98,0,0.4)" : "linear-gradient(135deg,#FF6200,#FF8534)",
                 border: "none", borderRadius: "14px", color: "#fff",
                 fontSize: "15px", fontWeight: 700, padding: "14px",
                 cursor: submitting ? "not-allowed" : "pointer",
                 fontFamily: "Nunito, sans-serif",
                 boxShadow: submitting ? "none" : "0 6px 20px rgba(255,98,0,0.4)",
-                transition: "all 0.25s",
+                transition: "all 0.2s",
               }}
             >
-              {uploadProgress ? "Uploading screenshot…" : submitting ? "Submitting…" : "Submit Ticket"}
+              {uploadMsg || (submitting ? "Submitting…" : "Submit Ticket")}
             </button>
+
+            {user && (
+              <div style={{ textAlign: "center", marginTop: "12px" }}>
+                <Link
+                  href="/support"
+                  onClick={closeModal}
+                  style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", textDecoration: "none" }}
+                >
+                  🎫 View my existing tickets →
+                </Link>
+              </div>
+            )}
           </form>
         )}
       </div>
 
       <style>{`
-        @media (max-width: 540px) {
-          .support-grid { grid-template-columns: 1fr !important; }
-          .support-grid > div { grid-column: 1 !important; }
+        @keyframes vcPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(0.85); }
+        }
+        @media (max-width: 520px) {
+          audio { height: 32px; }
         }
       `}</style>
     </div>
   );
 }
 
-// ─── Small helpers ────────────────────────────────────────────────────────────
+// ─── Style constants ─────────────────────────────────────────────────────────
 
-function Field({
-  label, error, children, style,
-}: {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-  style?: React.CSSProperties;
+const attachLabelStyle: React.CSSProperties = {
+  fontSize: "13px", color: "rgba(255,255,255,0.65)", fontWeight: 600,
+  marginBottom: "10px", display: "flex", alignItems: "center", gap: "6px",
+  flexWrap: "wrap",
+};
+
+const attachCountStyle: React.CSSProperties = {
+  fontSize: "11px", color: "#FF8534", background: "rgba(255,133,52,0.12)",
+  border: "1px solid rgba(255,133,52,0.25)", borderRadius: "20px",
+  padding: "1px 7px", fontWeight: 700,
+};
+
+const attachHintStyle: React.CSSProperties = {
+  fontSize: "11px", color: "rgba(255,255,255,0.3)", fontWeight: 400,
+};
+
+const ghostBtnStyle: React.CSSProperties = {
+  padding: "8px 16px", borderRadius: "10px",
+  background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)",
+  color: "rgba(255,255,255,0.7)", fontSize: "13px", cursor: "pointer",
+  fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap",
+  display: "inline-flex", alignItems: "center", gap: "6px",
+};
+
+// ─── Field helpers ────────────────────────────────────────────────────────────
+
+function Field({ label, error, children }: {
+  label: string; error?: string; children: React.ReactNode;
 }) {
   return (
-    <div style={style}>
+    <div>
       <label style={{
         display: "block", fontSize: "12px", color: "rgba(255,255,255,0.5)",
         textTransform: "uppercase", letterSpacing: "0.7px", marginBottom: "8px",
         fontFamily: "Nunito, sans-serif",
-      }}>
-        {label}
-      </label>
+      }}>{label}</label>
       {children}
-      {error && (
-        <div style={{ fontSize: "11px", color: "#f87171", marginTop: "5px" }}>{error}</div>
-      )}
+      {error && <div style={{ fontSize: "11px", color: "#f87171", marginTop: "5px" }}>{error}</div>}
     </div>
   );
 }
@@ -537,11 +835,11 @@ function Input({
         cursor: locked ? "default" : "text",
         transition: "border-color 0.2s",
       }}
-      onFocus={(e) => {
+      onFocus={e => {
         if (!locked) e.currentTarget.style.borderColor = hasError ? "rgba(248,113,113,0.8)" : "rgba(255,133,52,0.6)";
         props.onFocus?.(e);
       }}
-      onBlur={(e) => {
+      onBlur={e => {
         if (!locked) e.currentTarget.style.borderColor = hasError ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.12)";
         props.onBlur?.(e);
       }}
@@ -561,15 +859,14 @@ function Select({
         border: `1px solid ${hasError ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.12)"}`,
         borderRadius: "12px", padding: "11px 14px",
         color: "#fff", fontSize: "14px", outline: "none",
-        fontFamily: "Nunito, sans-serif",
-        cursor: "pointer", transition: "border-color 0.2s",
+        fontFamily: "Nunito, sans-serif", cursor: "pointer",
         appearance: "none",
         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
         backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center",
         paddingRight: "36px",
       }}
-      onFocus={(e) => { e.currentTarget.style.borderColor = hasError ? "rgba(248,113,113,0.8)" : "rgba(255,133,52,0.6)"; }}
-      onBlur={(e) => { e.currentTarget.style.borderColor = hasError ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.12)"; }}
+      onFocus={e => { e.currentTarget.style.borderColor = hasError ? "rgba(248,113,113,0.8)" : "rgba(255,133,52,0.6)"; }}
+      onBlur={e => { e.currentTarget.style.borderColor = hasError ? "rgba(248,113,113,0.6)" : "rgba(255,255,255,0.12)"; }}
     >
       {children}
     </select>

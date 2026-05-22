@@ -47,6 +47,11 @@ export interface SupportTicket {
   category: TicketCategory;
   description: string;
   screenshotUrl: string | null;
+  // Rich attachments (added May 2026 — optional for backward compat with old tickets)
+  attachments?: string[];
+  voiceNoteUrl?: string | null;
+  voiceDuration?: number | null;
+  screenRecordingUrl?: string | null;
   status: TicketStatus;
   priority: TicketPriority;
   assignedTo: string | null;

@@ -27,6 +27,7 @@ export default function AdminTicketDetailPage() {
   const [loading, setLoading] = useState(true);
   const [flash, setFlash] = useState("");
   const [flashType, setFlashType] = useState<"ok" | "err">("ok");
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const [newStatus, setNewStatus] = useState<TicketStatus>("OPEN");
   const [newPriority, setNewPriority] = useState<TicketPriority>("MEDIUM");
@@ -222,6 +223,45 @@ export default function AdminTicketDetailPage() {
 
   return (
     <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto", fontFamily: "Nunito, sans-serif" }}>
+      {/* Image lightbox */}
+      {lightboxUrl && (
+        <div
+          onClick={() => setLightboxUrl(null)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 10000,
+            background: "rgba(0,0,0,0.92)", backdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "20px", cursor: "zoom-out",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={lightboxUrl} alt="Full size"
+            style={{ maxWidth: "90vw", maxHeight: "85vh", objectFit: "contain", borderRadius: "12px" }}
+            onClick={e => e.stopPropagation()}
+          />
+          <div style={{ position: "absolute", bottom: "24px", display: "flex", gap: "10px" }}>
+            <a
+              href={lightboxUrl} download target="_blank" rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              style={{
+                padding: "8px 18px", borderRadius: "10px",
+                background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
+                color: "#fff", fontSize: "13px", fontWeight: 600, textDecoration: "none",
+              }}
+            >⬇️ Download</a>
+            <button
+              onClick={() => setLightboxUrl(null)}
+              style={{
+                padding: "8px 18px", borderRadius: "10px",
+                background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
+                color: "rgba(255,255,255,0.7)", fontSize: "13px", cursor: "pointer",
+              }}
+            >Close</button>
+          </div>
+        </div>
+      )}
+
       {/* Flash */}
       {flash && (
         <div
@@ -276,16 +316,7 @@ export default function AdminTicketDetailPage() {
             </p>
           </Card>
 
-          {ticket.screenshotUrl && (
-            <Card title="Screenshot">
-              <a href={ticket.screenshotUrl} target="_blank" rel="noopener noreferrer">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={ticket.screenshotUrl} alt="Ticket screenshot"
-                  style={{ maxWidth: "100%", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }} />
-              </a>
-              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", marginTop: "8px" }}>Click to open full size</div>
-            </Card>
-          )}
+          <AdminMediaCard ticket={ticket} onLightbox={setLightboxUrl} />
 
           <Card title={`Conversation Thread (${messages.length} messages)`}>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "16px", minHeight: "80px" }}>
@@ -490,5 +521,113 @@ function Info({ label, value }: { label: string; value: string | null }) {
 function SideLabel({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: "6px" }}>{children}</div>
+  );
+}
+
+function AdminMediaCard({
+  ticket,
+  onLightbox,
+}: {
+  ticket: ApiTicket;
+  onLightbox: (url: string) => void;
+}) {
+  // Merge new attachments with legacy screenshotUrl
+  const images = [
+    ...(ticket.attachments ?? []),
+    ...(!ticket.attachments?.length && ticket.screenshotUrl ? [ticket.screenshotUrl] : []),
+  ];
+  const hasAudio = !!ticket.voiceNoteUrl;
+  const hasVideo = !!ticket.screenRecordingUrl;
+
+  if (!images.length && !hasAudio && !hasVideo) return null;
+
+  return (
+    <Card title={`Attachments (${images.length} image${images.length !== 1 ? "s" : ""}${hasAudio ? " · voice" : ""}${hasVideo ? " · video" : ""})`}>
+
+      {/* Image gallery */}
+      {images.length > 0 && (
+        <div style={{ marginBottom: hasAudio || hasVideo ? "18px" : 0 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+            {images.map((url, i) => (
+              <div key={i} style={{ position: "relative" }}>
+                <button
+                  type="button"
+                  onClick={() => onLightbox(url)}
+                  title="Click to enlarge"
+                  style={{ background: "none", border: "none", padding: 0, cursor: "zoom-in", borderRadius: "10px", overflow: "hidden" }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url} alt={`Attachment ${i + 1}`}
+                    style={{
+                      width: "120px", height: "90px", objectFit: "cover",
+                      borderRadius: "10px", border: "1px solid rgba(255,255,255,0.12)",
+                      display: "block", transition: "opacity 0.15s",
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLImageElement).style.opacity = "0.75"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLImageElement).style.opacity = "1"; }}
+                  />
+                </button>
+                <a
+                  href={url} download target="_blank" rel="noopener noreferrer"
+                  title="Download"
+                  style={{
+                    position: "absolute", bottom: "5px", right: "5px",
+                    background: "rgba(0,0,0,0.7)", borderRadius: "6px",
+                    padding: "2px 6px", fontSize: "10px", color: "#fff", textDecoration: "none",
+                  }}
+                >⬇️</a>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", marginTop: "8px" }}>
+            Click image to enlarge · ⬇️ to download
+          </div>
+        </div>
+      )}
+
+      {/* Voice note */}
+      {hasAudio && (
+        <div style={{ marginBottom: hasVideo ? "16px" : 0 }}>
+          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>
+            🎙️ Voice Note{ticket.voiceDuration
+              ? ` — ${Math.floor(ticket.voiceDuration / 60)}:${(ticket.voiceDuration % 60).toString().padStart(2, "0")}`
+              : ""}
+          </div>
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+          <audio controls src={ticket.voiceNoteUrl!} style={{ width: "100%", maxWidth: "420px", height: "40px" }} />
+          <div style={{ marginTop: "6px" }}>
+            <a href={ticket.voiceNoteUrl!} download target="_blank" rel="noopener noreferrer"
+              style={{ fontSize: "12px", color: "#60a5fa", textDecoration: "none" }}>
+              ⬇️ Download Voice Note
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Screen recording */}
+      {hasVideo && (
+        <div>
+          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>
+            📹 Screen Recording
+          </div>
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+          <video
+            controls
+            src={ticket.screenRecordingUrl!}
+            style={{
+              width: "100%", borderRadius: "10px",
+              border: "1px solid rgba(255,255,255,0.1)", display: "block",
+            }}
+          />
+          <div style={{ marginTop: "8px" }}>
+            <a href={ticket.screenRecordingUrl!} download target="_blank" rel="noopener noreferrer"
+              style={{ fontSize: "12px", color: "#60a5fa", textDecoration: "none" }}>
+              ⬇️ Download Screen Recording
+            </a>
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }
