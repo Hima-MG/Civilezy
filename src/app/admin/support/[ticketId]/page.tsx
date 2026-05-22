@@ -4,17 +4,12 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  getTicketById,
-  getTicketMessages,
-  updateTicket,
-  updateTicketStatus,
-  addTicketMessage,
   STATUS_LABELS,
   STATUS_COLORS,
   PRIORITY_COLORS,
   formatDate,
-  type SupportTicket,
-  type TicketMessage,
+  type ApiTicket,
+  type ApiMessage,
   type TicketStatus,
   type TicketPriority,
 } from "@/lib/tickets";
@@ -27,13 +22,12 @@ export default function AdminTicketDetailPage() {
   const { ticketId } = useParams<{ ticketId: string }>();
   const router = useRouter();
 
-  const [ticket, setTicket] = useState<SupportTicket | null>(null);
-  const [messages, setMessages] = useState<TicketMessage[]>([]);
+  const [ticket, setTicket] = useState<ApiTicket | null>(null);
+  const [messages, setMessages] = useState<ApiMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [flash, setFlash] = useState("");
   const [flashType, setFlashType] = useState<"ok" | "err">("ok");
 
-  // Action states
   const [newStatus, setNewStatus] = useState<TicketStatus>("OPEN");
   const [newPriority, setNewPriority] = useState<TicketPriority>("MEDIUM");
   const [assignedTo, setAssignedTo] = useState("");
@@ -54,19 +48,29 @@ export default function AdminTicketDetailPage() {
     if (!ticketId) return;
     setLoading(true);
     try {
-      const [t, msgs] = await Promise.all([
-        getTicketById(ticketId),
-        getTicketMessages(ticketId),
+      const [tRes, mRes] = await Promise.all([
+        fetch(`/api/tickets/detail?id=${ticketId}`),
+        fetch(`/api/tickets/messages?ticketId=${ticketId}`),
       ]);
-      if (!t) { router.push("/admin/support"); return; }
+
+      const tJson = await tRes.json() as { ticket?: ApiTicket; error?: string };
+      const mJson = await mRes.json() as { messages?: ApiMessage[]; error?: string };
+
+      if (!tRes.ok) {
+        if (tRes.status === 404) { router.push("/admin/support"); return; }
+        throw new Error(tJson.error ?? `HTTP ${tRes.status}`);
+      }
+      if (!mRes.ok) throw new Error(mJson.error ?? `HTTP ${mRes.status}`);
+
+      const t = tJson.ticket!;
       setTicket(t);
-      setMessages(msgs);
+      setMessages(mJson.messages ?? []);
       setNewStatus(t.status);
       setNewPriority(t.priority);
       setAssignedTo(t.assignedTo ?? "");
       setAdminNotes(t.adminNotes ?? "");
-    } catch {
-      showFlash("Failed to load ticket", "err");
+    } catch (err) {
+      showFlash(err instanceof Error ? err.message : "Failed to load ticket", "err");
     } finally {
       setLoading(false);
     }
@@ -82,40 +86,51 @@ export default function AdminTicketDetailPage() {
     if (!ticket) return;
     setSavingStatus(true);
     try {
-      await updateTicketStatus(ticket.id, newStatus, { priority: newPriority, assignedTo: assignedTo || null });
+      const res = await fetch("/api/tickets/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: ticket.id,
+          status: newStatus,
+          priority: newPriority,
+          assignedTo: assignedTo || null,
+        }),
+      });
+      if (!res.ok) {
+        const j = await res.json() as { error?: string };
+        throw new Error(j.error ?? `HTTP ${res.status}`);
+      }
       setTicket((t) => t ? { ...t, status: newStatus, priority: newPriority, assignedTo: assignedTo || null } : t);
 
-      // Send email notifications
-      const sendEmail = async (type: string, extra?: Record<string, unknown>) => {
-        await fetch("/api/send-ticket-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type,
-            ticket: {
-              ticketId: ticket.ticketId,
-              id: ticket.id,
-              studentName: ticket.studentName,
-              studentEmail: ticket.studentEmail,
-              category: ticket.category,
-              courseName: ticket.courseName,
-              description: ticket.description,
-              status: newStatus,
-              ...extra,
-            },
-          }),
-        });
+      // Email notifications
+      const emailPayload = {
+        ticketId: ticket.ticketId,
+        id: ticket.id,
+        studentName: ticket.studentName,
+        studentEmail: ticket.studentEmail,
+        category: ticket.category,
+        courseName: ticket.courseName,
+        description: ticket.description,
+        status: newStatus,
       };
 
       if (newStatus === "WAITING_FOR_STUDENT") {
-        await sendEmail("resolution_confirm");
+        fetch("/api/send-ticket-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "resolution_confirm", ticket: emailPayload }),
+        }).catch(() => {});
       } else if (newStatus !== ticket.status) {
-        await sendEmail("status_update");
+        fetch("/api/send-ticket-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "status_update", ticket: emailPayload }),
+        }).catch(() => {});
       }
 
       showFlash("Ticket updated successfully");
-    } catch {
-      showFlash("Failed to update ticket", "err");
+    } catch (err) {
+      showFlash(err instanceof Error ? err.message : "Failed to update ticket", "err");
     } finally {
       setSavingStatus(false);
     }
@@ -125,11 +140,19 @@ export default function AdminTicketDetailPage() {
     if (!ticket) return;
     setSavingNotes(true);
     try {
-      await updateTicket(ticket.id, { adminNotes });
+      const res = await fetch("/api/tickets/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: ticket.id, adminNotes }),
+      });
+      if (!res.ok) {
+        const j = await res.json() as { error?: string };
+        throw new Error(j.error ?? `HTTP ${res.status}`);
+      }
       setTicket((t) => t ? { ...t, adminNotes } : t);
       showFlash("Notes saved");
-    } catch {
-      showFlash("Failed to save notes", "err");
+    } catch (err) {
+      showFlash(err instanceof Error ? err.message : "Failed to save notes", "err");
     } finally {
       setSavingNotes(false);
     }
@@ -139,19 +162,38 @@ export default function AdminTicketDetailPage() {
     if (!ticket || !replyText.trim()) return;
     setSendingReply(true);
     try {
-      const msg = await addTicketMessage(ticket.ticketId, "ADMIN", "Technical Team", replyText.trim());
-      setMessages((prev) => [...prev, msg]);
+      const res = await fetch("/api/tickets/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticketId: ticket.ticketId,
+          senderType: "ADMIN",
+          senderName: "Technical Team",
+          message: replyText.trim(),
+          attachmentUrl: null,
+        }),
+      });
+      const j = await res.json() as { message?: ApiMessage; error?: string };
+      if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
+
+      setMessages((prev) => [...prev, j.message!]);
       setReplyText("");
 
-      // If ticket was OPEN, auto-move to IN_PROGRESS
+      // Auto-move to IN_PROGRESS on first admin reply
       if (ticket.status === "OPEN") {
-        await updateTicketStatus(ticket.id, "IN_PROGRESS");
-        setTicket((t) => t ? { ...t, status: "IN_PROGRESS" } : t);
-        setNewStatus("IN_PROGRESS");
+        const upRes = await fetch("/api/tickets/update", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: ticket.id, status: "IN_PROGRESS" }),
+        });
+        if (upRes.ok) {
+          setTicket((t) => t ? { ...t, status: "IN_PROGRESS" } : t);
+          setNewStatus("IN_PROGRESS");
+        }
       }
       showFlash("Reply sent");
-    } catch {
-      showFlash("Failed to send reply", "err");
+    } catch (err) {
+      showFlash(err instanceof Error ? err.message : "Failed to send reply", "err");
     } finally {
       setSendingReply(false);
     }
@@ -181,19 +223,13 @@ export default function AdminTicketDetailPage() {
           border: `1px solid ${flashType === "ok" ? "rgba(52,211,153,0.3)" : "rgba(248,113,113,0.3)"}`,
           borderRadius: "12px", padding: "12px 20px",
           color: flashType === "ok" ? "#34d399" : "#f87171",
-          fontSize: "14px", fontFamily: "Nunito, sans-serif",
+          fontSize: "14px", fontFamily: "Nunito, sans-serif", maxWidth: "380px", wordBreak: "break-all",
         }}>{flash}</div>
       )}
 
       {/* Back + Header */}
       <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "24px", flexWrap: "wrap" }}>
-        <Link
-          href="/admin/support"
-          style={{
-            color: "rgba(255,255,255,0.5)", textDecoration: "none", fontSize: "13px",
-            display: "flex", alignItems: "center", gap: "5px",
-          }}
-        >
+        <Link href="/admin/support" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none", fontSize: "13px", display: "flex", alignItems: "center", gap: "5px" }}>
           ← Back to Support
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: "12px", flex: 1, flexWrap: "wrap" }}>
@@ -207,9 +243,8 @@ export default function AdminTicketDetailPage() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "20px", alignItems: "start" }}>
-        {/* ── Left: Chat + Info ── */}
+        {/* Left: Info + Chat */}
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          {/* Student info card */}
           <Card title="Student Information">
             <InfoGrid>
               <Info label="Name" value={ticket.studentName} />
@@ -221,31 +256,23 @@ export default function AdminTicketDetailPage() {
             </InfoGrid>
           </Card>
 
-          {/* Description */}
           <Card title="Issue Description">
             <p style={{ color: "rgba(255,255,255,0.8)", lineHeight: "1.7", margin: 0, fontSize: "14px" }}>
               {ticket.description}
             </p>
           </Card>
 
-          {/* Screenshot */}
           {ticket.screenshotUrl && (
             <Card title="Screenshot">
               <a href={ticket.screenshotUrl} target="_blank" rel="noopener noreferrer">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={ticket.screenshotUrl}
-                  alt="Ticket screenshot"
-                  style={{ maxWidth: "100%", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }}
-                />
+                <img src={ticket.screenshotUrl} alt="Ticket screenshot"
+                  style={{ maxWidth: "100%", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }} />
               </a>
-              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", marginTop: "8px" }}>
-                Click to open full size
-              </div>
+              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", marginTop: "8px" }}>Click to open full size</div>
             </Card>
           )}
 
-          {/* Chat */}
           <Card title={`Conversation Thread (${messages.length} messages)`}>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "16px", minHeight: "80px" }}>
               {messages.length === 0 ? (
@@ -259,11 +286,8 @@ export default function AdminTicketDetailPage() {
                     <div style={{
                       width: "32px", height: "32px", borderRadius: "50%", flexShrink: 0,
                       background: isAdmin ? "linear-gradient(135deg,#FF6200,#FF8534)" : "rgba(96,165,250,0.2)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: "14px",
-                    }}>
-                      {isAdmin ? "⚙️" : "🎓"}
-                    </div>
+                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px",
+                    }}>{isAdmin ? "⚙️" : "🎓"}</div>
                     <div style={{ maxWidth: "75%", display: "flex", flexDirection: "column", gap: "4px", alignItems: isAdmin ? "flex-end" : "flex-start" }}>
                       <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)" }}>
                         {isAdmin ? "Technical Team" : msg.senderName} · {formatDate(msg.createdAt)}
@@ -273,9 +297,7 @@ export default function AdminTicketDetailPage() {
                         background: isAdmin ? "rgba(255,98,0,0.15)" : "rgba(96,165,250,0.12)",
                         border: isAdmin ? "1px solid rgba(255,98,0,0.2)" : "1px solid rgba(96,165,250,0.2)",
                         color: "#fff", fontSize: "14px", lineHeight: "1.6",
-                      }}>
-                        {msg.message}
-                      </div>
+                      }}>{msg.message}</div>
                     </div>
                   </div>
                 );
@@ -283,7 +305,6 @@ export default function AdminTicketDetailPage() {
               <div ref={chatBottomRef} />
             </div>
 
-            {/* Reply input */}
             <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "16px" }}>
               <textarea
                 rows={3}
@@ -295,8 +316,7 @@ export default function AdminTicketDetailPage() {
                   background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)",
                   borderRadius: "12px", padding: "12px 14px", color: "#fff",
                   fontSize: "14px", fontFamily: "Nunito, sans-serif",
-                  lineHeight: "1.6", resize: "vertical", outline: "none",
-                  marginBottom: "10px",
+                  lineHeight: "1.6", resize: "vertical", outline: "none", marginBottom: "10px",
                 }}
               />
               <button
@@ -316,30 +336,19 @@ export default function AdminTicketDetailPage() {
           </Card>
         </div>
 
-        {/* ── Right: Actions ── */}
+        {/* Right: Actions */}
         <div style={{ display: "flex", flexDirection: "column", gap: "16px", position: "sticky", top: "70px" }}>
-          {/* Status & Priority */}
           <Card title="Update Ticket">
             <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div>
                 <SideLabel>Status</SideLabel>
-                <select
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value as TicketStatus)}
-                  style={selectStyle}
-                >
-                  {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-                  ))}
+                <select value={newStatus} onChange={(e) => setNewStatus(e.target.value as TicketStatus)} style={selectStyle}>
+                  {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
                 </select>
               </div>
               <div>
                 <SideLabel>Priority</SideLabel>
-                <select
-                  value={newPriority}
-                  onChange={(e) => setNewPriority(e.target.value as TicketPriority)}
-                  style={selectStyle}
-                >
+                <select value={newPriority} onChange={(e) => setNewPriority(e.target.value as TicketPriority)} style={selectStyle}>
                   <option value="HIGH">High</option>
                   <option value="MEDIUM">Medium</option>
                   <option value="LOW">Low</option>
@@ -347,19 +356,10 @@ export default function AdminTicketDetailPage() {
               </div>
               <div>
                 <SideLabel>Assigned To</SideLabel>
-                <input
-                  type="text"
-                  placeholder="Team member name"
-                  value={assignedTo}
-                  onChange={(e) => setAssignedTo(e.target.value)}
-                  style={inputStyle}
-                />
+                <input type="text" placeholder="Team member name" value={assignedTo}
+                  onChange={(e) => setAssignedTo(e.target.value)} style={inputStyle} />
               </div>
-              <button
-                onClick={handleStatusUpdate}
-                disabled={savingStatus}
-                style={primaryBtnStyle(savingStatus)}
-              >
+              <button onClick={handleStatusUpdate} disabled={savingStatus} style={primaryBtnStyle(savingStatus)}>
                 {savingStatus ? "Saving…" : "Save Changes"}
               </button>
               {newStatus === "WAITING_FOR_STUDENT" && (
@@ -374,25 +374,16 @@ export default function AdminTicketDetailPage() {
             </div>
           </Card>
 
-          {/* Admin Notes */}
           <Card title="Internal Notes">
-            <textarea
-              rows={5}
-              placeholder="Internal notes (not visible to student)..."
-              value={adminNotes}
-              onChange={(e) => setAdminNotes(e.target.value)}
+            <textarea rows={5} placeholder="Internal notes (not visible to student)..."
+              value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)}
               style={{ ...inputStyle, resize: "vertical", height: "auto", fontFamily: "Nunito, sans-serif", lineHeight: "1.6" }}
             />
-            <button
-              onClick={handleSaveNotes}
-              disabled={savingNotes}
-              style={{ ...primaryBtnStyle(savingNotes), marginTop: "10px" }}
-            >
+            <button onClick={handleSaveNotes} disabled={savingNotes} style={{ ...primaryBtnStyle(savingNotes), marginTop: "10px" }}>
               {savingNotes ? "Saving…" : "Save Notes"}
             </button>
           </Card>
 
-          {/* Timeline */}
           <Card title="Timeline">
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {[
@@ -410,14 +401,16 @@ export default function AdminTicketDetailPage() {
               ) : null)}
             </div>
           </Card>
+
+          <Card title="Student Info">
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <Info label="Category" value={ticket.category} />
+              <Info label="Course" value={ticket.courseName} />
+              {ticket.studentUid && <Info label="UID" value={ticket.studentUid} />}
+            </div>
+          </Card>
         </div>
       </div>
-
-      <style>{`
-        @media (max-width: 768px) {
-          .ticket-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
     </div>
   );
 }
@@ -452,15 +445,8 @@ function primaryBtnStyle(disabled: boolean): React.CSSProperties {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{
-      background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
-      borderRadius: "16px", padding: "20px",
-    }}>
-      <div style={{
-        fontFamily: "Rajdhani, sans-serif", fontSize: "15px", fontWeight: 700,
-        color: "rgba(255,255,255,0.7)", marginBottom: "16px",
-        textTransform: "uppercase", letterSpacing: "0.5px",
-      }}>{title}</div>
+    <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "16px", padding: "20px" }}>
+      <div style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "15px", fontWeight: 700, color: "rgba(255,255,255,0.7)", marginBottom: "16px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{title}</div>
       {children}
     </div>
   );
@@ -468,24 +454,17 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 
 function Badge({ text, colors }: { text: string; colors: { color: string; bg: string; border: string } }) {
   return (
-    <span style={{
-      display: "inline-block", padding: "3px 11px", borderRadius: "20px",
-      fontSize: "11px", fontWeight: 700, whiteSpace: "nowrap",
-      color: colors.color, background: colors.bg, border: `1px solid ${colors.border}`,
-      fontFamily: "Nunito, sans-serif",
-    }}>{text}</span>
+    <span style={{ display: "inline-block", padding: "3px 11px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, whiteSpace: "nowrap", color: colors.color, background: colors.bg, border: `1px solid ${colors.border}`, fontFamily: "Nunito, sans-serif" }}>
+      {text}
+    </span>
   );
 }
 
 function InfoGrid({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-      {children}
-    </div>
-  );
+  return <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>{children}</div>;
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function Info({ label, value }: { label: string; value: string | null }) {
   return (
     <div>
       <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: "3px" }}>{label}</div>
@@ -496,9 +475,6 @@ function Info({ label, value }: { label: string; value: string }) {
 
 function SideLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{
-      fontSize: "11px", color: "rgba(255,255,255,0.4)",
-      textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: "6px",
-    }}>{children}</div>
+    <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: "6px" }}>{children}</div>
   );
 }

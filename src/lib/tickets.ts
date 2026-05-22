@@ -124,12 +124,24 @@ export function getAutoPriority(category: TicketCategory): TicketPriority {
   return "LOW";
 }
 
-export function formatDate(ts: Timestamp | null | undefined): string {
+export function formatDate(ts: Timestamp | string | null | undefined): string {
   if (!ts) return "—";
-  return ts.toDate().toLocaleString("en-IN", {
+  const date = typeof ts === "string" ? new Date(ts) : ts.toDate();
+  return date.toLocaleString("en-IN", {
     day: "2-digit", month: "short", year: "numeric",
     hour: "2-digit", minute: "2-digit",
   });
+}
+
+// Serialized versions used when data comes from API routes (dates as ISO strings)
+export interface ApiTicket extends Omit<SupportTicket, "createdAt" | "updatedAt" | "resolvedAt"> {
+  createdAt: string | null;
+  updatedAt: string | null;
+  resolvedAt: string | null;
+}
+
+export interface ApiMessage extends Omit<TicketMessage, "createdAt"> {
+  createdAt: string | null;
 }
 
 // ─── Ticket ID Generation ─────────────────────────────────────────────────────

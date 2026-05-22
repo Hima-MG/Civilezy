@@ -3,19 +3,16 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
-  getAllTickets,
   STATUS_LABELS,
   STATUS_COLORS,
   PRIORITY_COLORS,
   CATEGORIES,
   formatDate,
-  type SupportTicket,
+  type ApiTicket,
   type TicketStatus,
   type TicketPriority,
   type TicketCategory,
 } from "@/lib/tickets";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 type SortKey = "newest" | "oldest" | "priority";
 
@@ -24,11 +21,10 @@ const STATUS_FILTER_OPTIONS: Array<TicketStatus | "ALL"> = [
   "ALL", "OPEN", "IN_PROGRESS", "WAITING_FOR_STUDENT", "REOPENED", "RESOLVED", "CLOSED",
 ];
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export default function AdminSupportPage() {
-  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [tickets, setTickets] = useState<ApiTicket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "ALL">("ALL");
   const [priorityFilter, setPriorityFilter] = useState<TicketPriority | "ALL">("ALL");
@@ -43,10 +39,16 @@ export default function AdminSupportPage() {
 
   const fetchTickets = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     try {
-      setTickets(await getAllTickets());
-    } catch {
-      showFlash("Failed to load tickets");
+      const res = await fetch("/api/tickets/list");
+      const json = await res.json() as { tickets?: ApiTicket[]; error?: string };
+      if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
+      setTickets(json.tickets ?? []);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setLoadError(msg);
+      showFlash(`Failed to load tickets: ${msg}`);
     } finally {
       setLoading(false);
     }
@@ -54,20 +56,20 @@ export default function AdminSupportPage() {
 
   useEffect(() => { fetchTickets(); }, [fetchTickets]);
 
-  // ── Stats ──
-  const today = new Date(); today.setHours(0, 0, 0, 0);
+  // Stats
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
   const stats = {
     open: tickets.filter((t) => t.status === "OPEN").length,
     inProgress: tickets.filter((t) => t.status === "IN_PROGRESS").length,
     resolvedToday: tickets.filter((t) => {
-      const d = t.resolvedAt?.toDate();
-      return d && d >= today && (t.status === "RESOLVED" || t.status === "CLOSED");
+      const d = t.resolvedAt ? new Date(t.resolvedAt) : null;
+      return d && d >= todayStart && (t.status === "RESOLVED" || t.status === "CLOSED");
     }).length,
     total: tickets.length,
     reopened: tickets.filter((t) => t.status === "REOPENED").length,
   };
 
-  // ── Filter + search + sort ──
+  // Filter + search + sort
   const filtered = tickets
     .filter((t) => {
       if (statusFilter !== "ALL" && t.status !== statusFilter) return false;
@@ -87,8 +89,10 @@ export default function AdminSupportPage() {
     })
     .sort((a, b) => {
       if (sort === "priority") return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
-      if (sort === "oldest") return (a.createdAt?.toMillis() ?? 0) - (b.createdAt?.toMillis() ?? 0);
-      return (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0);
+      const aMs = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bMs = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (sort === "oldest") return aMs - bMs;
+      return bMs - aMs;
     });
 
   return (
@@ -97,8 +101,9 @@ export default function AdminSupportPage() {
       {flash && (
         <div style={{
           position: "fixed", top: "70px", right: "24px", zIndex: 9999,
-          background: "rgba(52,211,153,0.15)", border: "1px solid rgba(52,211,153,0.3)",
-          borderRadius: "12px", padding: "12px 20px", color: "#34d399", fontSize: "14px",
+          background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.3)",
+          borderRadius: "12px", padding: "12px 20px", color: "#f87171", fontSize: "14px",
+          maxWidth: "420px", wordBreak: "break-all",
         }}>{flash}</div>
       )}
 
@@ -111,6 +116,19 @@ export default function AdminSupportPage() {
           Manage student technical support tickets
         </p>
       </div>
+
+      {/* Error banner */}
+      {loadError && !loading && (
+        <div style={{
+          background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)",
+          borderRadius: "14px", padding: "16px 20px", marginBottom: "20px",
+          color: "#f87171", fontSize: "13px", lineHeight: "1.6",
+        }}>
+          <strong>Error loading tickets:</strong> {loadError}
+          <br />
+          <span style={{ opacity: 0.7, fontSize: "12px" }}>Check the Next.js terminal for the full server-side error.</span>
+        </div>
+      )}
 
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "14px", marginBottom: "24px" }}>
@@ -150,14 +168,12 @@ export default function AdminSupportPage() {
           }}
         />
 
-        {/* Status filter */}
         <FilterSelect value={statusFilter} onChange={(v) => setStatusFilter(v as TicketStatus | "ALL")}>
           {STATUS_FILTER_OPTIONS.map((s) => (
             <option key={s} value={s}>{s === "ALL" ? "All Statuses" : STATUS_LABELS[s as TicketStatus]}</option>
           ))}
         </FilterSelect>
 
-        {/* Priority filter */}
         <FilterSelect value={priorityFilter} onChange={(v) => setPriorityFilter(v as TicketPriority | "ALL")}>
           <option value="ALL">All Priorities</option>
           <option value="HIGH">High</option>
@@ -165,13 +181,11 @@ export default function AdminSupportPage() {
           <option value="LOW">Low</option>
         </FilterSelect>
 
-        {/* Category filter */}
         <FilterSelect value={categoryFilter} onChange={(v) => setCategoryFilter(v as TicketCategory | "ALL")}>
           <option value="ALL">All Categories</option>
           {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </FilterSelect>
 
-        {/* Sort */}
         <FilterSelect value={sort} onChange={(v) => setSort(v as SortKey)}>
           <option value="newest">Newest First</option>
           <option value="oldest">Oldest First</option>
@@ -271,8 +285,6 @@ export default function AdminSupportPage() {
     </div>
   );
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function StatusBadge({ text, colors }: { text: string; colors: { color: string; bg: string; border: string } }) {
   return (
