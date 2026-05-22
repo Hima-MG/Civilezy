@@ -185,7 +185,8 @@ export default function TechnicalSupportModal() {
       setSubmitted(ticketId);
     } catch (err) {
       console.error("[submit ticket]", err);
-      alert("Failed to submit ticket. Please try again.");
+      const msg = err instanceof Error ? err.message : String(err);
+      alert(`Failed to submit ticket.\n\nError: ${msg}`);
     } finally {
       setSubmitting(false);
       setUploadProgress(false);

@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Support tickets — created via Admin SDK only; client can read and update
+    match /support_tickets/{ticketId} {
+      allow read: if true;
+      allow create: if false;           // creation is via /api/tickets/create (Admin SDK)
+      allow update: if true;            // admin panel updates status/notes via client SDK
+      allow delete: if false;
+    }
+
+    // Ticket messages — both admin and students can read/create; no edits or deletes
+    match /ticket_messages/{messageId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if false;
+    }
+
+    // Ticket counter — only Admin SDK (server-side); no client access
+    match /meta/{docId} {
+      allow read, write: if false;
+    }
+
+  }
+}

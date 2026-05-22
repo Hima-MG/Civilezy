@@ -196,13 +196,10 @@ export async function getAllTickets(): Promise<SupportTicket[]> {
 
 export async function getTicketsByEmail(email: string): Promise<SupportTicket[]> {
   const snap = await getDocs(
-    query(
-      collection(db, TICKETS_COL),
-      where("studentEmail", "==", email),
-      orderBy("createdAt", "desc")
-    )
+    query(collection(db, TICKETS_COL), where("studentEmail", "==", email))
   );
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SupportTicket));
+  const tickets = snap.docs.map((d) => ({ id: d.id, ...d.data() } as SupportTicket));
+  return tickets.sort((a, b) => (b.createdAt?.toMillis() ?? 0) - (a.createdAt?.toMillis() ?? 0));
 }
 
 export async function getTicketByTicketId(ticketId: string): Promise<SupportTicket | null> {
@@ -253,13 +250,10 @@ export async function updateTicket(
 
 export async function getTicketMessages(ticketId: string): Promise<TicketMessage[]> {
   const snap = await getDocs(
-    query(
-      collection(db, MESSAGES_COL),
-      where("ticketId", "==", ticketId),
-      orderBy("createdAt", "asc")
-    )
+    query(collection(db, MESSAGES_COL), where("ticketId", "==", ticketId))
   );
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as TicketMessage));
+  const msgs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as TicketMessage));
+  return msgs.sort((a, b) => (a.createdAt?.toMillis() ?? 0) - (b.createdAt?.toMillis() ?? 0));
 }
 
 export async function addTicketMessage(

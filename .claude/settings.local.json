@@ -34,7 +34,9 @@
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\" -Force)",
       "Bash(Select-Object Name, FullName)",
       "Bash(mkdir -p \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\\\\app\\\\api\\\\send-ticket-email\" \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\\\\app\\\\api\\\\tickets\\\\confirm\" \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\\\\components\\\\support\" \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\\\\app\\\\admin\\\\support\\\\[ticketId]\" \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\\\\app\\\\support\\\\[ticketId]\")",
-      "Bash(npx firebase-tools *)"
+      "Bash(npx firebase-tools *)",
+      "Bash(Read \"C:\\\\Users\\\\HIMAGI~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-Hima-Girish-Desktop-civilezy-Civilezy-website-civilezy\\\\50fc6ecf-c834-4f3c-9b6c-ac7a55345f2d\\\\tasks\\\\b24w2vd74.output\")",
+      "Bash(curl -s -X POST http://localhost:3001/api/tickets/create -H \"Content-Type: application/json\" -d \"{\\\\\"studentName\\\\\":\\\\\"Test User\\\\\",\\\\\"studentEmail\\\\\":\\\\\"test@example.com\\\\\",\\\\\"whatsappNumber\\\\\":\\\\\"9876543210\\\\\",\\\\\"courseName\\\\\":\\\\\"ITI Course\\\\\",\\\\\"category\\\\\":\\\\\"Other\\\\\",\\\\\"description\\\\\":\\\\\"This is a test ticket submission with enough characters\\\\\",\\\\\"screenshotUrl\\\\\":null,\\\\\"studentUid\\\\\":null}\")"
     ]
   }
 }

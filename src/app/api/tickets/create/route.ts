@@ -25,6 +25,7 @@ async function generateTicketId(db: Firestore): Promise<string> {
 }
 
 export async function POST(req: NextRequest) {
+  console.log("[tickets/create] Request received");
   try {
     const body = await req.json() as {
       studentName: string;
@@ -45,8 +46,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 });
     }
 
+    console.log("[tickets/create] Validation passed, initialising Admin SDK...");
     const db = getAdminDb();
+    console.log("[tickets/create] Admin SDK ready, generating ticket ID...");
     const ticketId = await generateTicketId(db);
+    console.log("[tickets/create] Ticket ID generated:", ticketId);
     const priority = getAutoPriority(category);
     const now = FieldValue.serverTimestamp();
 
@@ -69,10 +73,14 @@ export async function POST(req: NextRequest) {
       resolvedAt: null,
     };
 
+    console.log("[tickets/create] Writing ticket to Firestore...");
     const ref = await db.collection(TICKETS_COL).add(docData);
+    console.log("[tickets/create] Success — doc id:", ref.id, "ticketId:", ticketId);
     return NextResponse.json({ id: ref.id, ticketId }, { status: 201 });
   } catch (err) {
-    console.error("[tickets/create]", err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    const errStr = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+    console.error("[tickets/create] FAILED:", errStr);
+    if (err instanceof Error && err.stack) console.error(err.stack);
+    return NextResponse.json({ error: errStr }, { status: 500 });
   }
 }
