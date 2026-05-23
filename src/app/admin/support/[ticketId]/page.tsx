@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
+import { collection, doc, query, where, onSnapshot, orderBy, type DocumentSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   STATUS_LABELS,
@@ -95,6 +95,32 @@ export default function AdminTicketDetailPage() {
   }, [ticketId, router]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // Real-time ticket document listener — picks up background attachment uploads automatically
+  useEffect(() => {
+    if (!ticketId) return;
+    const unsub = onSnapshot(doc(db, "support_tickets", ticketId), (snap: DocumentSnapshot) => {
+      if (!snap.exists()) return;
+      const raw = snap.data()!;
+      setTicket(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          attachments: raw.attachments ?? prev.attachments,
+          screenshotUrl: raw.screenshotUrl ?? prev.screenshotUrl,
+          voiceNoteUrl: raw.voiceNoteUrl ?? prev.voiceNoteUrl,
+          voiceDuration: raw.voiceDuration ?? prev.voiceDuration,
+          screenRecordingUrl: raw.screenRecordingUrl ?? prev.screenRecordingUrl,
+          status: raw.status ?? prev.status,
+          priority: raw.priority ?? prev.priority,
+          assignedTo: raw.assignedTo ?? prev.assignedTo,
+          adminNotes: raw.adminNotes ?? prev.adminNotes,
+          updatedAt: raw.updatedAt?.toDate?.()?.toISOString() ?? prev.updatedAt,
+        };
+      });
+    }, () => { /* silently ignore permission errors */ });
+    return unsub;
+  }, [ticketId]);
 
   // Real-time messages listener (uses client-side Firestore)
   useEffect(() => {

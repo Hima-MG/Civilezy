@@ -6,7 +6,7 @@ import { useSupportModal } from "@/contexts/SupportContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { CATEGORIES, COURSE_OPTIONS, type TicketCategory } from "@/lib/tickets";
 import { storage } from "@/lib/firebase";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const MAX_SCREENSHOTS = 5;
@@ -22,6 +22,20 @@ interface FormState {
   courseName: string;
   category: TicketCategory | "";
   description: string;
+}
+
+type UploadItemStatus = "pending" | "uploading" | "done" | "failed";
+
+interface UploadItem {
+  label: string;
+  status: UploadItemStatus;
+  progress: number; // 0-100
+}
+
+interface UploadState {
+  items: UploadItem[];
+  allDone: boolean;
+  failedCount: number;
 }
 
 const EMPTY: FormState = {
@@ -47,17 +61,71 @@ function fmtTime(s: number): string {
   return `${m}:${(s % 60).toString().padStart(2, "0")}`;
 }
 
-async function uploadToStorage(
-  fileOrBlob: File | Blob, path: string
+/** Compress + resize an image using Canvas API. Returns a WebP Blob. */
+async function compressImage(file: File, maxPx = 1600, quality = 0.85): Promise<Blob> {
+  if (!file.type.startsWith("image/") || file.type === "image/gif") return file;
+  return new Promise<Blob>((resolve) => {
+    const img = new Image();
+    const objUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objUrl);
+      let w = img.naturalWidth, h = img.naturalHeight;
+      if (w > maxPx || h > maxPx) {
+        if (w >= h) { h = Math.round(h * maxPx / w); w = maxPx; }
+        else { w = Math.round(w * maxPx / h); h = maxPx; }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+      canvas.toBlob((blob) => resolve(blob ?? file), "image/webp", quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(objUrl); resolve(file); };
+    img.src = objUrl;
+  });
+}
+
+/** Upload a file/blob to Firebase Storage with progress callback. Returns download URL or null. */
+async function uploadWithProgress(
+  fileOrBlob: File | Blob,
+  path: string,
+  onProgress?: (pct: number) => void
 ): Promise<string | null> {
   try {
     const sRef = storageRef(storage, path);
-    await uploadBytes(sRef, fileOrBlob);
-    return await getDownloadURL(sRef);
+    const task = uploadBytesResumable(sRef, fileOrBlob);
+
+    return await new Promise<string | null>((resolve) => {
+      task.on(
+        "state_changed",
+        (snap) => {
+          const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+          onProgress?.(pct);
+        },
+        (err) => {
+          console.warn(`[upload] ${path} failed:`, err);
+          resolve(null);
+        },
+        async () => {
+          try { resolve(await getDownloadURL(task.snapshot.ref)); }
+          catch { resolve(null); }
+        }
+      );
+    });
   } catch (err) {
-    console.warn(`[upload] failed for ${path}:`, err);
+    console.warn(`[upload] ${path} failed:`, err);
     return null;
   }
+}
+
+/** Immutably update one item's status + progress in UploadState. */
+function patchItem(
+  prev: UploadState,
+  idx: number,
+  patch: Partial<UploadItem>
+): UploadState {
+  const items = [...prev.items];
+  items[idx] = { ...items[idx], ...patch };
+  return { ...prev, items };
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -70,7 +138,20 @@ export default function TechnicalSupportModal() {
   const [errors, setErrors] = useState<Partial<FormState>>({});
   const [submitting, setSubmitting] = useState(false);
   const [uploadMsg, setUploadMsg] = useState("");
-  const [submitted, setSubmitted] = useState<string | null>(null);
+
+  // Submission result
+  const [submitted, setSubmitted] = useState<string | null>(null);          // ticketId (TECH-XXXXXX)
+  const [submittedDocId, setSubmittedDocId] = useState<string | null>(null); // Firestore doc ID
+  const [uploadState, setUploadState] = useState<UploadState | null>(null);
+
+  // Ref for retry (snapshot of files at submit time)
+  const uploadSnapshotRef = useRef<{
+    docId: string;
+    screenshots: File[];
+    voice: Blob | null;
+    voiceDur: number;
+    video: File | null;
+  } | null>(null);
 
   // Screenshots
   const [screenshots, setScreenshots] = useState<File[]>([]);
@@ -96,7 +177,7 @@ export default function TechnicalSupportModal() {
   const canRecord =
     typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
 
-  // ── Stop recording (stable ref — used inside intervals) ───────────────────
+  // ── Stop recording ────────────────────────────────────────────────────────
   const doStop = useCallback(() => {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") {
@@ -129,14 +210,17 @@ export default function TechnicalSupportModal() {
           : { ...EMPTY });
         setErrors({});
         setSubmitted(null);
+        setSubmittedDocId(null);
+        setUploadState(null);
+        uploadSnapshotRef.current = null;
         setSubmitting(false);
         setUploadMsg("");
 
-        // Screenshots cleanup
+        // Screenshots
         setScreenshotPreviews(prev => { prev.forEach(URL.revokeObjectURL); return []; });
         setScreenshots([]);
 
-        // Voice cleanup
+        // Voice
         doStop();
         streamRef.current?.getTracks().forEach(t => t.stop());
         streamRef.current = null;
@@ -147,7 +231,7 @@ export default function TechnicalSupportModal() {
         setRecState("idle");
         setRecTime(0);
 
-        // Screen rec cleanup
+        // Screen rec
         setScreenRec(null);
       }, 300);
       return () => clearTimeout(t);
@@ -273,38 +357,161 @@ export default function TechnicalSupportModal() {
     return Object.keys(e).length === 0;
   }
 
+  // ── Background upload (runs AFTER ticket creation, non-blocking) ──────────
+  async function backgroundUpload(
+    docId: string,
+    files: File[],
+    voiceBlobData: Blob | null,
+    voiceDur: number,
+    videoFile: File | null,
+  ) {
+    const ts = Date.now();
+    const t0 = performance.now();
+
+    // Build task list
+    const tasks: UploadItem[] = [
+      ...files.map((_, i) => ({
+        label: files.length === 1 ? "Screenshot" : `Screenshot ${i + 1} of ${files.length}`,
+        status: "pending" as const,
+        progress: 0,
+      })),
+      ...(voiceBlobData ? [{ label: "Voice note", status: "pending" as const, progress: 0 }] : []),
+      ...(videoFile ? [{ label: "Screen recording", status: "pending" as const, progress: 0 }] : []),
+    ];
+
+    if (tasks.length === 0) {
+      setUploadState({ items: [], allDone: true, failedCount: 0 });
+      return;
+    }
+
+    setUploadState({ items: tasks, allDone: false, failedCount: 0 });
+
+    // ── Screenshots in parallel ──
+    const screenshotOffset = files.length;
+    const screenshotResults = await Promise.all(
+      files.map(async (file, i) => {
+        setUploadState(p => p ? patchItem(p, i, { status: "uploading", progress: 0 }) : p);
+        try {
+          const compressed = await compressImage(file);
+          const baseName = file.name.replace(/\.[^.]+$/, "");
+          const url = await uploadWithProgress(
+            compressed,
+            `support_screenshots/${ts}_${i}_${encodeURIComponent(baseName)}.webp`,
+            (pct) => setUploadState(p => p ? patchItem(p, i, { progress: pct }) : p)
+          );
+          setUploadState(p => p ? patchItem(p, i, { status: url ? "done" : "failed", progress: 100 }) : p);
+          return url;
+        } catch {
+          setUploadState(p => p ? patchItem(p, i, { status: "failed" }) : p);
+          return null;
+        }
+      })
+    );
+
+    // ── Voice note ──
+    let voiceUrl: string | null = null;
+    if (voiceBlobData) {
+      const idx = screenshotOffset;
+      setUploadState(p => p ? patchItem(p, idx, { status: "uploading", progress: 0 }) : p);
+      try {
+        voiceUrl = await uploadWithProgress(
+          voiceBlobData,
+          `support_voice/${ts}_voice.webm`,
+          (pct) => setUploadState(p => p ? patchItem(p, idx, { progress: pct }) : p)
+        );
+        setUploadState(p => p ? patchItem(p, idx, { status: voiceUrl ? "done" : "failed", progress: 100 }) : p);
+      } catch {
+        setUploadState(p => p ? patchItem(p, idx, { status: "failed" }) : p);
+      }
+    }
+
+    // ── Screen recording ──
+    let videoUrl: string | null = null;
+    if (videoFile) {
+      const idx = screenshotOffset + (voiceBlobData ? 1 : 0);
+      setUploadState(p => p ? patchItem(p, idx, { status: "uploading", progress: 0 }) : p);
+      try {
+        videoUrl = await uploadWithProgress(
+          videoFile,
+          `support_screen/${ts}_${encodeURIComponent(videoFile.name)}`,
+          (pct) => setUploadState(p => p ? patchItem(p, idx, { progress: pct }) : p)
+        );
+        setUploadState(p => p ? patchItem(p, idx, { status: videoUrl ? "done" : "failed", progress: 100 }) : p);
+      } catch {
+        setUploadState(p => p ? patchItem(p, idx, { status: "failed" }) : p);
+      }
+    }
+
+    // ── PATCH ticket with URLs ──
+    const attachments = screenshotResults.filter((u): u is string => !!u);
+    const patch: Record<string, unknown> = {};
+    if (attachments.length) { patch.attachments = attachments; patch.screenshotUrl = attachments[0]; }
+    if (voiceUrl) { patch.voiceNoteUrl = voiceUrl; patch.voiceDuration = voiceDur; }
+    if (videoUrl) patch.screenRecordingUrl = videoUrl;
+
+    if (Object.keys(patch).length > 0) {
+      fetch("/api/tickets/update", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: docId, ...patch }),
+      }).catch(err => console.warn("[bg-upload] PATCH failed:", err));
+    }
+
+    const elapsed = Math.round(performance.now() - t0);
+    console.log(`[support] 📎 Attachments uploaded in ${elapsed}ms`);
+
+    setUploadState(p => {
+      if (!p) return p;
+      const failedCount = p.items.filter(it => it.status === "failed").length;
+      return { ...p, allDone: true, failedCount };
+    });
+  }
+
+  // ── Retry failed uploads ──────────────────────────────────────────────────
+  function handleRetryUploads() {
+    if (!uploadSnapshotRef.current || !uploadState) return;
+    const { docId, screenshots: sc, voice, voiceDur, video } = uploadSnapshotRef.current;
+
+    const scCount = sc.length;
+    const voiceIdx = scCount;
+    const videoIdx = scCount + (voice ? 1 : 0);
+
+    const retryScreenshots: File[] = [];
+    let retryVoice: Blob | null = null;
+    let retryVideo: File | null = null;
+
+    uploadState.items.forEach((item, i) => {
+      if (item.status !== "failed") return;
+      if (i < scCount) retryScreenshots.push(sc[i]);
+      else if (i === voiceIdx && voice) retryVoice = voice;
+      else if (i === videoIdx && video) retryVideo = video;
+    });
+
+    if (retryScreenshots.length || retryVoice || retryVideo) {
+      backgroundUpload(docId, retryScreenshots, retryVoice, voiceDur, retryVideo);
+    }
+  }
+
   // ── Submit ────────────────────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate() || submitting) return;
     setSubmitting(true);
-    const ts = Date.now();
+
+    const t0 = performance.now();
 
     try {
-      // Stop any in-progress recording before upload
-      doStop();
+      doStop(); // Stop any in-progress recording
 
-      setUploadMsg("Uploading attachments…");
+      setUploadMsg("Creating ticket…");
 
-      // Upload all in parallel — failures are non-fatal
-      const [imgResults, voiceUrl, screenUrl] = await Promise.all([
-        Promise.all(
-          screenshots.map((f, i) =>
-            uploadToStorage(f, `support_screenshots/${ts}_${i}_${encodeURIComponent(f.name)}`)
-          )
-        ),
-        (voiceBlob && recState === "recorded")
-          ? uploadToStorage(voiceBlob, `support_voice/${ts}_voice.webm`)
-          : Promise.resolve(null),
-        screenRec
-          ? uploadToStorage(screenRec, `support_screen/${ts}_${encodeURIComponent(screenRec.name)}`)
-          : Promise.resolve(null),
-      ]);
+      // Snapshot files before async ops (state may change)
+      const screenshotSnap = [...screenshots];
+      const voiceBlobSnap = recState === "recorded" && voiceBlob ? voiceBlob : null;
+      const voiceDurSnap = recTimeRef.current;
+      const screenRecSnap = screenRec;
 
-      const attachments = imgResults.filter((u): u is string => !!u);
-
-      setUploadMsg("Submitting ticket…");
-
+      // ── Step 1: Create ticket (no attachments) ──
       const res = await fetch("/api/tickets/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -316,29 +523,45 @@ export default function TechnicalSupportModal() {
           category: form.category as TicketCategory,
           description: form.description.trim(),
           studentUid: user?.uid ?? null,
-          screenshotUrl: attachments[0] ?? null,   // backward compat
-          attachments,
-          voiceNoteUrl: voiceUrl ?? null,
-          voiceDuration: recState === "recorded" ? recTimeRef.current : null,
-          screenRecordingUrl: screenUrl ?? null,
+          // Attachments are empty — uploaded in background after success
+          screenshotUrl: null,
+          attachments: [],
+          voiceNoteUrl: null,
+          voiceDuration: voiceDurSnap || null,
+          screenRecordingUrl: null,
         }),
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error((err as { error?: string }).error ?? `HTTP ${res.status}`);
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error((errJson as { error?: string }).error ?? `HTTP ${res.status}`);
       }
 
-      const { id, ticketId } = await res.json() as { id: string; ticketId: string };
+      const { id: docId, ticketId } = await res.json() as { id: string; ticketId: string };
+      const creationMs = Math.round(performance.now() - t0);
+      console.log(`[support] ✅ Ticket created in ${creationMs}ms — ${ticketId}`);
 
-      // Fire-and-forget email
+      // ── Step 2: Show success immediately ──
+      setSubmitted(ticketId);
+      setSubmittedDocId(docId);
+
+      // Store snapshot for potential retry
+      uploadSnapshotRef.current = {
+        docId,
+        screenshots: screenshotSnap,
+        voice: voiceBlobSnap,
+        voiceDur: voiceDurSnap,
+        video: screenRecSnap,
+      };
+
+      // ── Step 3: Fire email asynchronously (non-blocking) ──
       fetch("/api/send-ticket-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "new_ticket",
           ticket: {
-            ticketId, id,
+            ticketId, id: docId,
             studentName: form.studentName.trim(),
             studentEmail: form.studentEmail.trim().toLowerCase(),
             category: form.category,
@@ -348,7 +571,13 @@ export default function TechnicalSupportModal() {
         }),
       }).catch(() => {});
 
-      setSubmitted(ticketId);
+      // ── Step 4: Upload attachments in background ──
+      const hasAttachments = screenshotSnap.length > 0 || !!voiceBlobSnap || !!screenRecSnap;
+      if (hasAttachments) {
+        // Intentionally NOT awaited — runs fully in background
+        backgroundUpload(docId, screenshotSnap, voiceBlobSnap, voiceDurSnap, screenRecSnap);
+      }
+
     } catch (err) {
       console.error("[submit ticket]", err);
       alert(`Failed to submit ticket.\n\nError: ${err instanceof Error ? err.message : String(err)}`);
@@ -436,30 +665,119 @@ export default function TechnicalSupportModal() {
 
         {/* ── Success Screen ── */}
         {submitted ? (
-          <div style={{ padding: "40px 28px", textAlign: "center" }}>
+          <div style={{ padding: "36px 28px" }}>
+            {/* Icon + heading */}
+            <div style={{ textAlign: "center", marginBottom: "24px" }}>
+              <div style={{
+                width: "72px", height: "72px", borderRadius: "50%",
+                background: "rgba(52,211,153,0.15)", border: "2px solid rgba(52,211,153,0.4)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "32px", margin: "0 auto 16px",
+              }}>✅</div>
+              <h2 style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "22px", fontWeight: 700, color: "#fff", margin: "0 0 6px" }}>
+                Ticket Submitted!
+              </h2>
+              <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.45)", margin: 0, lineHeight: "1.6" }}>
+                Your issue has been received. Our team will respond shortly.
+              </p>
+            </div>
+
+            {/* Ticket ID */}
             <div style={{
-              width: "72px", height: "72px", borderRadius: "50%",
-              background: "rgba(52,211,153,0.15)", border: "2px solid rgba(52,211,153,0.4)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: "32px", margin: "0 auto 20px",
-            }}>✅</div>
-            <h2 style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "22px", fontWeight: 700, color: "#fff", margin: "0 0 8px" }}>
-              Issue Submitted Successfully
-            </h2>
-            <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)", margin: "0 0 24px", lineHeight: "1.6" }}>
-              Your ticket has been created. Our team will review it shortly.
-            </p>
-            <div style={{
-              background: "rgba(96,165,250,0.08)", border: "1px solid rgba(96,165,250,0.25)",
-              borderRadius: "16px", padding: "20px", marginBottom: "28px",
+              background: "rgba(96,165,250,0.08)", border: "1px solid rgba(96,165,250,0.2)",
+              borderRadius: "14px", padding: "16px 20px", marginBottom: "20px", textAlign: "center",
             }}>
-              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "6px" }}>
+              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: "4px" }}>
                 Ticket ID
               </div>
               <div style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "28px", fontWeight: 700, color: "#60a5fa", letterSpacing: "1px" }}>
                 {submitted}
               </div>
             </div>
+
+            {/* Upload progress panel */}
+            {uploadState && uploadState.items.length > 0 && (
+              <div style={{
+                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "14px", padding: "16px 18px", marginBottom: "20px",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.6px" }}>
+                    📎 Uploading Attachments
+                  </div>
+                  {uploadState.allDone && uploadState.failedCount === 0 && (
+                    <span style={{ fontSize: "11px", color: "#34d399", fontWeight: 700 }}>All done ✓</span>
+                  )}
+                  {uploadState.allDone && uploadState.failedCount > 0 && (
+                    <span style={{ fontSize: "11px", color: "#f87171", fontWeight: 700 }}>
+                      {uploadState.failedCount} failed
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {uploadState.items.map((item, i) => (
+                    <div key={i}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: item.status === "uploading" ? "5px" : 0 }}>
+                        <span style={{ fontSize: "14px", lineHeight: 1, flexShrink: 0 }}>
+                          {item.status === "done" ? "✅" : item.status === "failed" ? "❌" : item.status === "uploading" ? "⏳" : "⌛"}
+                        </span>
+                        <span style={{
+                          fontSize: "13px",
+                          color: item.status === "done" ? "rgba(255,255,255,0.7)"
+                            : item.status === "failed" ? "#f87171"
+                            : item.status === "uploading" ? "#fff"
+                            : "rgba(255,255,255,0.4)",
+                          fontWeight: item.status === "uploading" ? 600 : 400,
+                        }}>
+                          {item.label}
+                        </span>
+                        {item.status === "uploading" && item.progress > 0 && (
+                          <span style={{ marginLeft: "auto", fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>
+                            {item.progress}%
+                          </span>
+                        )}
+                      </div>
+                      {/* Progress bar */}
+                      {item.status === "uploading" && (
+                        <div style={{ height: "3px", background: "rgba(255,255,255,0.08)", borderRadius: "2px", overflow: "hidden" }}>
+                          <div style={{
+                            height: "100%", borderRadius: "2px",
+                            background: "linear-gradient(90deg,#FF6200,#FF8534)",
+                            width: `${item.progress}%`,
+                            transition: "width 0.3s ease",
+                          }} />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Retry button */}
+                {uploadState.allDone && uploadState.failedCount > 0 && (
+                  <button
+                    onClick={handleRetryUploads}
+                    style={{
+                      marginTop: "12px", width: "100%",
+                      padding: "9px 16px", borderRadius: "10px",
+                      background: "rgba(248,113,113,0.12)", border: "1px solid rgba(248,113,113,0.3)",
+                      color: "#f87171", fontSize: "13px", fontWeight: 700, cursor: "pointer",
+                      fontFamily: "Nunito, sans-serif",
+                    }}
+                  >
+                    ↻ Retry {uploadState.failedCount} Failed Upload{uploadState.failedCount > 1 ? "s" : ""}
+                  </button>
+                )}
+
+                {!uploadState.allDone && (
+                  <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", margin: "10px 0 0", textAlign: "center", lineHeight: "1.5" }}>
+                    Ticket is already created. You can close this window — uploads continue in the background.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Actions */}
             <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
               <Link
                 href="/support"
@@ -479,6 +797,7 @@ export default function TechnicalSupportModal() {
                   padding: "11px 24px", borderRadius: "50px",
                   background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
                   color: "rgba(255,255,255,0.8)", fontSize: "14px", fontWeight: 600, cursor: "pointer",
+                  fontFamily: "Nunito, sans-serif",
                 }}
               >
                 Done
@@ -565,7 +884,7 @@ export default function TechnicalSupportModal() {
                 fontSize: "12px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase",
                 letterSpacing: "0.7px", marginBottom: "16px", fontFamily: "Nunito, sans-serif",
               }}>
-                📎 Attachments <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(all optional)</span>
+                📎 Attachments <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(all optional · uploaded after ticket creation)</span>
               </div>
 
               {/* ── Screenshots ── */}
@@ -573,10 +892,9 @@ export default function TechnicalSupportModal() {
                 <div style={attachLabelStyle}>
                   📸 Screenshots
                   <span style={attachCountStyle}>{screenshots.length}/{MAX_SCREENSHOTS}</span>
-                  <span style={attachHintStyle}>· JPG, PNG, WEBP · max {MAX_SCREENSHOT_MB} MB each</span>
+                  <span style={attachHintStyle}>· JPG, PNG, WEBP · max {MAX_SCREENSHOT_MB} MB · auto-compressed</span>
                 </div>
 
-                {/* Thumbnail grid */}
                 {screenshotPreviews.length > 0 && (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }}>
                     {screenshotPreviews.map((url, i) => (
@@ -619,7 +937,6 @@ export default function TechnicalSupportModal() {
                   </div>
                 )}
 
-                {/* Hidden inputs */}
                 <input ref={imgInputRef} type="file" accept="image/*" multiple
                   style={{ display: "none" }} onChange={handleImagesSelect} />
                 <input ref={camInputRef} type="file" accept="image/*"
@@ -743,7 +1060,7 @@ export default function TechnicalSupportModal() {
                 transition: "all 0.2s",
               }}
             >
-              {uploadMsg || (submitting ? "Submitting…" : "Submit Ticket")}
+              {uploadMsg || (submitting ? "Creating ticket…" : "Submit Ticket")}
             </button>
 
             {user && (
