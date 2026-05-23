@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -23,6 +23,22 @@ const STATUS_FILTER_OPTIONS: Array<TicketStatus | "ALL"> = [
   "ALL", "OPEN", "IN_PROGRESS", "WAITING_FOR_STUDENT", "REOPENED", "RESOLVED", "CLOSED",
 ];
 
+// ── Test-ticket detection (mirrors server-side logic in /api/tickets/delete-test) ──
+function isTestTicket(t: ApiTicket): boolean {
+  const email    = t.studentEmail.toLowerCase();
+  const name     = t.studentName.toLowerCase();
+  const ticketId = t.ticketId;
+  return (
+    email.includes("test")       ||
+    name.includes("test")        ||
+    ticketId.startsWith("TEST-") ||
+    ticketId.startsWith("test-")
+  );
+}
+
+// ── Flash type ────────────────────────────────────────────────────────────────
+interface FlashMsg { text: string; type: "ok" | "err" }
+
 export default function AdminSupportPage() {
   const [tickets, setTickets] = useState<ApiTicket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,12 +48,17 @@ export default function AdminSupportPage() {
   const [priorityFilter, setPriorityFilter] = useState<TicketPriority | "ALL">("ALL");
   const [categoryFilter, setCategoryFilter] = useState<TicketCategory | "ALL">("ALL");
   const [sort, setSort] = useState<SortKey>("newest");
-  const [flash, setFlash] = useState("");
+  const [flash, setFlash] = useState<FlashMsg | null>(null);
 
-  const showFlash = (msg: string) => {
-    setFlash(msg);
-    setTimeout(() => setFlash(""), 3000);
-  };
+  // Delete-test modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+
+  const showFlash = useCallback((text: string, type: FlashMsg["type"] = "ok") => {
+    setFlash({ text, type });
+    setTimeout(() => setFlash(null), 5000);
+  }, []);
 
   const fetchTickets = useCallback(async () => {
     setLoading(true);
@@ -50,11 +71,11 @@ export default function AdminSupportPage() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setLoadError(msg);
-      showFlash(`Failed to load tickets: ${msg}`);
+      showFlash(`Failed to load tickets: ${msg}`, "err");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showFlash]);
 
   // Real-time listener — tries onSnapshot first, falls back to API polling
   useEffect(() => {
@@ -86,13 +107,13 @@ export default function AdminSupportPage() {
 
   // Stats — counted directly from current ticket data
   const stats = {
-    open:             tickets.filter((t) => t.status === "OPEN").length,
-    inProgress:       tickets.filter((t) => t.status === "IN_PROGRESS").length,
-    waitingForStudent:tickets.filter((t) => t.status === "WAITING_FOR_STUDENT").length,
-    resolved:         tickets.filter((t) => t.status === "RESOLVED").length,
-    closed:           tickets.filter((t) => t.status === "CLOSED").length,
-    reopened:         tickets.filter((t) => t.status === "REOPENED").length,
-    total:            tickets.length,
+    open:              tickets.filter((t) => t.status === "OPEN").length,
+    inProgress:        tickets.filter((t) => t.status === "IN_PROGRESS").length,
+    waitingForStudent: tickets.filter((t) => t.status === "WAITING_FOR_STUDENT").length,
+    resolved:          tickets.filter((t) => t.status === "RESOLVED").length,
+    closed:            tickets.filter((t) => t.status === "CLOSED").length,
+    reopened:          tickets.filter((t) => t.status === "REOPENED").length,
+    total:             tickets.length,
   };
 
   // Filter + search + sort
@@ -121,29 +142,389 @@ export default function AdminSupportPage() {
       return bMs - aMs;
     });
 
+  // All tickets that qualify as test data (derived once from tickets state)
+  const testTickets = useMemo(() => tickets.filter(isTestTicket), [tickets]);
+
+  // Open the modal — pre-select ALL detected test tickets
+  function openDeleteModal() {
+    setSelectedIds(new Set(testTickets.map((t) => t.id)));
+    setShowDeleteModal(true);
+  }
+
+  function closeDeleteModal() {
+    if (deleting) return; // Don't close mid-delete
+    setShowDeleteModal(false);
+    setSelectedIds(new Set());
+  }
+
+  function toggleId(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    setSelectedIds((prev) =>
+      prev.size === testTickets.length
+        ? new Set()
+        : new Set(testTickets.map((t) => t.id))
+    );
+  }
+
+  async function handleDelete() {
+    if (selectedIds.size === 0) return;
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/tickets/delete-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "selected", selectedIds: Array.from(selectedIds) }),
+      });
+      const json = await res.json() as {
+        deleted?: number;
+        ticketIds?: string[];
+        docIds?: string[];
+        msgCount?: number;
+        evtCount?: number;
+        error?: string;
+      };
+      if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
+
+      const n = json.deleted ?? 0;
+      console.log(
+        `[admin] Deleted ${n} test ticket(s):`, json.ticketIds,
+        `| +${json.msgCount ?? 0} messages +${json.evtCount ?? 0} events`
+      );
+
+      closeDeleteModal();
+      await fetchTickets(); // Refresh dashboard
+      showFlash(
+        n === 0
+          ? "No test tickets were deleted."
+          : `Deleted ${n} test ticket${n !== 1 ? "s" : ""} successfully.`,
+        "ok"
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[admin] delete-test failed:", msg);
+      showFlash(`Delete failed: ${msg}`, "err");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  const allSelected = selectedIds.size === testTickets.length && testTickets.length > 0;
+  const noneSelected = selectedIds.size === 0;
+
   return (
     <div style={{ padding: "24px", minHeight: "100vh", fontFamily: "Nunito, sans-serif" }}>
-      {/* Flash */}
-      {flash && (
-        <div style={{
-          position: "fixed", top: "70px", right: "24px", zIndex: 9999,
-          background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.3)",
-          borderRadius: "12px", padding: "12px 20px", color: "#f87171", fontSize: "14px",
-          maxWidth: "420px", wordBreak: "break-all",
-        }}>{flash}</div>
+
+      {/* ── Delete confirmation modal ── */}
+      {showDeleteModal && (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget && !deleting) closeDeleteModal(); }}
+          style={{
+            position: "fixed", inset: 0, zIndex: 10000,
+            background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div style={{
+            background: "rgba(8,18,42,0.99)",
+            border: "1px solid rgba(248,113,113,0.3)",
+            borderRadius: "20px",
+            width: "100%", maxWidth: "520px",
+            boxShadow: "0 32px 80px rgba(0,0,0,0.7)",
+            display: "flex", flexDirection: "column", maxHeight: "85vh",
+          }}>
+
+            {/* Modal header */}
+            <div style={{
+              padding: "22px 24px 18px",
+              borderBottom: "1px solid rgba(255,255,255,0.07)",
+              display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px",
+            }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "5px" }}>
+                  <div style={{
+                    width: "36px", height: "36px", borderRadius: "10px",
+                    background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.3)",
+                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", flexShrink: 0,
+                  }}>🗑</div>
+                  <h2 style={{
+                    fontFamily: "Rajdhani, sans-serif", fontSize: "20px", fontWeight: 700,
+                    color: "#f87171", margin: 0,
+                  }}>
+                    Delete Test Data?
+                  </h2>
+                </div>
+                <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.45)", margin: 0, lineHeight: "1.5" }}>
+                  This will permanently delete the selected tickets plus all associated messages and events.
+                  <strong style={{ color: "rgba(255,255,255,0.65)" }}> This cannot be undone.</strong>
+                </p>
+              </div>
+              {!deleting && (
+                <button
+                  onClick={closeDeleteModal}
+                  style={{
+                    background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "8px", color: "rgba(255,255,255,0.5)", cursor: "pointer",
+                    width: "32px", height: "32px", fontSize: "18px", flexShrink: 0,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}
+                >×</button>
+              )}
+            </div>
+
+            {/* Body: ticket list */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px 24px" }}>
+
+              {testTickets.length === 0 ? (
+                <div style={{ padding: "32px", textAlign: "center" }}>
+                  <div style={{ fontSize: "40px", marginBottom: "12px" }}>🎉</div>
+                  <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "14px", fontWeight: 600 }}>
+                    No test tickets found
+                  </div>
+                  <div style={{ color: "rgba(255,255,255,0.3)", fontSize: "12px", marginTop: "4px" }}>
+                    All existing tickets appear to be real student tickets.
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Select all row */}
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    marginBottom: "12px",
+                  }}>
+                    <label style={{
+                      display: "flex", alignItems: "center", gap: "8px",
+                      cursor: "pointer", userSelect: "none",
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={toggleAll}
+                        disabled={deleting}
+                        style={{ width: "15px", height: "15px", accentColor: "#f87171", cursor: "pointer" }}
+                      />
+                      <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", fontWeight: 600 }}>
+                        {allSelected ? "Deselect All" : "Select All"}
+                      </span>
+                    </label>
+                    <span style={{
+                      fontSize: "12px", fontWeight: 700, padding: "3px 10px",
+                      borderRadius: "20px",
+                      background: selectedIds.size > 0 ? "rgba(248,113,113,0.12)" : "rgba(255,255,255,0.06)",
+                      border: `1px solid ${selectedIds.size > 0 ? "rgba(248,113,113,0.3)" : "rgba(255,255,255,0.1)"}`,
+                      color: selectedIds.size > 0 ? "#f87171" : "rgba(255,255,255,0.35)",
+                    }}>
+                      {selectedIds.size} / {testTickets.length} selected
+                    </span>
+                  </div>
+
+                  {/* Ticket rows */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {testTickets.map((t) => {
+                      const checked = selectedIds.has(t.id);
+                      return (
+                        <label
+                          key={t.id}
+                          style={{
+                            display: "flex", alignItems: "flex-start", gap: "10px",
+                            padding: "10px 12px", borderRadius: "10px", cursor: "pointer",
+                            background: checked ? "rgba(248,113,113,0.06)" : "rgba(255,255,255,0.02)",
+                            border: `1px solid ${checked ? "rgba(248,113,113,0.2)" : "rgba(255,255,255,0.06)"}`,
+                            transition: "all 0.15s",
+                            userSelect: "none",
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!checked) (e.currentTarget as HTMLLabelElement).style.background = "rgba(255,255,255,0.04)";
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!checked) (e.currentTarget as HTMLLabelElement).style.background = "rgba(255,255,255,0.02)";
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleId(t.id)}
+                            disabled={deleting}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ width: "15px", height: "15px", accentColor: "#f87171", cursor: "pointer", marginTop: "1px", flexShrink: 0 }}
+                          />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                              <span style={{
+                                fontFamily: "Rajdhani, sans-serif", fontWeight: 700,
+                                fontSize: "13px", color: "#60a5fa",
+                              }}>{t.ticketId}</span>
+                              <StatusBadge text={t.status.replace(/_/g, " ")} colors={STATUS_COLORS[t.status]} />
+                            </div>
+                            <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", marginTop: "3px", fontWeight: 600 }}>
+                              {t.studentName}
+                            </div>
+                            <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>
+                              {t.studentEmail} · {formatDate(t.createdAt)}
+                            </div>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  {/* Detection criteria note */}
+                  <div style={{
+                    marginTop: "14px", padding: "10px 12px", borderRadius: "10px",
+                    background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.15)",
+                    fontSize: "11px", color: "rgba(251,191,36,0.7)", lineHeight: "1.6",
+                  }}>
+                    ⚠️ Detected by: email/name contains "test" · ticketId starts with TEST-
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Footer: action buttons */}
+            <div style={{
+              padding: "16px 24px",
+              borderTop: "1px solid rgba(255,255,255,0.07)",
+              display: "flex", gap: "10px", justifyContent: "flex-end", flexWrap: "wrap",
+            }}>
+              <button
+                onClick={closeDeleteModal}
+                disabled={deleting}
+                style={{
+                  padding: "10px 20px", borderRadius: "10px",
+                  background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
+                  color: deleting ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.7)",
+                  fontSize: "14px", fontWeight: 600, cursor: deleting ? "not-allowed" : "pointer",
+                  fontFamily: "Nunito, sans-serif",
+                }}
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleDelete}
+                disabled={deleting || noneSelected || testTickets.length === 0}
+                style={{
+                  padding: "10px 22px", borderRadius: "10px",
+                  background: deleting || noneSelected
+                    ? "rgba(248,113,113,0.25)"
+                    : "linear-gradient(135deg,#ef4444,#dc2626)",
+                  border: "1px solid rgba(248,113,113,0.3)",
+                  color: deleting || noneSelected ? "rgba(248,113,113,0.5)" : "#fff",
+                  fontSize: "14px", fontWeight: 700,
+                  cursor: deleting || noneSelected ? "not-allowed" : "pointer",
+                  fontFamily: "Nunito, sans-serif",
+                  display: "flex", alignItems: "center", gap: "7px",
+                  minWidth: "200px", justifyContent: "center",
+                  transition: "all 0.2s",
+                }}
+              >
+                {deleting ? (
+                  <>
+                    <span style={{
+                      display: "inline-block", width: "14px", height: "14px",
+                      border: "2px solid rgba(255,255,255,0.3)",
+                      borderTopColor: "#fff", borderRadius: "50%",
+                      animation: "dtSpin 0.7s linear infinite",
+                    }} />
+                    Deleting…
+                  </>
+                ) : (
+                  <>
+                    🗑 Delete Permanently
+                    {selectedIds.size > 0 && (
+                      <span style={{
+                        background: "rgba(255,255,255,0.2)", borderRadius: "20px",
+                        padding: "1px 8px", fontSize: "12px",
+                      }}>
+                        {selectedIds.size}
+                      </span>
+                    )}
+                  </>
+                )}
+              </button>
+            </div>
+
+            <style>{`
+              @keyframes dtSpin { to { transform: rotate(360deg); } }
+            `}</style>
+          </div>
+        </div>
       )}
 
-      {/* Page header */}
-      <div style={{ marginBottom: "24px" }}>
-        <h1 style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "28px", fontWeight: 700, color: "#fff", margin: "0 0 4px" }}>
-          Technical Support
-        </h1>
-        <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "14px", margin: 0 }}>
-          Manage student technical support tickets
-        </p>
+      {/* ── Flash ── */}
+      {flash && (
+        <div
+          onClick={() => setFlash(null)}
+          style={{
+            position: "fixed", top: "70px", right: "24px", zIndex: 9999,
+            background: flash.type === "ok"
+              ? "rgba(52,211,153,0.15)" : "rgba(248,113,113,0.15)",
+            border: `1px solid ${flash.type === "ok" ? "rgba(52,211,153,0.3)" : "rgba(248,113,113,0.3)"}`,
+            borderRadius: "12px", padding: "12px 20px",
+            color: flash.type === "ok" ? "#34d399" : "#f87171",
+            fontSize: "14px", maxWidth: "420px", wordBreak: "break-all", cursor: "pointer",
+            fontFamily: "Nunito, sans-serif",
+          }}
+        >
+          {flash.text}
+          <span style={{ marginLeft: "8px", opacity: 0.5, fontSize: "11px" }}>(click to dismiss)</span>
+        </div>
+      )}
+
+      {/* ── Page header ── */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
+        <div>
+          <h1 style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "28px", fontWeight: 700, color: "#fff", margin: "0 0 4px" }}>
+            Technical Support
+          </h1>
+          <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "14px", margin: 0 }}>
+            Manage student technical support tickets
+          </p>
+        </div>
+
+        {/* Delete test data button — only shown when test tickets exist */}
+        {testTickets.length > 0 && (
+          <button
+            onClick={openDeleteModal}
+            title={`${testTickets.length} test ticket${testTickets.length !== 1 ? "s" : ""} detected`}
+            style={{
+              display: "flex", alignItems: "center", gap: "7px",
+              padding: "9px 18px", borderRadius: "10px",
+              background: "rgba(248,113,113,0.08)",
+              border: "1px solid rgba(248,113,113,0.25)",
+              color: "#f87171", fontSize: "13px", fontWeight: 700,
+              cursor: "pointer", fontFamily: "Nunito, sans-serif",
+              whiteSpace: "nowrap", flexShrink: 0,
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(248,113,113,0.14)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(248,113,113,0.4)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(248,113,113,0.08)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(248,113,113,0.25)";
+            }}
+          >
+            🗑
+            <span>Delete Test Data</span>
+            <span style={{
+              background: "rgba(248,113,113,0.2)", border: "1px solid rgba(248,113,113,0.3)",
+              borderRadius: "20px", padding: "1px 7px", fontSize: "11px",
+            }}>{testTickets.length}</span>
+          </button>
+        )}
       </div>
 
-      {/* Error banner */}
+      {/* ── Error banner ── */}
       {loadError && !loading && (
         <div style={{
           background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)",
@@ -156,15 +537,15 @@ export default function AdminSupportPage() {
         </div>
       )}
 
-      {/* Stats */}
+      {/* ── Stats ── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "14px", marginBottom: "24px" }}>
         {[
-          { label: "Open",              value: stats.open,             color: "#60a5fa" },
-          { label: "In Progress",       value: stats.inProgress,       color: "#fb923c" },
-          { label: "Waiting",           value: stats.waitingForStudent, color: "#fbbf24" },
-          { label: "Resolved",          value: stats.resolved,         color: "#34d399" },
-          { label: "Closed",            value: stats.closed,           color: "rgba(255,255,255,0.4)" },
-          { label: "Total",             value: stats.total,            color: "rgba(255,255,255,0.6)" },
+          { label: "Open",        value: stats.open,              color: "#60a5fa" },
+          { label: "In Progress", value: stats.inProgress,        color: "#fb923c" },
+          { label: "Waiting",     value: stats.waitingForStudent,  color: "#fbbf24" },
+          { label: "Resolved",    value: stats.resolved,           color: "#34d399" },
+          { label: "Closed",      value: stats.closed,             color: "rgba(255,255,255,0.4)" },
+          { label: "Total",       value: stats.total,              color: "rgba(255,255,255,0.6)" },
         ].map(({ label, value, color }) => (
           <div key={label} style={{
             background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
@@ -176,7 +557,7 @@ export default function AdminSupportPage() {
         ))}
       </div>
 
-      {/* Filters row */}
+      {/* ── Filters row ── */}
       <div style={{
         background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
         borderRadius: "16px", padding: "16px 20px", marginBottom: "20px",
@@ -231,7 +612,7 @@ export default function AdminSupportPage() {
         </button>
       </div>
 
-      {/* Table */}
+      {/* ── Table ── */}
       {loading ? (
         <LoadingState />
       ) : filtered.length === 0 ? (
@@ -252,55 +633,67 @@ export default function AdminSupportPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((ticket, i) => (
-                <tr
-                  key={ticket.id}
-                  style={{
-                    borderBottom: i < filtered.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
-                    transition: "background 0.15s",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                >
-                  <td style={{ padding: "14px 16px", whiteSpace: "nowrap" }}>
-                    <div style={{ fontFamily: "Rajdhani, sans-serif", fontWeight: 700, color: "#60a5fa", fontSize: "14px" }}>
-                      {ticket.ticketId}
-                    </div>
-                  </td>
-                  <td style={{ padding: "14px 16px" }}>
-                    <div style={{ fontSize: "14px", color: "#fff", fontWeight: 600 }}>{ticket.studentName}</div>
-                    <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>{ticket.studentEmail}</div>
-                  </td>
-                  <td style={{ padding: "14px 16px", fontSize: "13px", color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}>
-                    {ticket.courseName}
-                  </td>
-                  <td style={{ padding: "14px 16px", fontSize: "13px", color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}>
-                    {ticket.category}
-                  </td>
-                  <td style={{ padding: "14px 16px" }}>
-                    <StatusBadge text={ticket.priority} colors={PRIORITY_COLORS[ticket.priority]} />
-                  </td>
-                  <td style={{ padding: "14px 16px" }}>
-                    <StatusBadge text={STATUS_LABELS[ticket.status]} colors={STATUS_COLORS[ticket.status]} />
-                  </td>
-                  <td style={{ padding: "14px 16px", fontSize: "12px", color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap" }}>
-                    {formatDate(ticket.createdAt)}
-                  </td>
-                  <td style={{ padding: "14px 16px" }}>
-                    <Link
-                      href={`/admin/support/${ticket.id}`}
-                      style={{
-                        padding: "7px 14px", borderRadius: "8px",
-                        background: "rgba(255,133,52,0.1)", border: "1px solid rgba(255,133,52,0.25)",
-                        color: "#FF8534", fontSize: "12px", fontWeight: 700, textDecoration: "none",
-                        whiteSpace: "nowrap", display: "inline-block",
-                      }}
-                    >
-                      View →
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+              {filtered.map((ticket, i) => {
+                const isTest = isTestTicket(ticket);
+                return (
+                  <tr
+                    key={ticket.id}
+                    style={{
+                      borderBottom: i < filtered.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                      transition: "background 0.15s",
+                      background: isTest ? "rgba(248,113,113,0.02)" : "transparent",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = isTest ? "rgba(248,113,113,0.04)" : "rgba(255,255,255,0.03)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = isTest ? "rgba(248,113,113,0.02)" : "transparent")}
+                  >
+                    <td style={{ padding: "14px 16px", whiteSpace: "nowrap" }}>
+                      <div style={{ fontFamily: "Rajdhani, sans-serif", fontWeight: 700, color: "#60a5fa", fontSize: "14px" }}>
+                        {ticket.ticketId}
+                        {isTest && (
+                          <span style={{
+                            marginLeft: "6px", fontSize: "9px", padding: "1px 5px", borderRadius: "4px",
+                            background: "rgba(248,113,113,0.15)", color: "#f87171",
+                            border: "1px solid rgba(248,113,113,0.25)", verticalAlign: "middle",
+                            fontFamily: "Nunito, sans-serif", fontWeight: 700, letterSpacing: "0.3px",
+                          }}>TEST</span>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <div style={{ fontSize: "14px", color: "#fff", fontWeight: 600 }}>{ticket.studentName}</div>
+                      <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>{ticket.studentEmail}</div>
+                    </td>
+                    <td style={{ padding: "14px 16px", fontSize: "13px", color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}>
+                      {ticket.courseName}
+                    </td>
+                    <td style={{ padding: "14px 16px", fontSize: "13px", color: "rgba(255,255,255,0.7)", whiteSpace: "nowrap" }}>
+                      {ticket.category}
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <StatusBadge text={ticket.priority} colors={PRIORITY_COLORS[ticket.priority]} />
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <StatusBadge text={STATUS_LABELS[ticket.status]} colors={STATUS_COLORS[ticket.status]} />
+                    </td>
+                    <td style={{ padding: "14px 16px", fontSize: "12px", color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap" }}>
+                      {formatDate(ticket.createdAt)}
+                    </td>
+                    <td style={{ padding: "14px 16px" }}>
+                      <Link
+                        href={`/admin/support/${ticket.id}`}
+                        style={{
+                          padding: "7px 14px", borderRadius: "8px",
+                          background: "rgba(255,133,52,0.1)", border: "1px solid rgba(255,133,52,0.25)",
+                          color: "#FF8534", fontSize: "12px", fontWeight: 700, textDecoration: "none",
+                          whiteSpace: "nowrap", display: "inline-block",
+                        }}
+                      >
+                        View →
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -308,10 +701,17 @@ export default function AdminSupportPage() {
 
       <div style={{ marginTop: "12px", fontSize: "13px", color: "rgba(255,255,255,0.3)" }}>
         Showing {filtered.length} of {tickets.length} tickets
+        {testTickets.length > 0 && (
+          <span style={{ marginLeft: "10px", color: "rgba(248,113,113,0.6)" }}>
+            · {testTickets.length} test ticket{testTickets.length !== 1 ? "s" : ""} detected
+          </span>
+        )}
       </div>
     </div>
   );
 }
+
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 function StatusBadge({ text, colors }: { text: string; colors: { color: string; bg: string; border: string } }) {
   return (

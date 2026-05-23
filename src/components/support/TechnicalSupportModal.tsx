@@ -521,13 +521,24 @@ export default function TechnicalSupportModal() {
 
     if (Object.keys(patch).length > 0) {
       const tPatch = performance.now();
+      const patchPayload = { id: docId, ...patch };
+      console.log(`[upload] PATCH payload — docId: ${docId}, fields:`, Object.keys(patch).join(", "));
       fetch("/api/tickets/update", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: docId, ...patch }),
+        body: JSON.stringify(patchPayload),
       })
-        .then(() => console.log(`[upload] ticket PATCH done in ${Math.round(performance.now() - tPatch)}ms`))
-        .catch(err => console.warn("[upload] PATCH failed:", err));
+        .then(async (res) => {
+          const elapsed = Math.round(performance.now() - tPatch);
+          if (!res.ok) {
+            let errBody = "";
+            try { errBody = JSON.stringify(await res.json()); } catch { /* ignore */ }
+            console.error(`[upload] ✗ PATCH FAILED — HTTP ${res.status} after ${elapsed}ms`, errBody);
+          } else {
+            console.log(`[upload] ✓ PATCH done in ${elapsed}ms — attachment URLs saved to Firestore`);
+          }
+        })
+        .catch(err => console.warn("[upload] PATCH network error:", err));
     }
 
     setUploadState(p => {

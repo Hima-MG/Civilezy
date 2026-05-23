@@ -72,7 +72,10 @@ export default function AdminTicketDetailPage() {
       }
 
       const t = tJson.ticket!;
-      console.log("[admin-detail] ticket loaded — doc id:", t.id, " ticketId:", t.ticketId);
+      console.log(
+        "[admin-detail] ticket loaded — doc id:", t.id, "| ticketId:", t.ticketId,
+        "| attachments:", t.attachments, "| voice:", t.voiceNoteUrl, "| video:", t.screenRecordingUrl
+      );
 
       // Step 2: fetch messages using ticket.ticketId (TECH-XXXXXX), NOT the Firestore doc ID
       const mRes = await fetch(`/api/tickets/messages?ticketId=${encodeURIComponent(t.ticketId)}`);
@@ -102,23 +105,35 @@ export default function AdminTicketDetailPage() {
     const unsub = onSnapshot(doc(db, "support_tickets", ticketId), (snap: DocumentSnapshot) => {
       if (!snap.exists()) return;
       const raw = snap.data()!;
+      console.log(
+        "[admin-detail] onSnapshot fired — attachments:", raw.attachments,
+        "| voice:", raw.voiceNoteUrl,
+        "| video:", raw.screenRecordingUrl,
+        "| status:", raw.status
+      );
       setTicket(prev => {
         if (!prev) return prev;
+        // Use `!== undefined` instead of `??` so that explicit `null` values from
+        // Firestore (e.g. voiceNoteUrl: null before upload, then "url" after) are
+        // correctly propagated rather than falling back to prev.
         return {
           ...prev,
-          attachments: raw.attachments ?? prev.attachments,
-          screenshotUrl: raw.screenshotUrl ?? prev.screenshotUrl,
-          voiceNoteUrl: raw.voiceNoteUrl ?? prev.voiceNoteUrl,
-          voiceDuration: raw.voiceDuration ?? prev.voiceDuration,
-          screenRecordingUrl: raw.screenRecordingUrl ?? prev.screenRecordingUrl,
-          status: raw.status ?? prev.status,
-          priority: raw.priority ?? prev.priority,
-          assignedTo: raw.assignedTo ?? prev.assignedTo,
-          adminNotes: raw.adminNotes ?? prev.adminNotes,
-          updatedAt: raw.updatedAt?.toDate?.()?.toISOString() ?? prev.updatedAt,
+          attachments:         raw.attachments         !== undefined ? (raw.attachments as string[])        : prev.attachments,
+          screenshotUrl:       raw.screenshotUrl       !== undefined ? (raw.screenshotUrl as string | null)  : prev.screenshotUrl,
+          voiceNoteUrl:        raw.voiceNoteUrl        !== undefined ? (raw.voiceNoteUrl as string | null)   : prev.voiceNoteUrl,
+          voiceDuration:       raw.voiceDuration       !== undefined ? (raw.voiceDuration as number | null)  : prev.voiceDuration,
+          screenRecordingUrl:  raw.screenRecordingUrl  !== undefined ? (raw.screenRecordingUrl as string | null) : prev.screenRecordingUrl,
+          status:              raw.status              !== undefined ? (raw.status as ApiTicket["status"])   : prev.status,
+          priority:            raw.priority            !== undefined ? (raw.priority as ApiTicket["priority"]) : prev.priority,
+          assignedTo:          raw.assignedTo          !== undefined ? (raw.assignedTo as string | null)    : prev.assignedTo,
+          adminNotes:          raw.adminNotes          !== undefined ? (raw.adminNotes as string | null)     : prev.adminNotes,
+          updatedAt:           raw.updatedAt?.toDate?.()?.toISOString() ?? prev.updatedAt,
         };
       });
-    }, () => { /* silently ignore permission errors */ });
+    }, (err) => {
+      // Not silently ignoring — log so we can diagnose security-rule or auth issues
+      console.warn("[admin-detail] onSnapshot error — likely Firestore security rules blocking reads:", err.code, err.message);
+    });
     return unsub;
   }, [ticketId]);
 
@@ -400,6 +415,19 @@ export default function AdminTicketDetailPage() {
           <Badge text={ticket.priority} colors={pc} />
           <Badge text={ticket.category} colors={{ color: "rgba(255,255,255,0.6)", bg: "rgba(255,255,255,0.06)", border: "rgba(255,255,255,0.1)" }} />
         </div>
+        {/* Manual refresh — catches attachments even if onSnapshot is blocked by security rules */}
+        <button
+          onClick={fetchAll}
+          title="Refresh ticket data (useful if attachments were uploaded after this page opened)"
+          style={{
+            padding: "7px 14px", borderRadius: "10px",
+            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)",
+            color: "rgba(255,255,255,0.55)", fontSize: "12px", cursor: "pointer",
+            fontFamily: "Nunito, sans-serif", flexShrink: 0, whiteSpace: "nowrap",
+          }}
+        >
+          ↻ Refresh
+        </button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "20px", alignItems: "start" }}>

@@ -22,6 +22,13 @@ export async function PATCH(req: NextRequest) {
     const { id, _event, ...fields } = body;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
+    // Log when attachment fields arrive (helps diagnose the upload→Firestore pipeline)
+    const attachmentFields = ["attachments", "screenshotUrl", "voiceNoteUrl", "voiceDuration", "screenRecordingUrl"];
+    const incomingAttachments = attachmentFields.filter(k => k in fields);
+    if (incomingAttachments.length > 0) {
+      console.log(`[tickets/update] Saving attachments for doc ${id}:`, incomingAttachments.map(k => `${k}=${JSON.stringify(fields[k as keyof typeof fields])}`).join(", "));
+    }
+
     const updates: Record<string, unknown> = {
       ...fields,
       updatedAt: FieldValue.serverTimestamp(),
