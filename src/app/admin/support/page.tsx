@@ -382,7 +382,7 @@ export default function AdminSupportPage() {
                     background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.15)",
                     fontSize: "11px", color: "rgba(251,191,36,0.7)", lineHeight: "1.6",
                   }}>
-                    ⚠️ Detected by: email/name contains "test" · ticketId starts with TEST-
+                    ⚠️ Detected by: email/name contains &quot;test&quot; · ticketId starts with TEST-
                   </div>
                 </>
               )}
