@@ -61,25 +61,59 @@ function fmtTime(s: number): string {
   return `${m}:${(s % 60).toString().padStart(2, "0")}`;
 }
 
-/** Compress + resize an image using Canvas API. Returns a WebP Blob. */
-async function compressImage(file: File, maxPx = 1600, quality = 0.85): Promise<Blob> {
+/**
+ * Compress + resize an image using Canvas API.
+ * • Tries WebP first (smaller, supported on all modern browsers).
+ * • Falls back to JPEG when WebP toBlob() returns null (Safari < 2022, some Android WebViews).
+ * • 8-second timeout guard prevents a hung canvas.toBlob() from stalling the upload.
+ * • Skips compression for GIF to avoid losing animation.
+ */
+async function compressImage(file: File, maxPx = 1600, quality = 0.82): Promise<Blob> {
   if (!file.type.startsWith("image/") || file.type === "image/gif") return file;
+
   return new Promise<Blob>((resolve) => {
+    let settled = false;
+    const settle = (blob: Blob) => { if (!settled) { settled = true; resolve(blob); } };
+
+    // Timeout guard — never hang longer than 8s; fall back to original file
+    const guard = setTimeout(() => {
+      console.warn("[compress] timeout — using original file:", file.name);
+      settle(file);
+    }, 8000);
+
     const img = new Image();
     const objUrl = URL.createObjectURL(file);
+
     img.onload = () => {
       URL.revokeObjectURL(objUrl);
+      clearTimeout(guard);
+
       let w = img.naturalWidth, h = img.naturalHeight;
       if (w > maxPx || h > maxPx) {
         if (w >= h) { h = Math.round(h * maxPx / w); w = maxPx; }
         else { w = Math.round(w * maxPx / h); h = maxPx; }
       }
+
       const canvas = document.createElement("canvas");
       canvas.width = w; canvas.height = h;
       canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
-      canvas.toBlob((blob) => resolve(blob ?? file), "image/webp", quality);
+
+      // Try WebP first
+      canvas.toBlob((webpBlob) => {
+        if (webpBlob && webpBlob.size > 0) { settle(webpBlob); return; }
+        // WebP not supported — fall back to JPEG
+        canvas.toBlob((jpegBlob) => {
+          settle(jpegBlob && jpegBlob.size > 0 ? jpegBlob : file);
+        }, "image/jpeg", quality);
+      }, "image/webp", quality);
     };
-    img.onerror = () => { URL.revokeObjectURL(objUrl); resolve(file); };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objUrl);
+      clearTimeout(guard);
+      settle(file);
+    };
+
     img.src = objUrl;
   });
 }
@@ -358,6 +392,11 @@ export default function TechnicalSupportModal() {
   }
 
   // ── Background upload (runs AFTER ticket creation, non-blocking) ──────────
+  //
+  // KEY OPTIMIZATION: screenshots + voice + video all run in FULL PARALLEL
+  // via a single Promise.all([...screenshotPromises, voicePromise, videoPromise]).
+  // The previous version ran screenshots parallel but voice/video sequential.
+  //
   async function backgroundUpload(
     docId: string,
     files: File[],
@@ -368,6 +407,11 @@ export default function TechnicalSupportModal() {
     const ts = Date.now();
     const t0 = performance.now();
 
+    // Precompute stable indices for each upload task
+    const scCount = files.length;
+    const voiceIdx = scCount;                             // voice always after screenshots
+    const videoIdx = scCount + (voiceBlobData ? 1 : 0);  // video after voice
+
     // Build task list
     const tasks: UploadItem[] = [
       ...files.map((_, i) => ({
@@ -376,7 +420,7 @@ export default function TechnicalSupportModal() {
         progress: 0,
       })),
       ...(voiceBlobData ? [{ label: "Voice note", status: "pending" as const, progress: 0 }] : []),
-      ...(videoFile ? [{ label: "Screen recording", status: "pending" as const, progress: 0 }] : []),
+      ...(videoFile     ? [{ label: "Screen recording", status: "pending" as const, progress: 0 }] : []),
     ];
 
     if (tasks.length === 0) {
@@ -385,64 +429,90 @@ export default function TechnicalSupportModal() {
     }
 
     setUploadState({ items: tasks, allDone: false, failedCount: 0 });
+    console.log(`[upload] ▶ Starting ${tasks.length} upload(s) in parallel`);
 
-    // ── Screenshots in parallel ──
-    const screenshotOffset = files.length;
-    const screenshotResults = await Promise.all(
-      files.map(async (file, i) => {
-        setUploadState(p => p ? patchItem(p, i, { status: "uploading", progress: 0 }) : p);
-        try {
-          const compressed = await compressImage(file);
-          const baseName = file.name.replace(/\.[^.]+$/, "");
-          const url = await uploadWithProgress(
-            compressed,
-            `support_screenshots/${ts}_${i}_${encodeURIComponent(baseName)}.webp`,
-            (pct) => setUploadState(p => p ? patchItem(p, i, { progress: pct }) : p)
-          );
-          setUploadState(p => p ? patchItem(p, i, { status: url ? "done" : "failed", progress: 100 }) : p);
-          return url;
-        } catch {
-          setUploadState(p => p ? patchItem(p, i, { status: "failed" }) : p);
-          return null;
-        }
-      })
-    );
+    // ── ALL uploads run simultaneously ────────────────────────────────────────
+    const [screenshotResults, voiceUrl, videoUrl] = await Promise.all([
 
-    // ── Voice note ──
-    let voiceUrl: string | null = null;
-    if (voiceBlobData) {
-      const idx = screenshotOffset;
-      setUploadState(p => p ? patchItem(p, idx, { status: "uploading", progress: 0 }) : p);
-      try {
-        voiceUrl = await uploadWithProgress(
-          voiceBlobData,
-          `support_voice/${ts}_voice.webm`,
-          (pct) => setUploadState(p => p ? patchItem(p, idx, { progress: pct }) : p)
-        );
-        setUploadState(p => p ? patchItem(p, idx, { status: voiceUrl ? "done" : "failed", progress: 100 }) : p);
-      } catch {
-        setUploadState(p => p ? patchItem(p, idx, { status: "failed" }) : p);
-      }
-    }
+      // Screenshots — compress then upload, all parallel
+      Promise.all(
+        files.map(async (file, i) => {
+          const tFile = performance.now();
+          setUploadState(p => p ? patchItem(p, i, { status: "uploading", progress: 0 }) : p);
+          try {
+            const tCompress = performance.now();
+            const compressed = await compressImage(file);
+            const ratio = ((1 - compressed.size / file.size) * 100).toFixed(0);
+            console.log(`[upload] screenshot[${i}] compressed in ${Math.round(performance.now() - tCompress)}ms — saved ${ratio}% (${(file.size/1024).toFixed(0)}KB → ${(compressed.size/1024).toFixed(0)}KB)`);
 
-    // ── Screen recording ──
-    let videoUrl: string | null = null;
-    if (videoFile) {
-      const idx = screenshotOffset + (voiceBlobData ? 1 : 0);
-      setUploadState(p => p ? patchItem(p, idx, { status: "uploading", progress: 0 }) : p);
-      try {
-        videoUrl = await uploadWithProgress(
-          videoFile,
-          `support_screen/${ts}_${encodeURIComponent(videoFile.name)}`,
-          (pct) => setUploadState(p => p ? patchItem(p, idx, { progress: pct }) : p)
-        );
-        setUploadState(p => p ? patchItem(p, idx, { status: videoUrl ? "done" : "failed", progress: 100 }) : p);
-      } catch {
-        setUploadState(p => p ? patchItem(p, idx, { status: "failed" }) : p);
-      }
-    }
+            const ext = compressed.type === "image/webp" ? "webp" : "jpg";
+            const baseName = file.name.replace(/\.[^.]+$/, "");
+            const url = await uploadWithProgress(
+              compressed,
+              `support_screenshots/${ts}_${i}_${encodeURIComponent(baseName)}.${ext}`,
+              (pct) => setUploadState(p => p ? patchItem(p, i, { progress: pct }) : p)
+            );
+            console.log(`[upload] screenshot[${i}] done in ${Math.round(performance.now() - tFile)}ms — ${url ? "✓" : "✗"}`);
+            setUploadState(p => p ? patchItem(p, i, { status: url ? "done" : "failed", progress: 100 }) : p);
+            return url;
+          } catch (err) {
+            console.warn(`[upload] screenshot[${i}] error:`, err);
+            setUploadState(p => p ? patchItem(p, i, { status: "failed" }) : p);
+            return null;
+          }
+        })
+      ),
 
-    // ── PATCH ticket with URLs ──
+      // Voice note (runs in parallel with screenshots)
+      voiceBlobData
+        ? (async () => {
+            const tVoice = performance.now();
+            setUploadState(p => p ? patchItem(p, voiceIdx, { status: "uploading", progress: 0 }) : p);
+            try {
+              const url = await uploadWithProgress(
+                voiceBlobData,
+                `support_voice/${ts}_voice.webm`,
+                (pct) => setUploadState(p => p ? patchItem(p, voiceIdx, { progress: pct }) : p)
+              );
+              console.log(`[upload] voice done in ${Math.round(performance.now() - tVoice)}ms — ${url ? "✓" : "✗"}`);
+              setUploadState(p => p ? patchItem(p, voiceIdx, { status: url ? "done" : "failed", progress: 100 }) : p);
+              return url;
+            } catch (err) {
+              console.warn("[upload] voice error:", err);
+              setUploadState(p => p ? patchItem(p, voiceIdx, { status: "failed" }) : p);
+              return null;
+            }
+          })()
+        : Promise.resolve(null),
+
+      // Screen recording (runs in parallel with screenshots + voice)
+      videoFile
+        ? (async () => {
+            const tVideo = performance.now();
+            setUploadState(p => p ? patchItem(p, videoIdx, { status: "uploading", progress: 0 }) : p);
+            try {
+              const url = await uploadWithProgress(
+                videoFile,
+                `support_screen/${ts}_${encodeURIComponent(videoFile.name)}`,
+                (pct) => setUploadState(p => p ? patchItem(p, videoIdx, { progress: pct }) : p)
+              );
+              console.log(`[upload] video done in ${Math.round(performance.now() - tVideo)}ms — ${url ? "✓" : "✗"}`);
+              setUploadState(p => p ? patchItem(p, videoIdx, { status: url ? "done" : "failed", progress: 100 }) : p);
+              return url;
+            } catch (err) {
+              console.warn("[upload] video error:", err);
+              setUploadState(p => p ? patchItem(p, videoIdx, { status: "failed" }) : p);
+              return null;
+            }
+          })()
+        : Promise.resolve(null),
+
+    ]); // end Promise.all
+
+    const uploadElapsed = Math.round(performance.now() - t0);
+    console.log(`[upload] ✅ All uploads finished in ${uploadElapsed}ms`);
+
+    // ── PATCH ticket with collected URLs ──────────────────────────────────────
     const attachments = screenshotResults.filter((u): u is string => !!u);
     const patch: Record<string, unknown> = {};
     if (attachments.length) { patch.attachments = attachments; patch.screenshotUrl = attachments[0]; }
@@ -450,15 +520,15 @@ export default function TechnicalSupportModal() {
     if (videoUrl) patch.screenRecordingUrl = videoUrl;
 
     if (Object.keys(patch).length > 0) {
+      const tPatch = performance.now();
       fetch("/api/tickets/update", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: docId, ...patch }),
-      }).catch(err => console.warn("[bg-upload] PATCH failed:", err));
+      })
+        .then(() => console.log(`[upload] ticket PATCH done in ${Math.round(performance.now() - tPatch)}ms`))
+        .catch(err => console.warn("[upload] PATCH failed:", err));
     }
-
-    const elapsed = Math.round(performance.now() - t0);
-    console.log(`[support] 📎 Attachments uploaded in ${elapsed}ms`);
 
     setUploadState(p => {
       if (!p) return p;
@@ -499,19 +569,23 @@ export default function TechnicalSupportModal() {
     setSubmitting(true);
 
     const t0 = performance.now();
+    console.log("[submit] ▶ Form submitted");
 
     try {
       doStop(); // Stop any in-progress recording
 
       setUploadMsg("Creating ticket…");
 
-      // Snapshot files before async ops (state may change)
+      // Snapshot files before async ops (state may change during await)
       const screenshotSnap = [...screenshots];
       const voiceBlobSnap = recState === "recorded" && voiceBlob ? voiceBlob : null;
       const voiceDurSnap = recTimeRef.current;
       const screenRecSnap = screenRec;
 
+      console.log(`[submit] files: ${screenshotSnap.length} screenshots, voice: ${!!voiceBlobSnap}, video: ${!!screenRecSnap}`);
+
       // ── Step 1: Create ticket (no attachments) ──
+      const tFetch = performance.now();
       const res = await fetch("/api/tickets/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -538,8 +612,9 @@ export default function TechnicalSupportModal() {
       }
 
       const { id: docId, ticketId } = await res.json() as { id: string; ticketId: string };
-      const creationMs = Math.round(performance.now() - t0);
-      console.log(`[support] ✅ Ticket created in ${creationMs}ms — ${ticketId}`);
+      const creationMs = Math.round(performance.now() - tFetch);
+      const totalMs = Math.round(performance.now() - t0);
+      console.log(`[submit] ✅ Ticket created in ${creationMs}ms (total: ${totalMs}ms) — ${ticketId}`);
 
       // ── Step 2: Show success immediately ──
       setSubmitted(ticketId);

@@ -48,7 +48,8 @@
       "Bash(curl -s \"http://localhost:3000/api/tickets/messages?ticketId=yZ5fEj2uCHCuFhay0ywr\")",
       "Bash(node -e ' *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git add *)"
     ]
   }
 }
