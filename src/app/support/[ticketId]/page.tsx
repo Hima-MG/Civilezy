@@ -130,27 +130,49 @@ export default function StudentTicketDetailPage() {
   }, [ticket?.ticketId]);
 
   // Real-time ticket status/field updates (starts once ticket is loaded)
+  //
+  // IMPORTANT: The query MUST include where("studentUid", "==", user.uid) so
+  // that Firestore security rule evaluation can prove at query-planning time
+  // that every result document is owned by the current user.  Without this
+  // extra clause the rule `request.auth.uid == resource.data.studentUid` cannot
+  // be validated for the whole query and Firestore returns permission-denied,
+  // silently killing all real-time updates (status changes, attachment URLs).
   useEffect(() => {
-    if (!ticket?.ticketId) return;
+    if (!ticket?.ticketId || !user) return;
     const q = query(
       collection(db, "support_tickets"),
-      where("ticketId", "==", ticket.ticketId)
+      where("ticketId",   "==", ticket.ticketId),
+      where("studentUid", "==", user.uid)          // ← required for rule validation
     );
     const unsub = onSnapshot(q, (snap) => {
       if (snap.empty) return;
       const raw = snap.docs[0].data();
-      setTicket((prev) => prev ? {
-        ...prev,
-        status: raw.status ?? prev.status,
-        priority: raw.priority ?? prev.priority,
-        assignedTo: raw.assignedTo ?? prev.assignedTo,
-        adminNotes: raw.adminNotes ?? prev.adminNotes,
-        updatedAt: raw.updatedAt?.toDate?.()?.toISOString() ?? prev.updatedAt,
-        resolvedAt: raw.resolvedAt?.toDate?.()?.toISOString() ?? prev.resolvedAt,
-      } : prev);
-    }, () => { /* silently ignore if Firestore rules deny */ });
+      setTicket((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          // ── Ticket metadata ──────────────────────────────────────────────
+          status:     raw.status     !== undefined ? (raw.status     as ApiTicket["status"])   : prev.status,
+          priority:   raw.priority   !== undefined ? (raw.priority   as ApiTicket["priority"]) : prev.priority,
+          assignedTo: raw.assignedTo !== undefined ? (raw.assignedTo as string | null)         : prev.assignedTo,
+          adminNotes: raw.adminNotes !== undefined ? (raw.adminNotes as string | null)         : prev.adminNotes,
+          updatedAt:  raw.updatedAt?.toDate?.()?.toISOString()  ?? prev.updatedAt,
+          resolvedAt: raw.resolvedAt?.toDate?.()?.toISOString() ?? prev.resolvedAt,
+          // ── Attachment URLs pushed by background upload ───────────────────
+          // Use `!== undefined` (not `??`) so an explicit null clears a stale value
+          attachments:        raw.attachments        !== undefined ? (raw.attachments        as string[])        : prev.attachments,
+          screenshotUrl:      raw.screenshotUrl      !== undefined ? (raw.screenshotUrl      as string | null)   : prev.screenshotUrl,
+          voiceNoteUrl:       raw.voiceNoteUrl       !== undefined ? (raw.voiceNoteUrl       as string | null)   : prev.voiceNoteUrl,
+          voiceDuration:      raw.voiceDuration      !== undefined ? (raw.voiceDuration      as number | null)   : prev.voiceDuration,
+          screenRecordingUrl: raw.screenRecordingUrl !== undefined ? (raw.screenRecordingUrl as string | null)   : prev.screenRecordingUrl,
+        };
+      });
+    }, (err) => {
+      // Log the error so it is visible in browser devtools — do not swallow silently
+      console.warn("[student-ticket] onSnapshot error:", err.code, err.message);
+    });
     return unsub;
-  }, [ticket?.ticketId]);
+  }, [ticket?.ticketId, user]);
 
   // Auto-scroll to bottom of chat when messages change
   useEffect(() => {

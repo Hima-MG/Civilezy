@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { collection, doc, query, where, onSnapshot, orderBy, type DocumentSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import {
   STATUS_LABELS,
   STATUS_COLORS,
@@ -99,79 +97,24 @@ export default function AdminTicketDetailPage() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // Real-time ticket document listener — picks up background attachment uploads automatically
+  // ── Auto-refresh every 15 s ───────────────────────────────────────────────
+  // WHY: The admin panel has no Firebase Auth user (auth is a sessionStorage
+  // passphrase).  Firestore security rules require request.auth != null, so
+  // ALL client-SDK onSnapshot listeners return permission-denied immediately
+  // and can never push updates to this page.
+  //
+  // This polling approach uses the Admin-SDK API routes (which bypass rules)
+  // and therefore always succeeds.  It picks up:
+  //   • Attachment URLs after the student's background upload completes
+  //   • New student replies
+  //   • Status / priority changes made by another admin session
   useEffect(() => {
-    if (!ticketId) return;
-    const unsub = onSnapshot(doc(db, "support_tickets", ticketId), (snap: DocumentSnapshot) => {
-      if (!snap.exists()) return;
-      const raw = snap.data()!;
-      console.log(
-        "[admin-detail] onSnapshot fired — attachments:", raw.attachments,
-        "| voice:", raw.voiceNoteUrl,
-        "| video:", raw.screenRecordingUrl,
-        "| status:", raw.status
-      );
-      setTicket(prev => {
-        if (!prev) return prev;
-        // Use `!== undefined` instead of `??` so that explicit `null` values from
-        // Firestore (e.g. voiceNoteUrl: null before upload, then "url" after) are
-        // correctly propagated rather than falling back to prev.
-        return {
-          ...prev,
-          attachments:         raw.attachments         !== undefined ? (raw.attachments as string[])        : prev.attachments,
-          screenshotUrl:       raw.screenshotUrl       !== undefined ? (raw.screenshotUrl as string | null)  : prev.screenshotUrl,
-          voiceNoteUrl:        raw.voiceNoteUrl        !== undefined ? (raw.voiceNoteUrl as string | null)   : prev.voiceNoteUrl,
-          voiceDuration:       raw.voiceDuration       !== undefined ? (raw.voiceDuration as number | null)  : prev.voiceDuration,
-          screenRecordingUrl:  raw.screenRecordingUrl  !== undefined ? (raw.screenRecordingUrl as string | null) : prev.screenRecordingUrl,
-          status:              raw.status              !== undefined ? (raw.status as ApiTicket["status"])   : prev.status,
-          priority:            raw.priority            !== undefined ? (raw.priority as ApiTicket["priority"]) : prev.priority,
-          assignedTo:          raw.assignedTo          !== undefined ? (raw.assignedTo as string | null)    : prev.assignedTo,
-          adminNotes:          raw.adminNotes          !== undefined ? (raw.adminNotes as string | null)     : prev.adminNotes,
-          updatedAt:           raw.updatedAt?.toDate?.()?.toISOString() ?? prev.updatedAt,
-        };
-      });
-    }, (err) => {
-      // Not silently ignoring — log so we can diagnose security-rule or auth issues
-      console.warn("[admin-detail] onSnapshot error — likely Firestore security rules blocking reads:", err.code, err.message);
-    });
-    return unsub;
-  }, [ticketId]);
-
-  // Real-time messages listener (uses client-side Firestore)
-  useEffect(() => {
-    if (!ticket?.ticketId) return;
-    const q = query(
-      collection(db, "ticket_messages"),
-      where("ticketId", "==", ticket.ticketId),
-      orderBy("createdAt", "asc")
-    );
-    const unsub = onSnapshot(q, (snap) => {
-      const msgs = snap.docs.map((d) => {
-        const raw = d.data();
-        return { id: d.id, ...raw, createdAt: raw.createdAt?.toDate?.()?.toISOString() ?? null } as ApiMessage;
-      });
-      setMessages(msgs);
-    });
-    return unsub;
-  }, [ticket?.ticketId]);
-
-  // Real-time ticket event log listener
-  useEffect(() => {
-    if (!ticket?.ticketId) return;
-    const q = query(
-      collection(db, "ticket_events"),
-      where("ticketId", "==", ticket.ticketId),
-      orderBy("createdAt", "asc")
-    );
-    const unsub = onSnapshot(q, (snap) => {
-      const evts = snap.docs.map((d) => {
-        const raw = d.data();
-        return { id: d.id, ...raw, createdAt: raw.createdAt?.toDate?.()?.toISOString() ?? null } as TicketEvent;
-      });
-      setEvents(evts);
-    }, () => { /* silently ignore if rules deny */ });
-    return unsub;
-  }, [ticket?.ticketId]);
+    const id = setInterval(() => {
+      console.log("[admin-detail] ↻ auto-refresh (15 s)");
+      fetchAll();
+    }, 15_000);
+    return () => clearInterval(id);
+  }, [fetchAll]);
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -700,7 +643,32 @@ function AdminMediaCard({
   const hasAudio = !!ticket.voiceNoteUrl;
   const hasVideo = !!ticket.screenRecordingUrl;
 
-  if (!images.length && !hasAudio && !hasVideo) return null;
+  // ── No media at all ───────────────────────────────────────────────────────
+  if (!images.length && !hasAudio && !hasVideo) {
+    // If the ticket was created less than 5 minutes ago, attachments may still
+    // be uploading in the student's browser.  Show a soft placeholder instead
+    // of hiding the section entirely — the 15 s auto-refresh will reveal them.
+    const ageMs = ticket.createdAt ? Date.now() - new Date(ticket.createdAt).getTime() : Infinity;
+    if (ageMs < 5 * 60 * 1000) {
+      return (
+        <Card title="Attachments">
+          <div style={{
+            display: "flex", alignItems: "center", gap: "10px",
+            padding: "12px 0", color: "rgba(255,255,255,0.35)", fontSize: "13px",
+          }}>
+            <span style={{
+              display: "inline-block", width: "14px", height: "14px",
+              border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "rgba(255,255,255,0.6)",
+              borderRadius: "50%", animation: "adSpin 1s linear infinite", flexShrink: 0,
+            }} />
+            Attachments may still be uploading — page refreshes automatically every 15 s.
+          </div>
+          <style>{`@keyframes adSpin { to { transform: rotate(360deg); } }`}</style>
+        </Card>
+      );
+    }
+    return null;
+  }
 
   return (
     <Card title={`Attachments (${images.length} image${images.length !== 1 ? "s" : ""}${hasAudio ? " · voice" : ""}${hasVideo ? " · video" : ""})`}>

@@ -2,8 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import {
   STATUS_LABELS,
   STATUS_COLORS,
@@ -43,12 +41,16 @@ export default function AdminSupportPage() {
   const [tickets, setTickets] = useState<ApiTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  // Raw count returned directly by the API before any client-side processing
+  const [apiCount, setApiCount] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "ALL">("ALL");
   const [priorityFilter, setPriorityFilter] = useState<TicketPriority | "ALL">("ALL");
   const [categoryFilter, setCategoryFilter] = useState<TicketCategory | "ALL">("ALL");
   const [sort, setSort] = useState<SortKey>("newest");
   const [flash, setFlash] = useState<FlashMsg | null>(null);
+  // Debug view: shows every ticket bypassing all filters
+  const [showRawDebug, setShowRawDebug] = useState(false);
 
   // Delete-test modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -57,52 +59,74 @@ export default function AdminSupportPage() {
 
   const showFlash = useCallback((text: string, type: FlashMsg["type"] = "ok") => {
     setFlash({ text, type });
-    setTimeout(() => setFlash(null), 5000);
+    setTimeout(() => setFlash(null), 6000);
   }, []);
 
   const fetchTickets = useCallback(async () => {
     setLoading(true);
     setLoadError("");
     try {
+      console.log("[admin/support] ▶ fetchTickets → GET /api/tickets/list");
       const res = await fetch("/api/tickets/list");
-      const json = await res.json() as { tickets?: ApiTicket[]; error?: string };
+      const json = await res.json() as { tickets?: ApiTicket[]; _count?: number; error?: string };
+      console.log(`[admin/support] API response — HTTP ${res.status}`, json);
+
       if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
-      setTickets(json.tickets ?? []);
+
+      const loaded = json.tickets ?? [];
+      const rawCount = json._count ?? loaded.length;
+
+      // ── Step 7: log raw count BEFORE any client-side filtering ────────────
+      console.log(`[admin/support] Firestore docs loaded (raw _count): ${rawCount}`);
+      console.log(`[admin/support] tickets array length after mapping: ${loaded.length}`);
+
+      // ── Steps 1-3: log each ticket's key fields ───────────────────────────
+      if (loaded.length > 0) {
+        console.log("[admin/support] Raw Firestore docs (mapped):", loaded);
+        console.log("[admin/support] Mapped tickets summary:",
+          loaded.map((t) => ({
+            id:       t.id,
+            ticketId: t.ticketId,
+            status:   t.status,
+            email:    t.studentEmail,
+            createdAt: t.createdAt,
+          }))
+        );
+        console.log(
+          `[admin/support] ✓ ${loaded.length} ticket(s) loaded:`,
+          loaded.map((t) => `${t.ticketId} [${t.status}]`)
+        );
+      } else {
+        console.warn("[admin/support] ⚠️ tickets array is empty — check API route logs for snap.size");
+      }
+
+      setApiCount(rawCount);
+      setTickets(loaded);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+      console.error("[admin/support] ✗ fetchTickets failed:", msg);
       setLoadError(msg);
-      showFlash(`Failed to load tickets: ${msg}`, "err");
     } finally {
       setLoading(false);
     }
-  }, [showFlash]);
+  }, []);
 
-  // Real-time listener — tries onSnapshot first, falls back to API polling
+  // Initial load on mount
   useEffect(() => {
-    const q = query(collection(db, "support_tickets"), orderBy("createdAt", "desc"));
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
-        const data = snap.docs.map((d) => {
-          const raw = d.data();
-          return {
-            id: d.id,
-            ...raw,
-            createdAt: raw.createdAt?.toDate?.()?.toISOString() ?? null,
-            updatedAt: raw.updatedAt?.toDate?.()?.toISOString() ?? null,
-            resolvedAt: raw.resolvedAt?.toDate?.()?.toISOString() ?? null,
-          } as ApiTicket;
-        });
-        setTickets(data);
-        setLoading(false);
-        setLoadError("");
-      },
-      () => {
-        // Firestore rules don't allow client reads — fall back to API fetch
-        fetchTickets();
-      }
-    );
-    return unsub;
+    fetchTickets();
+  }, [fetchTickets]);
+
+  // Auto-refresh every 30 s so new tickets appear without a manual reload.
+  // (We cannot use onSnapshot here: the Firestore security rules only allow
+  //  authenticated students to read their own ticket via the client SDK.
+  //  The admin is not a Firebase Auth user — reads must go through the
+  //  Admin-SDK API route which bypasses security rules entirely.)
+  useEffect(() => {
+    const id = setInterval(() => {
+      console.log("[admin/support] ↻ auto-refresh");
+      fetchTickets();
+    }, 30_000);
+    return () => clearInterval(id);
   }, [fetchTickets]);
 
   // Stats — counted directly from current ticket data
@@ -529,11 +553,116 @@ export default function AdminSupportPage() {
         <div style={{
           background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.3)",
           borderRadius: "14px", padding: "16px 20px", marginBottom: "20px",
-          color: "#f87171", fontSize: "13px", lineHeight: "1.6",
+          color: "#f87171", fontSize: "13px", lineHeight: "1.7",
         }}>
-          <strong>Error loading tickets:</strong> {loadError}
-          <br />
-          <span style={{ opacity: 0.7, fontSize: "12px" }}>Check the Next.js terminal for the full server-side error.</span>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+            <div>
+              <strong style={{ fontSize: "14px" }}>⚠️ Error loading tickets</strong>
+              <pre style={{
+                margin: "6px 0 0", padding: "8px 12px",
+                background: "rgba(0,0,0,0.35)", borderRadius: "8px",
+                fontSize: "12px", color: "#fca5a5",
+                whiteSpace: "pre-wrap", wordBreak: "break-all",
+                fontFamily: "monospace", lineHeight: "1.5",
+              }}>{loadError}</pre>
+            </div>
+            <button
+              onClick={fetchTickets}
+              style={{
+                padding: "8px 16px", borderRadius: "8px", flexShrink: 0,
+                background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.35)",
+                color: "#f87171", fontSize: "13px", fontWeight: 700, cursor: "pointer",
+                fontFamily: "Nunito, sans-serif",
+              }}
+            >
+              ↻ Retry
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Step 7: Diagnostic banner — raw Firestore count before any filtering ── */}
+      {!loading && apiCount !== null && (
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          flexWrap: "wrap", gap: "10px",
+          background: apiCount === 0
+            ? "rgba(248,113,113,0.07)"
+            : "rgba(96,165,250,0.07)",
+          border: `1px solid ${apiCount === 0 ? "rgba(248,113,113,0.22)" : "rgba(96,165,250,0.22)"}`,
+          borderRadius: "12px", padding: "12px 18px", marginBottom: "16px",
+          fontSize: "13px",
+        }}>
+          <span style={{ color: apiCount === 0 ? "#f87171" : "#93c5fd", fontWeight: 600 }}>
+            {apiCount === 0
+              ? "⚠️  Firestore docs loaded: 0 — collection may be empty or Admin SDK credentials are wrong"
+              : `✅ Firestore docs loaded: ${apiCount} (before any client-side filtering)`}
+          </span>
+          {/* Step 5 toggle — raw debug view */}
+          <button
+            onClick={() => setShowRawDebug((v) => !v)}
+            style={{
+              padding: "6px 14px", borderRadius: "8px", flexShrink: 0,
+              background: showRawDebug ? "rgba(251,191,36,0.15)" : "rgba(255,255,255,0.06)",
+              border: `1px solid ${showRawDebug ? "rgba(251,191,36,0.4)" : "rgba(255,255,255,0.12)"}`,
+              color: showRawDebug ? "#fbbf24" : "rgba(255,255,255,0.6)",
+              fontSize: "12px", fontWeight: 700, cursor: "pointer",
+              fontFamily: "Nunito, sans-serif", whiteSpace: "nowrap",
+            }}
+          >
+            {showRawDebug ? "🔍 Hide Raw Debug" : "🔍 Show Raw Debug"}
+          </button>
+        </div>
+      )}
+
+      {/* ── Step 5: Raw debug view — all docs, NO filtering ── */}
+      {showRawDebug && !loading && (
+        <div style={{
+          background: "rgba(251,191,36,0.04)", border: "1px solid rgba(251,191,36,0.2)",
+          borderRadius: "14px", padding: "16px 18px", marginBottom: "20px",
+        }}>
+          <div style={{
+            fontFamily: "Rajdhani, sans-serif", fontSize: "15px", fontWeight: 700,
+            color: "#fbbf24", marginBottom: "12px",
+            display: "flex", alignItems: "center", gap: "8px",
+          }}>
+            🔍 Raw Debug View — {tickets.length} doc{tickets.length !== 1 ? "s" : ""} (all filters bypassed)
+          </div>
+          {tickets.length === 0 ? (
+            <div style={{ color: "rgba(255,255,255,0.45)", fontSize: "13px" }}>
+              No documents returned from /api/tickets/list. Check server logs for <code style={{ color: "#fbbf24" }}>snap.size</code>.
+            </div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+                <thead>
+                  <tr>
+                    {["#", "id (Firestore)", "ticketId", "status", "priority", "studentEmail", "createdAt"].map((h) => (
+                      <th key={h} style={{
+                        textAlign: "left", padding: "6px 10px",
+                        color: "rgba(251,191,36,0.7)", fontWeight: 700,
+                        borderBottom: "1px solid rgba(251,191,36,0.15)",
+                        whiteSpace: "nowrap", fontSize: "11px",
+                      }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {tickets.map((t, i) => (
+                    <tr key={t.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                      <td style={{ padding: "6px 10px", color: "rgba(255,255,255,0.3)" }}>{i + 1}</td>
+                      <td style={{ padding: "6px 10px", color: "rgba(255,255,255,0.45)", fontFamily: "monospace", fontSize: "11px" }}>{t.id}</td>
+                      <td style={{ padding: "6px 10px", color: "#60a5fa", fontWeight: 700, fontFamily: "Rajdhani, sans-serif" }}>{t.ticketId ?? <span style={{ color: "#f87171" }}>MISSING</span>}</td>
+                      <td style={{ padding: "6px 10px", color: t.status ? "#34d399" : "#f87171" }}>{t.status ?? "MISSING"}</td>
+                      <td style={{ padding: "6px 10px", color: "rgba(255,255,255,0.6)" }}>{t.priority ?? "?"}</td>
+                      <td style={{ padding: "6px 10px", color: "rgba(255,255,255,0.5)" }}>{t.studentEmail ?? "?"}</td>
+                      <td style={{ padding: "6px 10px", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "11px" }}>{t.createdAt ?? "null"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
