@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import {
   STATUS_LABELS,
   STATUS_COLORS,
@@ -54,19 +56,43 @@ export default function AdminSupportPage() {
     }
   }, []);
 
-  useEffect(() => { fetchTickets(); }, [fetchTickets]);
+  // Real-time listener — tries onSnapshot first, falls back to API polling
+  useEffect(() => {
+    const q = query(collection(db, "support_tickets"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const data = snap.docs.map((d) => {
+          const raw = d.data();
+          return {
+            id: d.id,
+            ...raw,
+            createdAt: raw.createdAt?.toDate?.()?.toISOString() ?? null,
+            updatedAt: raw.updatedAt?.toDate?.()?.toISOString() ?? null,
+            resolvedAt: raw.resolvedAt?.toDate?.()?.toISOString() ?? null,
+          } as ApiTicket;
+        });
+        setTickets(data);
+        setLoading(false);
+        setLoadError("");
+      },
+      () => {
+        // Firestore rules don't allow client reads — fall back to API fetch
+        fetchTickets();
+      }
+    );
+    return unsub;
+  }, [fetchTickets]);
 
-  // Stats
-  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  // Stats — counted directly from current ticket data
   const stats = {
-    open: tickets.filter((t) => t.status === "OPEN").length,
-    inProgress: tickets.filter((t) => t.status === "IN_PROGRESS").length,
-    resolvedToday: tickets.filter((t) => {
-      const d = t.resolvedAt ? new Date(t.resolvedAt) : null;
-      return d && d >= todayStart && (t.status === "RESOLVED" || t.status === "CLOSED");
-    }).length,
-    total: tickets.length,
-    reopened: tickets.filter((t) => t.status === "REOPENED").length,
+    open:             tickets.filter((t) => t.status === "OPEN").length,
+    inProgress:       tickets.filter((t) => t.status === "IN_PROGRESS").length,
+    waitingForStudent:tickets.filter((t) => t.status === "WAITING_FOR_STUDENT").length,
+    resolved:         tickets.filter((t) => t.status === "RESOLVED").length,
+    closed:           tickets.filter((t) => t.status === "CLOSED").length,
+    reopened:         tickets.filter((t) => t.status === "REOPENED").length,
+    total:            tickets.length,
   };
 
   // Filter + search + sort
@@ -133,11 +159,12 @@ export default function AdminSupportPage() {
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "14px", marginBottom: "24px" }}>
         {[
-          { label: "Open", value: stats.open, color: "#60a5fa" },
-          { label: "In Progress", value: stats.inProgress, color: "#fb923c" },
-          { label: "Reopened", value: stats.reopened, color: "#f87171" },
-          { label: "Resolved Today", value: stats.resolvedToday, color: "#34d399" },
-          { label: "Total Tickets", value: stats.total, color: "rgba(255,255,255,0.6)" },
+          { label: "Open",              value: stats.open,             color: "#60a5fa" },
+          { label: "In Progress",       value: stats.inProgress,       color: "#fb923c" },
+          { label: "Waiting",           value: stats.waitingForStudent, color: "#fbbf24" },
+          { label: "Resolved",          value: stats.resolved,         color: "#34d399" },
+          { label: "Closed",            value: stats.closed,           color: "rgba(255,255,255,0.4)" },
+          { label: "Total",             value: stats.total,            color: "rgba(255,255,255,0.6)" },
         ].map(({ label, value, color }) => (
           <div key={label} style={{
             background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",

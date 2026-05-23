@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 
-// PATCH /api/tickets/update  { id, status?, priority?, assignedTo?, adminNotes?, resolvedAt? }
+// PATCH /api/tickets/update  { id, status?, priority?, assignedTo?, adminNotes?, _event? }
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json() as {
@@ -11,10 +11,15 @@ export async function PATCH(req: NextRequest) {
       priority?: string;
       assignedTo?: string | null;
       adminNotes?: string | null;
+      _event?: {
+        ticketId: string;
+        oldStatus?: string;
+        oldPriority?: string;
+      };
       [key: string]: unknown;
     };
 
-    const { id, ...fields } = body;
+    const { id, _event, ...fields } = body;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
     const updates: Record<string, unknown> = {
@@ -29,6 +34,33 @@ export async function PATCH(req: NextRequest) {
 
     const db = getAdminDb();
     await db.collection("support_tickets").doc(id).update(updates);
+
+    // Record activity log events
+    if (_event?.ticketId) {
+      const eventPromises: Promise<unknown>[] = [];
+      if (fields.status && fields.status !== _event.oldStatus) {
+        eventPromises.push(db.collection("ticket_events").add({
+          ticketId: _event.ticketId,
+          type: "STATUS_CHANGE",
+          actor: "Technical Team",
+          oldValue: _event.oldStatus ?? "",
+          newValue: fields.status,
+          createdAt: FieldValue.serverTimestamp(),
+        }));
+      }
+      if (fields.priority && fields.priority !== _event.oldPriority) {
+        eventPromises.push(db.collection("ticket_events").add({
+          ticketId: _event.ticketId,
+          type: "PRIORITY_CHANGE",
+          actor: "Technical Team",
+          oldValue: _event.oldPriority ?? "",
+          newValue: fields.priority,
+          createdAt: FieldValue.serverTimestamp(),
+        }));
+      }
+      await Promise.all(eventPromises);
+    }
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err);

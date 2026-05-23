@@ -5,6 +5,9 @@ import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSupportModal } from "@/contexts/SupportContext";
+import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
+import { db, storage } from "@/lib/firebase";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import {
   STATUS_LABELS,
   STATUS_COLORS,
@@ -13,8 +16,6 @@ import {
   type ApiTicket,
   type ApiMessage,
 } from "@/lib/tickets";
-import { storage } from "@/lib/firebase";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export default function StudentTicketDetailPage() {
   const { ticketId: docId } = useParams<{ ticketId: string }>();
@@ -80,6 +81,47 @@ export default function StudentTicketDetailPage() {
   useEffect(() => {
     if (!authLoading && user) fetchAll();
   }, [authLoading, user, fetchAll]);
+
+  // Real-time messages listener — updates chat without manual refresh
+  useEffect(() => {
+    if (!ticket?.ticketId) return;
+    const q = query(
+      collection(db, "ticket_messages"),
+      where("ticketId", "==", ticket.ticketId),
+      orderBy("createdAt", "asc")
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      const msgs = snap.docs.map((d) => {
+        const raw = d.data();
+        return { id: d.id, ...raw, createdAt: raw.createdAt?.toDate?.()?.toISOString() ?? null } as ApiMessage;
+      });
+      setMessages(msgs);
+    }, () => { /* silently ignore permission errors */ });
+    return unsub;
+  }, [ticket?.ticketId]);
+
+  // Real-time ticket status/field updates (starts once ticket is loaded)
+  useEffect(() => {
+    if (!ticket?.ticketId) return;
+    const q = query(
+      collection(db, "support_tickets"),
+      where("ticketId", "==", ticket.ticketId)
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      if (snap.empty) return;
+      const raw = snap.docs[0].data();
+      setTicket((prev) => prev ? {
+        ...prev,
+        status: raw.status ?? prev.status,
+        priority: raw.priority ?? prev.priority,
+        assignedTo: raw.assignedTo ?? prev.assignedTo,
+        adminNotes: raw.adminNotes ?? prev.adminNotes,
+        updatedAt: raw.updatedAt?.toDate?.()?.toISOString() ?? prev.updatedAt,
+        resolvedAt: raw.resolvedAt?.toDate?.()?.toISOString() ?? prev.resolvedAt,
+      } : prev);
+    }, () => { /* silently ignore if Firestore rules deny */ });
+    return unsub;
+  }, [ticket?.ticketId]);
 
   // Auto-scroll to bottom of chat when messages change
   useEffect(() => {
@@ -388,25 +430,7 @@ export default function StudentTicketDetailPage() {
             {ticket.description}
           </p>
 
-          {ticket.screenshotUrl && (
-            <div style={{ marginTop: "14px" }}>
-              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                Attached Screenshot
-              </div>
-              <a href={ticket.screenshotUrl} target="_blank" rel="noopener noreferrer">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={ticket.screenshotUrl}
-                  alt="Issue screenshot"
-                  style={{
-                    maxWidth: "100%", maxHeight: "220px", borderRadius: "10px",
-                    border: "1px solid rgba(255,255,255,0.1)", objectFit: "contain",
-                    display: "block",
-                  }}
-                />
-              </a>
-            </div>
-          )}
+          {/* Screenshots and media are shown in the Attachments block below */}
         </div>
 
         {/* Media attachments */}
@@ -695,6 +719,17 @@ function AttachmentsBlock({
             src={ticket.voiceNoteUrl!}
             style={{ width: "100%", maxWidth: "400px", height: "40px" }}
           />
+          <div style={{ marginTop: "6px" }}>
+            <a
+              href={ticket.voiceNoteUrl!}
+              download
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: "12px", color: "#60a5fa", textDecoration: "none" }}
+            >
+              ⬇️ Download Voice Note
+            </a>
+          </div>
         </div>
       )}
 

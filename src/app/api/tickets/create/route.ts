@@ -85,6 +85,16 @@ export async function POST(req: NextRequest) {
     console.log("[tickets/create] Writing ticket to Firestore...");
     const ref = await db.collection(TICKETS_COL).add(docData);
     console.log("[tickets/create] Success — doc id:", ref.id, "ticketId:", ticketId);
+
+    // Record creation event (fire-and-forget)
+    db.collection("ticket_events").add({
+      ticketId,
+      type: "CREATED",
+      actor: body.studentName?.trim() ?? "Student",
+      note: "Ticket submitted",
+      createdAt: FieldValue.serverTimestamp(),
+    }).catch(() => {});
+
     return NextResponse.json({ id: ref.id, ticketId }, { status: 201 });
   } catch (err) {
     const errStr = err instanceof Error ? `${err.name}: ${err.message}` : String(err);

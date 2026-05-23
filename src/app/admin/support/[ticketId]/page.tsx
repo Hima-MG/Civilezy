@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import {
   STATUS_LABELS,
   STATUS_COLORS,
@@ -14,6 +16,16 @@ import {
   type TicketPriority,
 } from "@/lib/tickets";
 
+interface TicketEvent {
+  id: string;
+  type: "STATUS_CHANGE" | "PRIORITY_CHANGE" | "ADMIN_REPLY" | "STUDENT_REPLY" | "CREATED";
+  actor: string;
+  oldValue?: string;
+  newValue?: string;
+  note?: string;
+  createdAt: string | null;
+}
+
 const STATUS_OPTIONS: TicketStatus[] = [
   "OPEN", "IN_PROGRESS", "WAITING_FOR_STUDENT", "RESOLVED", "REOPENED", "CLOSED",
 ];
@@ -24,6 +36,7 @@ export default function AdminTicketDetailPage() {
 
   const [ticket, setTicket] = useState<ApiTicket | null>(null);
   const [messages, setMessages] = useState<ApiMessage[]>([]);
+  const [events, setEvents] = useState<TicketEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [flash, setFlash] = useState("");
   const [flashType, setFlashType] = useState<"ok" | "err">("ok");
@@ -83,6 +96,42 @@ export default function AdminTicketDetailPage() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
+  // Real-time messages listener (uses client-side Firestore)
+  useEffect(() => {
+    if (!ticket?.ticketId) return;
+    const q = query(
+      collection(db, "ticket_messages"),
+      where("ticketId", "==", ticket.ticketId),
+      orderBy("createdAt", "asc")
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      const msgs = snap.docs.map((d) => {
+        const raw = d.data();
+        return { id: d.id, ...raw, createdAt: raw.createdAt?.toDate?.()?.toISOString() ?? null } as ApiMessage;
+      });
+      setMessages(msgs);
+    });
+    return unsub;
+  }, [ticket?.ticketId]);
+
+  // Real-time ticket event log listener
+  useEffect(() => {
+    if (!ticket?.ticketId) return;
+    const q = query(
+      collection(db, "ticket_events"),
+      where("ticketId", "==", ticket.ticketId),
+      orderBy("createdAt", "asc")
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      const evts = snap.docs.map((d) => {
+        const raw = d.data();
+        return { id: d.id, ...raw, createdAt: raw.createdAt?.toDate?.()?.toISOString() ?? null } as TicketEvent;
+      });
+      setEvents(evts);
+    }, () => { /* silently ignore if rules deny */ });
+    return unsub;
+  }, [ticket?.ticketId]);
+
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -92,7 +141,18 @@ export default function AdminTicketDetailPage() {
     console.log("[admin-detail] handleStatusUpdate — doc id:", ticket.id, "new status:", newStatus, "new priority:", newPriority);
     setSavingStatus(true);
     try {
-      const payload = { id: ticket.id, status: newStatus, priority: newPriority, assignedTo: assignedTo || null };
+      const payload = {
+        id: ticket.id,
+        status: newStatus,
+        priority: newPriority,
+        assignedTo: assignedTo || null,
+        // Activity log fields
+        _event: {
+          ticketId: ticket.ticketId,
+          oldStatus: ticket.status,
+          oldPriority: ticket.priority,
+        },
+      };
       console.log("[admin-detail] PATCH /api/tickets/update →", payload);
       const res = await fetch("/api/tickets/update", {
         method: "PATCH",
@@ -197,7 +257,27 @@ export default function AdminTicketDetailPage() {
           setNewStatus("IN_PROGRESS");
         }
       }
-      showFlash("Reply sent");
+
+      // Email notification to student
+      fetch("/api/send-ticket-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "admin_reply",
+          ticket: {
+            ticketId: ticket.ticketId,
+            id: ticket.id,
+            studentName: ticket.studentName,
+            studentEmail: ticket.studentEmail,
+            category: ticket.category,
+            courseName: ticket.courseName,
+            description: ticket.description,
+            message: replyText.trim(),
+          },
+        }),
+      }).catch(() => {});
+
+      showFlash("Reply sent — student notified by email");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error("[admin-detail] send reply failed:", msg);
@@ -431,19 +511,46 @@ export default function AdminTicketDetailPage() {
 
           <Card title="Timeline">
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {/* Static timestamps */}
               {[
-                { label: "Created", date: ticket.createdAt, color: "#60a5fa" },
-                { label: "Last Updated", date: ticket.updatedAt, color: "#fb923c" },
-                { label: "Resolved", date: ticket.resolvedAt, color: "#34d399" },
-              ].map(({ label, date, color }) => date ? (
+                { label: "Created", date: ticket.createdAt, color: "#60a5fa", icon: "🎫" },
+                { label: "Last Updated", date: ticket.updatedAt, color: "#fb923c", icon: "✏️" },
+                { label: "Resolved", date: ticket.resolvedAt, color: "#34d399", icon: "✅" },
+              ].map(({ label, date, color, icon }) => date ? (
                 <div key={label} style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
                   <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: color, flexShrink: 0, marginTop: "4px" }} />
                   <div>
-                    <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+                    <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{icon} {label}</div>
                     <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.7)", marginTop: "1px" }}>{formatDate(date)}</div>
                   </div>
                 </div>
               ) : null)}
+
+              {/* Dynamic event log */}
+              {events.length > 0 && (
+                <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "10px", marginTop: "4px" }}>
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>Activity</div>
+                  {events.map((ev) => {
+                    const icon = ev.type === "STATUS_CHANGE" ? "↔️" : ev.type === "ADMIN_REPLY" ? "⚙️" : ev.type === "STUDENT_REPLY" ? "🎓" : ev.type === "PRIORITY_CHANGE" ? "🔺" : "📋";
+                    const desc = ev.type === "STATUS_CHANGE"
+                      ? `${ev.oldValue} → ${ev.newValue}`
+                      : ev.type === "PRIORITY_CHANGE"
+                      ? `Priority: ${ev.oldValue} → ${ev.newValue}`
+                      : ev.note ?? ev.type.replace(/_/g, " ");
+                    return (
+                      <div key={ev.id} style={{ display: "flex", gap: "8px", alignItems: "flex-start", marginBottom: "8px" }}>
+                        <span style={{ fontSize: "12px", flexShrink: 0 }}>{icon}</span>
+                        <div>
+                          <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.7)" }}>{desc}</div>
+                          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", marginTop: "1px" }}>
+                            {ev.actor} · {formatDate(ev.createdAt)}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </Card>
 

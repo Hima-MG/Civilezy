@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSupportModal } from "@/contexts/SupportContext";
+import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { STATUS_LABELS, STATUS_COLORS, PRIORITY_COLORS, formatDate, type ApiTicket } from "@/lib/tickets";
 
 export default function StudentSupportPage() {
@@ -53,6 +55,37 @@ export default function StudentSupportPage() {
   useEffect(() => {
     if (user) fetchTickets();
   }, [user, fetchTickets]);
+
+  // Real-time listener on student's own tickets
+  useEffect(() => {
+    if (!user) return;
+    const q = query(
+      collection(db, "support_tickets"),
+      where("studentUid", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const data = snap.docs.map((d) => {
+          const raw = d.data();
+          return {
+            id: d.id,
+            ...raw,
+            createdAt: raw.createdAt?.toDate?.()?.toISOString() ?? null,
+            updatedAt: raw.updatedAt?.toDate?.()?.toISOString() ?? null,
+            resolvedAt: raw.resolvedAt?.toDate?.()?.toISOString() ?? null,
+          } as ApiTicket;
+        });
+        setTickets(data);
+        const waiting = data.filter((t) => t.status === "WAITING_FOR_STUDENT").length;
+        setUnreadCount(waiting);
+        setLoading(false);
+      },
+      () => { /* Firestore rules may not allow — API fetch already loaded data */ }
+    );
+    return unsub;
+  }, [user, setUnreadCount]);
 
   const pageStyle: React.CSSProperties = {
     minHeight: "100vh",

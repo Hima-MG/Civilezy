@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { type, ticket, siteUrl } = body as {
-      type: "new_ticket" | "status_update" | "resolution_confirm" | "student_confirm";
+      type: "new_ticket" | "status_update" | "resolution_confirm" | "student_confirm" | "admin_reply";
       ticket: {
         ticketId: string;
         id: string;
@@ -128,6 +128,22 @@ export async function POST(req: NextRequest) {
             <a href="${base}/api/tickets/confirm?id=${ticket.id}&action=reopen" class="btn btn-red">✗ Still Facing Issue</a>
           </div>
           <p style="color:rgba(255,255,255,0.4);font-size:12px;margin-top:20px">If the buttons above don't work, copy this link to your browser:<br>${base}/support/${ticket.id}</p>
+        `)
+      );
+    }
+
+    if (type === "admin_reply") {
+      const replyMsg = (ticket as { message?: string }).message ?? "";
+      await sendEmail(
+        ticket.studentEmail,
+        `New Reply on Ticket ${ticket.ticketId}`,
+        baseTemplate(`
+          <p style="font-size:16px;font-weight:700;color:#fff;margin-top:0">Hi ${ticket.studentName},</p>
+          <p style="color:rgba(255,255,255,0.7);line-height:1.6">The support team has replied to your ticket.</p>
+          <div class="field"><div class="label">Ticket ID</div><div class="value" style="color:#60a5fa">${ticket.ticketId}</div></div>
+          <div class="field"><div class="label">Category</div><div class="value">${ticket.category}</div></div>
+          ${replyMsg ? `<div class="field"><div class="label">Message</div><div class="value" style="font-weight:400;line-height:1.6;color:rgba(255,255,255,0.8)">${replyMsg}</div></div>` : ""}
+          <p style="margin-top:24px"><a href="${base}/support/${ticket.id}" class="btn" style="background:linear-gradient(135deg,#FF6200,#FF8534)">View Reply →</a></p>
         `)
       );
     }
