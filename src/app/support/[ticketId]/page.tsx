@@ -17,6 +17,16 @@ import {
   type ApiMessage,
 } from "@/lib/tickets";
 
+interface TicketEvent {
+  id: string;
+  type: "STATUS_CHANGE" | "PRIORITY_CHANGE" | "ADMIN_REPLY" | "STUDENT_REPLY" | "CREATED";
+  actor: string;
+  oldValue?: string;
+  newValue?: string;
+  note?: string;
+  createdAt: string | null;
+}
+
 export default function StudentTicketDetailPage() {
   const { ticketId: docId } = useParams<{ ticketId: string }>();
   const searchParams = useSearchParams();
@@ -25,6 +35,7 @@ export default function StudentTicketDetailPage() {
 
   const [ticket, setTicket] = useState<ApiTicket | null>(null);
   const [messages, setMessages] = useState<ApiMessage[]>([]);
+  const [events, setEvents] = useState<TicketEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [forbidden, setForbidden] = useState(false);
@@ -97,6 +108,24 @@ export default function StudentTicketDetailPage() {
       });
       setMessages(msgs);
     }, () => { /* silently ignore permission errors */ });
+    return unsub;
+  }, [ticket?.ticketId]);
+
+  // Real-time ticket event log (timeline)
+  useEffect(() => {
+    if (!ticket?.ticketId) return;
+    const q = query(
+      collection(db, "ticket_events"),
+      where("ticketId", "==", ticket.ticketId),
+      orderBy("createdAt", "asc")
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      const evts = snap.docs.map((d) => {
+        const raw = d.data();
+        return { id: d.id, ...raw, createdAt: raw.createdAt?.toDate?.()?.toISOString() ?? null } as TicketEvent;
+      });
+      setEvents(evts);
+    }, () => { /* silently ignore if rules deny */ });
     return unsub;
   }, [ticket?.ticketId]);
 
@@ -629,6 +658,52 @@ export default function StudentTicketDetailPage() {
             </div>
           )}
         </div>
+
+        {/* Ticket timeline */}
+        {(events.length > 0 || ticket.createdAt) && (
+          <div style={{
+            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: "16px", padding: "20px 22px", marginBottom: "16px",
+          }}>
+            <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: "16px" }}>
+              📋 Ticket Timeline
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+              {/* Created */}
+              {ticket.createdAt && (
+                <TimelineRow icon="🎫" label="Ticket Created" date={ticket.createdAt} color="#60a5fa" isFirst />
+              )}
+              {/* Dynamic events */}
+              {events.map((ev) => {
+                const icon = ev.type === "STATUS_CHANGE" ? "↔️"
+                  : ev.type === "PRIORITY_CHANGE" ? "🔺"
+                  : ev.type === "ADMIN_REPLY" ? "⚙️"
+                  : ev.type === "STUDENT_REPLY" ? "🎓"
+                  : "📋";
+                const label = ev.type === "STATUS_CHANGE"
+                  ? `Status changed to ${ev.newValue?.replace(/_/g, " ")}`
+                  : ev.type === "PRIORITY_CHANGE"
+                  ? `Priority changed to ${ev.newValue}`
+                  : ev.type === "ADMIN_REPLY"
+                  ? "Support team replied"
+                  : ev.type === "STUDENT_REPLY"
+                  ? "You replied"
+                  : ev.note ?? ev.type.replace(/_/g, " ");
+                const color = ev.type === "STATUS_CHANGE"
+                  ? (ev.newValue === "RESOLVED" || ev.newValue === "CLOSED" ? "#34d399" : ev.newValue === "REOPENED" ? "#f87171" : "#fb923c")
+                  : ev.type === "ADMIN_REPLY" ? "#FF8534"
+                  : "#60a5fa";
+                return (
+                  <TimelineRow key={ev.id} icon={icon} label={label} date={ev.createdAt} color={color} />
+                );
+              })}
+              {/* Resolved */}
+              {ticket.resolvedAt && ticket.status !== "REOPENED" && (
+                <TimelineRow icon="✅" label={`Ticket ${ticket.status === "CLOSED" ? "Closed" : "Resolved"}`} date={ticket.resolvedAt} color="#34d399" />
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -645,6 +720,35 @@ function StatusBadge({ text, colors }: { text: string; colors: { color: string; 
     }}>
       {text}
     </span>
+  );
+}
+
+function TimelineRow({
+  icon, label, date, color, isFirst,
+}: {
+  icon: string; label: string; date: string | null; color: string; isFirst?: boolean;
+}) {
+  return (
+    <div style={{ display: "flex", gap: "14px", alignItems: "flex-start", paddingBottom: "14px", position: "relative" }}>
+      {/* Vertical line */}
+      {!isFirst && (
+        <div style={{
+          position: "absolute", left: "11px", top: "-14px", width: "2px", height: "14px",
+          background: "rgba(255,255,255,0.08)",
+        }} />
+      )}
+      {/* Dot */}
+      <div style={{
+        width: "24px", height: "24px", borderRadius: "50%", flexShrink: 0,
+        background: `${color}20`, border: `2px solid ${color}60`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: "11px", zIndex: 1,
+      }}>{icon}</div>
+      <div style={{ paddingTop: "2px" }}>
+        <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.8)", fontWeight: 600 }}>{label}</div>
+        <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>{formatDate(date)}</div>
+      </div>
+    </div>
   );
 }
 

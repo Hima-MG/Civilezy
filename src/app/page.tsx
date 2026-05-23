@@ -7,7 +7,7 @@ import GameArenaSection    from "@/components/sections/GameArenaSection";
 
 import FinalCTASection from "@/components/sections/FinalCTASection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
-import ComparisonSection from "@/components/sections/Comparisonsection";
+import ComparisonSection from "@/components/sections/ComparisonSection";
 // import DepartmentSection from "@/components/sections/Departmentsection";
 import Footer from "@/components/sections/Footer";
 import TickerSection from "@/components/sections/TickerSection";

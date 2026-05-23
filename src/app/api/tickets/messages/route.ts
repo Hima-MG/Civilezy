@@ -64,6 +64,17 @@ export async function POST(req: NextRequest) {
     };
 
     const ref = await db.collection("ticket_messages").add(data);
+
+    // Record activity event (fire-and-forget)
+    const eventType = senderType === "ADMIN" ? "ADMIN_REPLY" : "STUDENT_REPLY";
+    db.collection("ticket_events").add({
+      ticketId,
+      type: eventType,
+      actor: senderName,
+      note: message.trim().slice(0, 80) + (message.trim().length > 80 ? "…" : ""),
+      createdAt: FieldValue.serverTimestamp(),
+    }).catch(() => {});
+
     const newSnap = await ref.get();
     return NextResponse.json({ message: serializeMsg(ref.id, newSnap.data()!) }, { status: 201 });
   } catch (err) {
