@@ -39,6 +39,22 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ── E-Books ────────────────────────────────────────────────────────────────
+    // Public listing/detail pages read directly via client SDK.
+    // Admin writes also use client SDK from the passphrase-protected admin panel.
+    // To harden: migrate addEbook/updateEbook/deleteEbook to API routes (Admin SDK)
+    // and change the write rule below to `if false`.
+    match /ebooks/{docId} {
+      // Ebooks are public marketing content — no sensitive data.
+      // Full reads allowed so the admin panel can list drafts too.
+      allow read: if true;
+
+      // Writes from the passphrase-protected admin panel (client SDK).
+      // To harden later: move mutations to API routes (Admin SDK) and
+      // set this to `if false`.
+      allow write: if true;
+    }
+
     // ── User profiles ──────────────────────────────────────────────────────────
     // Each user can read/write only their own profile
     match /users/{uid} {
