@@ -1,521 +1,487 @@
 "use client";
 
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { EBOOKS, type EbookData } from "@/data/ebookData";
+import { getPublishedEbooks } from "@/lib/ebooks";
+import type { Ebook } from "@/types/ebook";
+import EbookCard from "./EbookCard";
+
+const FILTERS = ["All", "Diploma", "B.Tech", "AE", "Surveyor", "Instructor"] as const;
+type Filter = (typeof FILTERS)[number];
+
+function matchesFilter(ebook: Ebook, filter: Filter): boolean {
+  if (filter === "All") return true;
+  const haystack = `${ebook.level} ${ebook.exam}`.toLowerCase();
+  return haystack.includes(filter.toLowerCase());
+}
+
+function matchesSearch(ebook: Ebook, q: string): boolean {
+  if (!q.trim()) return true;
+  const lower = q.toLowerCase();
+  return (
+    ebook.title.toLowerCase().includes(lower) ||
+    ebook.exam.toLowerCase().includes(lower) ||
+    ebook.level.toLowerCase().includes(lower) ||
+    (ebook.description?.toLowerCase().includes(lower) ?? false)
+  );
+}
 
 export default function EbooksListing() {
-  return (
-    <main style={{ background: "#040C18", minHeight: "100vh", paddingTop: "70px" }}>
+  const [ebooks, setEbooks] = useState<Ebook[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [activeFilter, setActiveFilter] = useState<Filter>("All");
+  const [searchFocused, setSearchFocused] = useState(false);
 
-      {/* ── Page Header ── */}
-      <section
-        style={{
-          background: "linear-gradient(135deg, #091729 0%, #0B1E3D 50%, #0D2347 100%)",
-          borderBottom: "1px solid rgba(245,158,11,0.2)",
-          padding: "56px 5% 48px",
-          textAlign: "center",
-        }}
-      >
-        <div
-          style={{
-            display: "inline-block",
-            background: "rgba(245,158,11,0.12)",
-            border: "1px solid rgba(245,158,11,0.3)",
-            borderRadius: "20px",
-            padding: "4px 18px",
-            fontSize: "12px",
-            fontWeight: 700,
-            color: "#F59E0B",
-            letterSpacing: "0.8px",
-            marginBottom: "18px",
-            fontFamily: "Nunito, sans-serif",
-          }}
-        >
-          KERALA PSC CIVIL ENGINEERING
-        </div>
-        <h1
-          style={{
-            fontFamily: "Rajdhani, sans-serif",
-            fontSize: "clamp(30px, 5vw, 52px)",
-            fontWeight: 700,
-            color: "#ffffff",
-            lineHeight: 1.15,
-            margin: "0 0 16px",
-          }}
-        >
-          Quick Revision{" "}
-          <span
-            style={{
-              background: "linear-gradient(135deg, #F59E0B, #FCD34D)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            E-Books
-          </span>
-        </h1>
-        <p
-          style={{
-            fontSize: "clamp(14px, 1.8vw, 17px)",
-            color: "rgba(255,255,255,0.65)",
-            maxWidth: "560px",
-            margin: "0 auto",
-            lineHeight: 1.7,
-            fontFamily: "Nunito, sans-serif",
-          }}
-        >
-          Concise, syllabus-based revision guides crafted for Kerala PSC Civil Engineering exams.
-          Study smart, save time, score more.
-        </p>
-      </section>
+  useEffect(() => {
+    getPublishedEbooks()
+      .then(setEbooks)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
-      {/* ── Featured E-Book Banners ── */}
-      <section style={{ maxWidth: "1100px", margin: "0 auto", padding: "56px 5% 80px" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "36px" }}>
-          {EBOOKS.map((ebook) => (
-            <EbookFeaturedBanner key={ebook.slug} ebook={ebook} />
-          ))}
-          <ComingSoonCard />
-        </div>
-      </section>
-
-      <style>{`
-        /* ━━━ BANNER ANIMATIONS ━━━ */
-        @keyframes ebDotPulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.25; transform: scale(0.55); }
-        }
-        @keyframes ebFloat {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-8px); }
-        }
-
-        /* ━━━ FEATURED BANNER ━━━ */
-        .eb-banner {
-          position: relative; overflow: hidden;
-          background: linear-gradient(135deg, #020817 0%, #04152d 48%, #071a35 100%);
-          border: 1px solid rgba(245,158,11,0.18);
-          border-top: 2px solid rgba(245,158,11,0.5);
-          border-radius: 24px;
-          min-height: 500px;
-          cursor: pointer;
-          transition: border-color 0.3s ease, box-shadow 0.3s ease;
-          box-shadow: 0 8px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(245,158,11,0.05);
-          display: block; text-decoration: none;
-        }
-        .eb-banner:hover {
-          border-color: rgba(245,158,11,0.38);
-          box-shadow: 0 20px 72px rgba(245,158,11,0.14), 0 8px 48px rgba(0,0,0,0.45);
-        }
-        .eb-banner:focus-visible {
-          outline: 2px solid #F59E0B; outline-offset: 4px;
-        }
-
-        /* Background decorations */
-        .eb-bg-grid {
-          position: absolute; inset: 0; pointer-events: none; z-index: 0;
-          background-image:
-            linear-gradient(rgba(245,158,11,0.016) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(245,158,11,0.016) 1px, transparent 1px);
-          background-size: 60px 60px;
-        }
-        .eb-bg-glow {
-          position: absolute; inset: 0; pointer-events: none; z-index: 0;
-          background: radial-gradient(ellipse at 78% 52%,
-            rgba(245,158,11,0.11) 0%,
-            rgba(245,158,11,0.045) 36%,
-            rgba(59,130,246,0.02) 58%,
-            transparent 70%);
-        }
-
-        /* CEO image */
-        .eb-ceo-img {
-          position: absolute;
-          right: 0; top: 50%;
-          transform: translateY(-50%);
-          height: 115%; width: auto;
-          max-width: none; display: block;
-          z-index: 1; pointer-events: none;
-        }
-
-        /* Ground vignette — anchors character to banner floor */
-        .eb-ground {
-          position: absolute; bottom: 0; left: 0; right: 0;
-          height: 22%; z-index: 2; pointer-events: none;
-          background: linear-gradient(to top, #020817 0%, rgba(2,8,23,0.5) 48%, transparent 100%);
-        }
-
-        /* Left-to-right fade — makes text readable while CEO stays visible */
-        .eb-fade {
-          position: absolute; inset: 0; z-index: 2; pointer-events: none;
-          background: linear-gradient(
-            to right,
-            #020817 0%,
-            rgba(2,8,23,0.96) 20%,
-            rgba(2,8,23,0.78) 38%,
-            rgba(2,8,23,0.36) 56%,
-            rgba(2,8,23,0.08) 70%,
-            transparent 82%
-          );
-        }
-
-        /* Content area */
-        .eb-content {
-          position: relative; z-index: 3;
-          padding: 52px 48px 52px 52px;
-          max-width: 60%;
-        }
-
-        /* Badges */
-        .eb-badges { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
-        .eb-badge-new {
-          display: inline-flex; align-items: center; gap: 7px;
-          background: rgba(16,185,129,0.09); border: 1px solid rgba(16,185,129,0.24);
-          border-radius: 30px; padding: 5px 14px;
-          font-size: 10px; font-weight: 800; color: #34D399;
-          font-family: Nunito, sans-serif; text-transform: uppercase; letter-spacing: 0.8px;
-        }
-        .eb-dot {
-          width: 6px; height: 6px; border-radius: 50%;
-          background: #34D399; flex-shrink: 0;
-          animation: ebDotPulse 1.5s ease-in-out infinite;
-        }
-        .eb-badge-exam {
-          display: inline-block;
-          background: rgba(245,158,11,0.09); border: 1px solid rgba(245,158,11,0.22);
-          border-radius: 30px; padding: 5px 14px;
-          font-size: 10px; font-weight: 700; color: #FCD34D;
-          font-family: Nunito, sans-serif;
-        }
-
-        /* Exam strip */
-        .eb-exam-strip {
-          font-family: Nunito, sans-serif; font-size: 11px;
-          font-weight: 700; color: rgba(245,158,11,0.7);
-          letter-spacing: 0.5px; margin-bottom: 22px;
-        }
-
-        /* Big heading */
-        .eb-heading { margin: 0 0 18px; line-height: 0.93; }
-        .eb-heading-white {
-          display: block; font-family: Rajdhani, sans-serif;
-          font-size: clamp(44px, 5.5vw, 78px);
-          font-weight: 800; color: #ffffff;
-          text-transform: uppercase; letter-spacing: -2px;
-        }
-        .eb-heading-gold {
-          display: block; font-family: Rajdhani, sans-serif;
-          font-size: clamp(44px, 5.5vw, 78px);
-          font-weight: 800; text-transform: uppercase; letter-spacing: -2px;
-          background: linear-gradient(135deg, #F59E0B 0%, #FDE68A 50%, #F59E0B 100%);
-          -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-        }
-
-        /* Subtitle */
-        .eb-subtitle {
-          display: flex; align-items: center; gap: 12px;
-          font-family: Nunito, sans-serif;
-          font-size: clamp(14px, 1.6vw, 17px);
-          font-weight: 700; color: rgba(255,255,255,0.85);
-          margin: 0 0 26px;
-        }
-        .eb-subtitle-bar {
-          width: 4px; height: 22px; border-radius: 4px; flex-shrink: 0;
-          background: linear-gradient(180deg, #F59E0B, #FCD34D);
-        }
-
-        /* Highlights */
-        .eb-highlights {
-          list-style: none; margin: 0 0 22px; padding: 0;
-          display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px;
-        }
-        .eb-highlight-item {
-          font-family: Nunito, sans-serif; font-size: 13px;
-          font-weight: 600; color: rgba(255,255,255,0.72);
-          display: flex; align-items: center; gap: 9px;
-        }
-        .eb-check {
-          width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
-          background: rgba(16,185,129,0.14); border: 1px solid rgba(16,185,129,0.28);
-          display: flex; align-items: center; justify-content: center;
-          font-size: 9px; color: #34D399; font-weight: 900;
-        }
-
-        /* Tagline */
-        .eb-tagline {
-          font-family: Nunito, sans-serif; font-size: 13px;
-          font-style: italic; color: rgba(255,255,255,0.32);
-          margin: 0 0 30px;
-        }
-
-        /* CTA row */
-        .eb-cta-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 22px; }
-        .eb-btn-know {
-          display: inline-flex; align-items: center;
-          background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%);
-          color: #0D0700; font-family: Nunito, sans-serif;
-          font-size: 16px; font-weight: 800; letter-spacing: 0.2px;
-          padding: 15px 38px; border-radius: 50px;
-          text-decoration: none; white-space: nowrap;
-          box-shadow: 0 6px 32px rgba(245,158,11,0.5);
-          transition: transform 0.22s ease, box-shadow 0.22s ease;
-        }
-        .eb-btn-know:hover { transform: translateY(-3px); box-shadow: 0 14px 48px rgba(245,158,11,0.65); }
-        .eb-btn-preview {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: rgba(255,255,255,0.055); border: 1px solid rgba(255,255,255,0.14);
-          color: rgba(255,255,255,0.82); font-family: Nunito, sans-serif;
-          font-size: 14px; font-weight: 700;
-          padding: 15px 28px; border-radius: 50px;
-          text-decoration: none; white-space: nowrap;
-          transition: background 0.2s, border-color 0.2s;
-        }
-        .eb-btn-preview:hover { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.26); }
-
-        /* Info row */
-        .eb-info-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .eb-price {
-          font-family: Rajdhani, sans-serif; font-size: 22px;
-          font-weight: 800; color: #F59E0B;
-        }
-        .eb-info-sep {
-          width: 3px; height: 3px; border-radius: 50%;
-          background: rgba(255,255,255,0.18); flex-shrink: 0;
-        }
-        .eb-validity {
-          font-family: Nunito, sans-serif; font-size: 12px;
-          font-weight: 600; color: rgba(255,255,255,0.32);
-        }
-
-        /* ━━━ RESPONSIVE ━━━ */
-        @media (max-width: 900px) {
-          .eb-content { max-width: 68%; padding: 44px 40px 44px 44px; }
-        }
-        @media (max-width: 720px) {
-          /* Side-by-side: content left, CEO right — same as desktop */
-          .eb-banner   { min-height: 440px; }
-          .eb-content  { max-width: 65%; padding: 36px 12px 36px 32px; }
-          .eb-highlights { display: none; }
-          .eb-ceo-img  {
-            top: 50%; right: 0; bottom: auto;
-            transform: translateY(-50%);
-            height: 112%; width: auto;
-          }
-          /* Left-to-right fade so text stays readable over CEO */
-          .eb-fade {
-            background: linear-gradient(to right,
-              rgba(2,8,23,1) 0%, rgba(2,8,23,0.96) 48%,
-              rgba(2,8,23,0.38) 68%, transparent 84%
-            );
-          }
-          .eb-ground { display: none; }
-        }
-        @media (max-width: 480px) {
-          .eb-banner   { min-height: 400px; }
-          .eb-content  { max-width: 65%; padding: 24px 10px 24px 20px; }
-          .eb-heading-white, .eb-heading-gold { font-size: 34px; letter-spacing: -1px; }
-          .eb-ceo-img  {
-            top: 50%; right: -20px; bottom: auto;
-            transform: translateY(-50%);
-            height: 110%; width: auto;
-          }
-          /* Hide tagline to keep content compact */
-          .eb-tagline  { display: none; }
-          .eb-cta-row  { flex-direction: column; gap: 8px; }
-          .eb-btn-know, .eb-btn-preview {
-            justify-content: center; text-align: center;
-            font-size: 14px; padding: 12px 16px; width: 100%;
-          }
-        }
-        @media (max-width: 414px) {
-          .eb-banner   { min-height: 360px; }
-          .eb-content  { padding: 20px 8px 20px 16px; }
-          .eb-heading-white, .eb-heading-gold { font-size: 30px; letter-spacing: -0.5px; }
-          .eb-ceo-img  { right: -25px; height: 108%; }
-        }
-        @media (max-width: 375px) {
-          .eb-heading-white, .eb-heading-gold { font-size: 27px; }
-          .eb-content  { padding: 18px 6px 18px 14px; }
-          .eb-ceo-img  { right: -28px; height: 106%; }
-        }
-        @media (max-width: 320px) {
-          .eb-banner   { min-height: 320px; }
-          .eb-heading-white, .eb-heading-gold { font-size: 24px; letter-spacing: 0; }
-          .eb-content  { padding: 16px 4px 16px 12px; }
-          .eb-badges   { display: none; }
-          .eb-ceo-img  { right: -30px; height: 104%; }
-        }
-
-        /* ━━━ COMING SOON CARD ━━━ */
-        .eb-coming-soon {
-          background: rgba(255,255,255,0.025);
-          border: 1px dashed rgba(255,255,255,0.1);
-          border-radius: 20px;
-          padding: 52px 24px;
-          display: flex; flex-direction: column;
-          align-items: center; justify-content: center;
-          text-align: center; gap: 14px;
-        }
-      `}</style>
-    </main>
+  const featuredEbooks = useMemo(
+    () => ebooks.filter((e) => e.featured),
+    [ebooks]
   );
-}
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   LARGE FEATURED BANNER COMPONENT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-function EbookFeaturedBanner({ ebook }: { ebook: EbookData }) {
-  const router = useRouter();
-  const highlights = [
-    `${ebook.modules.length} Comprehensive Modules`,
-    "20 Model Exams Included",
-    "Diploma Civil Level",
-    "Quick Revision Format",
-    "Syllabus Based Content",
-  ];
+  const filteredEbooks = useMemo(
+    () =>
+      ebooks.filter(
+        (e) => matchesFilter(e, activeFilter) && matchesSearch(e, search)
+      ),
+    [ebooks, activeFilter, search]
+  );
+
+  const isFiltering = search.trim() !== "" || activeFilter !== "All";
+  const heroEbook = !isFiltering && featuredEbooks.length > 0 ? featuredEbooks[0] : null;
 
   return (
-    // Use a div — <a> inside <a> is invalid HTML and causes hydration errors.
-    // Whole-banner click is handled via onClick; inner buttons use their own hrefs.
-    <div
-      className="eb-banner"
-      role="article"
-      aria-label={`${ebook.title} for ${ebook.subtitle} — Click to know more`}
-      style={{ cursor: "pointer" }}
-      onClick={(e) => {
-        if (!(e.target as HTMLElement).closest("a, button")) {
-          router.push(`/ebooks/${ebook.slug}`);
-        }
-      }}
-    >
-      {/* ── Background layers ── */}
-      <div className="eb-bg-grid" aria-hidden="true" />
-      <div className="eb-bg-glow" aria-hidden="true" />
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(180deg, #020817 0%, #04152d 50%, #020817 100%)",
+      paddingTop: "80px",
+      paddingBottom: "80px",
+      fontFamily: "Nunito, sans-serif",
+    }}>
+      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 20px" }}>
 
-      {/* ── CEO: cinematic character image ── */}
-      <Image
-        src="/ceo-banner.png"
-        alt="Civilezy Expert"
-        width={700}
-        height={700}
-        priority
-        className="eb-ceo-img"
-      />
-
-      {/* ── Blend layers ── */}
-      <div className="eb-ground" aria-hidden="true" />
-      <div className="eb-fade" aria-hidden="true" />
-
-      {/* ── Content ── */}
-      <div className="eb-content">
-
-        {/* Badges */}
-        <div className="eb-badges">
-          {ebook.isNew && (
-            <span className="eb-badge-new">
-              <span className="eb-dot" />
-              🚀 NEW LAUNCH
+        {/* ── Page header ── */}
+        <div style={{ textAlign: "center", marginBottom: "40px" }}>
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: "8px",
+            background: "rgba(255,98,0,0.12)",
+            border: "1px solid rgba(255,98,0,0.25)",
+            borderRadius: "20px", padding: "5px 16px",
+            marginBottom: "16px",
+          }}>
+            <span style={{ fontSize: "14px" }}>📚</span>
+            <span style={{
+              fontSize: "12px", fontWeight: 700, color: "#FF8534",
+              fontFamily: "Rajdhani, sans-serif", letterSpacing: "0.08em",
+              textTransform: "uppercase",
+            }}>
+              E-Book Marketplace
             </span>
-          )}
-          {ebook.examBadge && (
-            <span className="eb-badge-exam">{ebook.examBadge}</span>
-          )}
+          </div>
+
+          <h1 style={{
+            fontFamily: "Rajdhani, sans-serif",
+            fontSize: "clamp(32px, 5vw, 52px)",
+            fontWeight: 700, color: "#fff",
+            margin: "0 0 12px", lineHeight: 1.1,
+          }}>
+            Quick Revision{" "}
+            <span style={{ color: "#FF8534" }}>E-Books</span>
+          </h1>
+          <p style={{
+            fontSize: "16px",
+            color: "rgba(255,255,255,0.55)",
+            margin: 0,
+          }}>
+            Smart Revision. Better Results.
+          </p>
         </div>
 
-        {/* Exam strip */}
-        <div className="eb-exam-strip">
-          📅 EXAM ON&nbsp;<strong>JUNE 30</strong>&nbsp;·&nbsp;{ebook.subtitle.toUpperCase()}
+        {/* ── Search + filters ── */}
+        <div style={{
+          maxWidth: "720px",
+          margin: "0 auto 48px",
+          display: "flex", flexDirection: "column", gap: "16px",
+        }}>
+          <div style={{ position: "relative" }}>
+            <span style={{
+              position: "absolute", left: "16px",
+              top: "50%", transform: "translateY(-50%)",
+              fontSize: "16px", pointerEvents: "none",
+            }}>
+              🔍
+            </span>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+              placeholder="Search by title, exam or level…"
+              style={{
+                width: "100%",
+                boxSizing: "border-box",
+                padding: "14px 44px",
+                background: searchFocused
+                  ? "rgba(255,255,255,0.07)"
+                  : "rgba(255,255,255,0.04)",
+                border: `1px solid ${searchFocused ? "rgba(255,98,0,0.4)" : "rgba(255,255,255,0.1)"}`,
+                borderRadius: "14px",
+                color: "#fff",
+                fontSize: "15px",
+                outline: "none",
+                fontFamily: "Nunito, sans-serif",
+                transition: "all 0.2s",
+                boxShadow: searchFocused ? "0 0 0 3px rgba(255,98,0,0.1)" : "none",
+              }}
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                style={{
+                  position: "absolute", right: "14px",
+                  top: "50%", transform: "translateY(-50%)",
+                  background: "rgba(255,255,255,0.1)",
+                  border: "none", borderRadius: "50%",
+                  width: "24px", height: "24px",
+                  color: "rgba(255,255,255,0.6)",
+                  cursor: "pointer", fontSize: "12px",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center" }}>
+            {FILTERS.map((f) => (
+              <button
+                key={f}
+                onClick={() => setActiveFilter(f)}
+                style={{
+                  padding: "7px 18px",
+                  borderRadius: "20px",
+                  border: `1px solid ${activeFilter === f ? "rgba(255,98,0,0.5)" : "rgba(255,255,255,0.12)"}`,
+                  background: activeFilter === f
+                    ? "rgba(255,98,0,0.18)"
+                    : "rgba(255,255,255,0.04)",
+                  color: activeFilter === f ? "#FF8534" : "rgba(255,255,255,0.55)",
+                  fontSize: "13px", fontWeight: 700,
+                  fontFamily: "Rajdhani, sans-serif",
+                  letterSpacing: "0.04em",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  boxShadow: activeFilter === f ? "0 2px 12px rgba(255,98,0,0.2)" : "none",
+                }}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Main heading */}
-        <h2 className="eb-heading">
-          <span className="eb-heading-white">QUICK REVISION</span>
-          <span className="eb-heading-gold">E-BOOK</span>
-        </h2>
+        {/* ── Loading ── */}
+        {loading && (
+          <div style={{ textAlign: "center", padding: "80px 20px", color: "rgba(255,255,255,0.35)" }}>
+            <div style={{
+              width: "40px", height: "40px",
+              border: "3px solid rgba(255,98,0,0.2)",
+              borderTopColor: "#FF6200",
+              borderRadius: "50%",
+              animation: "spin 0.8s linear infinite",
+              margin: "0 auto 16px",
+            }} />
+            <p style={{ fontSize: "14px", margin: 0 }}>Loading e-books…</p>
+          </div>
+        )}
 
-        {/* Subtitle */}
-        <p className="eb-subtitle">
-          <span className="eb-subtitle-bar" />
-          For <strong style={{ color: "#fff" }}>&nbsp;{ebook.subtitle}</strong>
-        </p>
+        {/* ── Empty ── */}
+        {!loading && filteredEbooks.length === 0 && (
+          <div style={{
+            textAlign: "center", padding: "80px 20px",
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: "20px",
+            maxWidth: "480px", margin: "0 auto",
+          }}>
+            <div style={{ fontSize: "48px", marginBottom: "16px" }}>📭</div>
+            <h3 style={{
+              fontFamily: "Rajdhani, sans-serif",
+              fontSize: "22px", fontWeight: 700, color: "#fff", margin: "0 0 8px",
+            }}>
+              {ebooks.length === 0 ? "No E-Books Yet" : "No Results Found"}
+            </h3>
+            <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.4)", margin: "0 0 20px" }}>
+              {ebooks.length === 0
+                ? "E-books will appear here once published."
+                : "Try a different search term or filter."}
+            </p>
+            {isFiltering && (
+              <button
+                onClick={() => { setSearch(""); setActiveFilter("All"); }}
+                style={{
+                  padding: "10px 24px",
+                  background: "rgba(255,98,0,0.15)",
+                  border: "1px solid rgba(255,98,0,0.3)",
+                  borderRadius: "10px",
+                  color: "#FF8534", fontSize: "14px", fontWeight: 700,
+                  fontFamily: "Nunito, sans-serif", cursor: "pointer",
+                }}
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        )}
 
-        {/* Highlights grid */}
-        <ul className="eb-highlights">
-          {highlights.map((h) => (
-            <li key={h} className="eb-highlight-item">
-              <span className="eb-check">✓</span>
-              {h}
-            </li>
-          ))}
-        </ul>
+        {/* ── Content ── */}
+        {!loading && filteredEbooks.length > 0 && (
+          <>
+            {/* Featured hero */}
+            {heroEbook && (
+              <div style={{ marginBottom: "56px" }}>
+                <SectionLabel text="Featured" />
+                <Link href={`/ebooks/${heroEbook.slug}`} style={{ textDecoration: "none" }}>
+                  <FeaturedHeroCard ebook={heroEbook} />
+                </Link>
+              </div>
+            )}
 
-        {/* Tagline */}
-        <p className="eb-tagline">&ldquo;{ebook.tagline}&rdquo;</p>
+            {/* Grid heading */}
+            <SectionLabel
+              text={isFiltering
+                ? `${filteredEbooks.length} Result${filteredEbooks.length !== 1 ? "s" : ""}${activeFilter !== "All" ? ` · ${activeFilter}` : ""}${search ? ` · "${search}"` : ""}`
+                : `All E-Books (${filteredEbooks.length})`}
+            />
 
-        {/* CTAs */}
-        <div className="eb-cta-row">
-          <Link href={`/ebooks/${ebook.slug}`} className="eb-btn-know">
-            Know More →
-          </Link>
-          <a
-            href={ebook.previewLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="eb-btn-preview"
-          >
-            👁 Free Preview
-          </a>
-        </div>
-
-        {/* Price / validity */}
-        <div className="eb-info-row">
-          <span className="eb-price">💰 {ebook.priceDisplay}</span>
-          <span className="eb-info-sep" />
-          <span className="eb-validity">📆 {ebook.validity}</span>
-        </div>
-
+            {/* Grid */}
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+              gap: "24px",
+            }}>
+              {filteredEbooks.map((ebook) => (
+                <EbookCard key={ebook.id} ebook={ebook} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   COMING SOON CARD
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-function ComingSoonCard() {
+function SectionLabel({ text }: { text: string }) {
   return (
-    <div className="eb-coming-soon">
-      <div
-        style={{
-          width: "56px", height: "56px", borderRadius: "50%",
-          background: "rgba(255,255,255,0.05)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: "26px",
-        }}
-      >
-        📖
-      </div>
-      <p
-        style={{
-          fontFamily: "Rajdhani, sans-serif",
-          fontSize: "22px", fontWeight: 700,
-          color: "rgba(255,255,255,0.3)", margin: 0,
-        }}
-      >
-        More E-Books Coming Soon
-      </p>
-      <p
-        style={{
-          fontFamily: "Nunito, sans-serif",
-          fontSize: "14px", color: "rgba(255,255,255,0.18)",
-          margin: 0, maxWidth: "260px", lineHeight: 1.6,
-        }}
-      >
-        ITI, B.Tech &amp; Surveyor level revision guides in the works
-      </p>
+    <div style={{
+      display: "flex", alignItems: "center", gap: "10px",
+      marginBottom: "20px",
+    }}>
+      <span style={{
+        width: "4px", height: "18px",
+        background: "linear-gradient(180deg, #FF6200, #FF8534)",
+        borderRadius: "2px", display: "inline-block", flexShrink: 0,
+      }} />
+      <span style={{
+        fontSize: "12px", fontWeight: 700,
+        color: "rgba(255,255,255,0.5)",
+        fontFamily: "Rajdhani, sans-serif",
+        letterSpacing: "0.1em", textTransform: "uppercase",
+      }}>
+        {text}
+      </span>
     </div>
+  );
+}
+
+function FeaturedHeroCard({ ebook }: { ebook: Ebook }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <>
+      <style>{`
+        .featured-hero { display: grid; grid-template-columns: 260px 1fr; }
+        @media (max-width: 680px) { .featured-hero { grid-template-columns: 1fr; } }
+      `}</style>
+      <div
+        className="featured-hero"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          background: hovered ? "rgba(255,98,0,0.06)" : "rgba(255,255,255,0.03)",
+          border: `1px solid ${hovered ? "rgba(255,98,0,0.35)" : "rgba(255,255,255,0.1)"}`,
+          borderRadius: "24px",
+          overflow: "hidden",
+          transition: "all 0.3s ease",
+          boxShadow: hovered
+            ? "0 24px 80px rgba(255,98,0,0.18), 0 8px 32px rgba(0,0,0,0.4)"
+            : "0 8px 40px rgba(0,0,0,0.3)",
+        }}
+      >
+        {/* Cover */}
+        <div style={{
+          position: "relative",
+          background: "linear-gradient(135deg, #0B1E3D, #04152d)",
+          minHeight: "300px",
+          overflow: "hidden",
+        }}>
+          {ebook.coverImage ? (
+            <Image
+              src={ebook.coverImage}
+              alt={ebook.title}
+              fill
+              sizes="260px"
+              style={{ objectFit: "cover" }}
+            />
+          ) : (
+            <div style={{
+              position: "absolute", inset: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: "linear-gradient(135deg, #0B1E3D, #162E5C)",
+            }}>
+              <span style={{ fontSize: "72px" }}>📖</span>
+            </div>
+          )}
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(90deg, transparent 50%, rgba(2,8,23,0.4))",
+          }} />
+        </div>
+
+        {/* Info */}
+        <div style={{
+          padding: "32px 36px",
+          display: "flex", flexDirection: "column", gap: "14px",
+          justifyContent: "center",
+        }}>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <span style={{
+              fontSize: "11px", fontWeight: 700, padding: "4px 12px",
+              borderRadius: "20px",
+              background: "rgba(255,98,0,0.15)",
+              border: "1px solid rgba(255,98,0,0.3)",
+              color: "#FF8534",
+              fontFamily: "Rajdhani, sans-serif", letterSpacing: "0.06em",
+              textTransform: "uppercase",
+            }}>
+              ⭐ Featured
+            </span>
+            <span style={{
+              fontSize: "11px", fontWeight: 700, padding: "4px 12px",
+              borderRadius: "20px",
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "rgba(255,255,255,0.7)",
+              fontFamily: "Rajdhani, sans-serif", letterSpacing: "0.06em",
+              textTransform: "uppercase",
+            }}>
+              {ebook.level}
+            </span>
+          </div>
+
+          <div>
+            <h2 style={{
+              fontFamily: "Rajdhani, sans-serif",
+              fontSize: "clamp(20px, 3vw, 28px)",
+              fontWeight: 700, color: "#fff",
+              margin: "0 0 5px", lineHeight: 1.2,
+            }}>
+              {ebook.title}
+            </h2>
+            <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)", margin: 0 }}>
+              {ebook.exam}
+            </p>
+          </div>
+
+          {ebook.description && (
+            <p style={{
+              fontSize: "14px", color: "rgba(255,255,255,0.6)",
+              margin: 0, lineHeight: 1.6,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}>
+              {ebook.description}
+            </p>
+          )}
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
+            {ebook.features.slice(0, 4).map((f, i) => (
+              <span key={i} style={{
+                fontSize: "11px", color: "rgba(255,184,0,0.9)",
+                background: "rgba(255,184,0,0.08)",
+                border: "1px solid rgba(255,184,0,0.18)",
+                padding: "3px 10px", borderRadius: "20px",
+                fontWeight: 600, fontFamily: "Nunito, sans-serif",
+              }}>
+                ✓ {f}
+              </span>
+            ))}
+          </div>
+
+          <div style={{
+            display: "flex", alignItems: "center",
+            justifyContent: "space-between", flexWrap: "wrap", gap: "12px",
+            paddingTop: "4px",
+          }}>
+            <div>
+              <span style={{
+                fontFamily: "Rajdhani, sans-serif",
+                fontSize: "28px", fontWeight: 700, color: "#FF8534",
+              }}>
+                ₹{ebook.price.toLocaleString("en-IN")}
+              </span>
+              {ebook.validityDate && (
+                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>
+                  Valid till {ebook.validityDate}
+                </div>
+              )}
+            </div>
+            <div style={{ display: "flex", gap: "10px" }}>
+              {ebook.previewUrl && (
+                <a
+                  href={ebook.previewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    padding: "10px 18px",
+                    background: "rgba(255,255,255,0.08)",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    borderRadius: "12px",
+                    color: "rgba(255,255,255,0.8)",
+                    fontSize: "13px", fontWeight: 700,
+                    textDecoration: "none",
+                    fontFamily: "Nunito, sans-serif",
+                  }}
+                >
+                  Free Preview
+                </a>
+              )}
+              <span style={{
+                padding: "10px 22px",
+                background: "linear-gradient(135deg, #FF6200, #FF8534)",
+                borderRadius: "12px", color: "#fff",
+                fontSize: "13px", fontWeight: 700,
+                fontFamily: "Nunito, sans-serif",
+                boxShadow: "0 4px 20px rgba(255,98,0,0.35)",
+                whiteSpace: "nowrap",
+              }}>
+                View Details →
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

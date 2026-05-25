@@ -14,6 +14,7 @@ import TickerSection from "@/components/sections/TickerSection";
 import AppDownloadSection from "@/components/sections/AppDownloadSection";
 import BlogSection from "@/components/sections/BlogSection";
 import ExploreCivilezy from "@/components/sections/ExploreCivilezy";
+import FeaturedEbooks from "@/components/sections/FeaturedEbooks";
 
 export default function Home() {
   return (
@@ -29,6 +30,7 @@ export default function Home() {
       <ComparisonSection />
       <TestimonialsSection />
       {/* <DepartmentSection /> */}
+      <FeaturedEbooks />
       <BlogSection />
       <ExploreCivilezy />
       <FinalCTASection />

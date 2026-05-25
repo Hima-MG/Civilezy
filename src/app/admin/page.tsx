@@ -38,6 +38,17 @@ const CARDS = [
     hoverBorder: "rgba(52,211,153,0.45)",
     action:  "Manage Questions →",
   },
+  {
+    href:    "/admin/ebooks",
+    icon:    "📖",
+    title:   "E-Book Manager",
+    desc:    "Add, edit, publish, and feature e-books in the marketplace. Manage cover images, pricing, modules and more.",
+    accent:  "#a78bfa",
+    accentBg:"rgba(167,139,250,0.10)",
+    border:  "rgba(167,139,250,0.22)",
+    hoverBorder: "rgba(167,139,250,0.45)",
+    action:  "Manage E-Books →",
+  },
 ] as const;
 
 export default function AdminHomePage() {

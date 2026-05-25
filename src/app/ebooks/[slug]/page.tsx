@@ -1,38 +1,34 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { EBOOKS, getEbookBySlug } from "@/data/ebookData";
-import EbookDetailPage from "@/components/ebooks/EbookDetailPage";
+export const dynamic = "force-dynamic";
 
-export function generateStaticParams() {
-  return EBOOKS.map((e) => ({ slug: e.slug }));
-}
+import type { Metadata } from "next";
+import EbookDetailPage from "@/components/ebooks/EbookDetailPage";
 
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const ebook = getEbookBySlug(params.slug);
-  if (!ebook) return {};
+  const { slug } = await params;
+  const title = slug
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
   return {
-    title: `${ebook.title} – ${ebook.subtitle}`,
-    description: `${ebook.title} for ${ebook.subtitle}. ${ebook.level} | ${ebook.features.slice(0, 3).join(", ")} | ${ebook.priceDisplay} | ${ebook.validity}`,
+    title: `${title} – E-Book | CivilEzy`,
+    description: `Kerala PSC Civil Engineering Quick Revision E-Book. Syllabus-based content for ${title}.`,
     openGraph: {
-      title: `${ebook.title} – ${ebook.subtitle}`,
-      description: `Kerala PSC quick revision guide for ${ebook.subtitle}. Covers ${ebook.modules.length} modules and includes 20 model exams.`,
-      url: `https://civilezy.in/ebooks/${ebook.slug}`,
+      title: `${title} – E-Book | CivilEzy`,
+      url: `https://civilezy.in/ebooks/${slug}`,
       siteName: "CivilEzy",
     },
   };
 }
 
-export default function EbookDetailRoute({
+export default async function EbookDetailRoute({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const ebook = getEbookBySlug(params.slug);
-  if (!ebook) notFound();
-
-  return <EbookDetailPage ebook={ebook} />;
+  const { slug } = await params;
+  return <EbookDetailPage slug={slug} />;
 }
