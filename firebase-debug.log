@@ -1,0 +1,41 @@
+[debug] [2026-05-25T08:22:03.679Z] ----------------------------------------------------------------------
+[debug] [2026-05-25T08:22:03.683Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\Hima Girish\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only firestore:rules
+[debug] [2026-05-25T08:22:03.683Z] CLI Version:   15.17.0
+[debug] [2026-05-25T08:22:03.684Z] Platform:      win32
+[debug] [2026-05-25T08:22:03.684Z] Node Version:  v24.15.0
+[debug] [2026-05-25T08:22:03.684Z] Time:          Mon May 25 2026 13:52:03 GMT+0530 (India Standard Time)
+[debug] [2026-05-25T08:22:03.684Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-05-25T08:22:05.891Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-05-25T08:22:05.892Z] > authorizing via signed-in user (himaammu656@gmail.com)
+[debug] [2026-05-25T08:22:05.892Z] [iam] checking project skilllink-6b1ad for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]
+[debug] [2026-05-25T08:22:05.893Z] Checked if tokens are valid: true, expires at: 1779700808747
+[debug] [2026-05-25T08:22:05.894Z] Checked if tokens are valid: true, expires at: 1779700808747
+[debug] [2026-05-25T08:22:05.895Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/skilllink-6b1ad:testIamPermissions [none]
+[debug] [2026-05-25T08:22:05.895Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/skilllink-6b1ad:testIamPermissions  x-goog-user-project=skilllink-6b1ad
+[debug] [2026-05-25T08:22:05.895Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/skilllink-6b1ad:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[debug] [2026-05-25T08:22:07.233Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/skilllink-6b1ad:testIamPermissions 200
+[debug] [2026-05-25T08:22:07.233Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/skilllink-6b1ad:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[info] 
+[info] === Deploying to 'skilllink-6b1ad'...
+[info] 
+[info] i  deploying firestore 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[debug] [2026-05-25T08:22:07.239Z] Checked if tokens are valid: true, expires at: 1779700808747
+[debug] [2026-05-25T08:22:07.239Z] Checked if tokens are valid: true, expires at: 1779700808747
+[debug] [2026-05-25T08:22:07.239Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/skilllink-6b1ad/databases/(default) [none]
+[debug] [2026-05-25T08:22:07.974Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/skilllink-6b1ad/databases/(default) 200
+[debug] [2026-05-25T08:22:07.974Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/skilllink-6b1ad/databases/(default) {"name":"projects/skilllink-6b1ad/databases/(default)","uid":"696f19c7-0423-49d1-9436-195d89554586","createTime":"2025-11-13T13:55:13.120264Z","updateTime":"2025-11-13T13:55:13.120264Z","locationId":"nam5","type":"FIRESTORE_NATIVE","concurrencyMode":"PESSIMISTIC","versionRetentionPeriod":"3600s","earliestVersionTime":"2026-05-25T07:22:08.239761Z","appEngineIntegrationMode":"DISABLED","keyPrefix":"s","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_DISABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"STANDARD","freeTier":true,"realtimeUpdatesMode":"REALTIME_UPDATES_MODE_ENABLED","etag":"IMPkupiB1JQDMNSm9La55pID"}
+[info] i  firestore: reading indexes from firestore.indexes.json... 
+[info] i  cloud.firestore: checking firestore.rules for compilation errors... 
+[debug] [2026-05-25T08:22:07.978Z] Checked if tokens are valid: true, expires at: 1779700808747
+[debug] [2026-05-25T08:22:07.978Z] Checked if tokens are valid: true, expires at: 1779700808747
+[debug] [2026-05-25T08:22:07.978Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/skilllink-6b1ad:test [none]
+[debug] [2026-05-25T08:22:07.978Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/skilllink-6b1ad:test [omitted]
+[debug] [2026-05-25T08:22:09.378Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/skilllink-6b1ad:test 200
+[debug] [2026-05-25T08:22:09.379Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/skilllink-6b1ad:test {}
+[info] +  cloud.firestore: rules file firestore.rules compiled successfully 
+[debug] [2026-05-25T08:22:09.382Z] Checked if tokens are valid: true, expires at: 1779700808747
+[debug] [2026-05-25T08:22:09.382Z] Checked if tokens are valid: true, expires at: 1779700808747
+[debug] [2026-05-25T08:22:09.382Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/skilllink-6b1ad/releases pageSize=10&pageToken=

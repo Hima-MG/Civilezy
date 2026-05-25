@@ -2,63 +2,130 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Support tickets ────────────────────────────────────────────────────────
-    // All reads/writes from the student-facing app go via API routes (Admin SDK),
-    // which bypasses these rules entirely.
-    // Direct client-SDK access is restricted here as a defence-in-depth measure.
-    match /support_tickets/{docId} {
-      // Authenticated student can read only their own ticket
-      allow read: if request.auth != null
-                  && request.auth.uid == resource.data.studentUid;
+    // ==================================
+    // ADMINS
+    // ==================================
+    function isAdmin() {
+      return request.auth != null &&
+        request.auth.token.admin == true;
+    }
 
-      // Creation is via /api/tickets/create (Admin SDK) — no client writes
-      allow create: if false;
-
-      // No client-side updates (admin panel uses Admin SDK via /api/tickets/update)
-      allow update: if false;
+    // ==================================
+    // USERS
+    // ==================================
+    match /users/{uid} {
+      allow read, create, update:
+        if request.auth != null &&
+        request.auth.uid == uid;
 
       allow delete: if false;
     }
 
-    // ── Ticket messages ────────────────────────────────────────────────────────
-    // Student replies go via /api/tickets/messages POST (Admin SDK).
-    // Admin replies also go via API. No direct client writes needed.
-    match /ticket_messages/{messageId} {
-      // Authenticated user can read messages — server enforces ticket ownership
-      allow read: if request.auth != null;
-
-      // Client-side creation is disabled; use the messages API route
-      allow create: if false;
-
-      allow update, delete: if false;
-    }
-
-    // ── Ticket counter (meta) ──────────────────────────────────────────────────
-    // Only Admin SDK (server-side); no client access
-    match /meta/{docId} {
-      allow read, write: if false;
-    }
-
-    // ── E-Books ────────────────────────────────────────────────────────────────
-    // Public listing/detail pages read directly via client SDK.
-    // Admin writes also use client SDK from the passphrase-protected admin panel.
-    // To harden: migrate addEbook/updateEbook/deleteEbook to API routes (Admin SDK)
-    // and change the write rule below to `if false`.
-    match /ebooks/{docId} {
-      // Ebooks are public marketing content — no sensitive data.
-      // Full reads allowed so the admin panel can list drafts too.
+    // ==================================
+    // SUPPORT TICKETS
+    // ==================================
+    match /support_tickets/{ticketId} {
       allow read: if true;
-
-      // Writes from the passphrase-protected admin panel (client SDK).
-      // To harden later: move mutations to API routes (Admin SDK) and
-      // set this to `if false`.
-      allow write: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if false;
     }
 
-    // ── User profiles ──────────────────────────────────────────────────────────
-    // Each user can read/write only their own profile
-    match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+    // ==================================
+    // TICKET MESSAGES
+    // ==================================
+    match /ticket_messages/{messageId} {
+      allow read, write: if isAdmin();
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ==================================
+    // TICKET EVENTS / TIMELINE
+    // ==================================
+    match /ticket_events/{eventId} {
+      allow read, write: if isAdmin();
+      allow read: if request.auth != null;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ==================================
+    // ANNOUNCEMENTS
+    // ==================================
+    match /announcements/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ==================================
+    // QUESTIONS
+    // ==================================
+    match /questions/{questionId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ==================================
+    // GAME REPORTS
+    // ==================================
+    match /game_arena_reports/{reportId} {
+      allow create: if true;
+      allow read: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ==================================
+    // LEADERBOARDS
+    // ==================================
+    match /leaderboard/{playerId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /leaderboard_daily/{playerId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /leaderboard_weekly/{playerId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /leaderboard_monthly/{playerId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // ==================================
+    // SYLLABUS LEADS
+    // ==================================
+    match /syllabus_leads/{leadId} {
+      allow create: if
+        request.resource.data.name is string &&
+        request.resource.data.phone is string &&
+        request.resource.data.phone.size() == 10 &&
+        request.resource.data.course is string;
+
+      allow read: if isAdmin();
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ==================================
+    // E-BOOKS
+    // ==================================
+    // Public reads: ebooks are marketing content, no PII.
+    // Open writes: the admin panel uses a passphrase (not Firebase Auth),
+    // so isAdmin() cannot be used here. Ebook content is non-sensitive.
+    match /ebooks/{docId} {
+      allow read: if true;
+      allow write: if true;
     }
 
   }
