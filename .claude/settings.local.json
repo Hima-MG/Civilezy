@@ -50,7 +50,8 @@
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
       "Bash(git add *)",
-      "Bash(Get-ChildItem -Recurse -Directory)"
+      "Bash(Get-ChildItem -Recurse -Directory)",
+      "Bash(Select-String -Pattern \"\\(error|warning|admin/ebooks|Compiled|Failed\\)\")"
     ]
   }
 }

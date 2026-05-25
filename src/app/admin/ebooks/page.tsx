@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import {
   getAllEbooks,
@@ -9,6 +9,7 @@ import {
   deleteEbook,
 } from "@/lib/ebooks";
 import type { Ebook, EbookInput } from "@/types/ebook";
+import CoverImageUpload from "@/components/admin/CoverImageUpload";
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
@@ -662,32 +663,15 @@ function EbookForm({
           />
         </label>
 
-        {/* Cover Image */}
-        <label style={lbl}>
-          <span style={lblText}>Cover Image URL</span>
-          <input
+        {/* Cover Image Upload */}
+        <div style={lbl}>
+          <span style={lblText}>Cover Image</span>
+          <CoverImageUpload
             value={form.coverImage}
-            onChange={(e) => set("coverImage", e.target.value)}
-            placeholder="https://… (paste image URL)"
-            style={inputStyle}
+            onChange={(url) => set("coverImage", url)}
+            slug={form.slug}
           />
-          {form.coverImage && (
-            <div style={{
-              marginTop: "8px", width: "80px", height: "106px",
-              borderRadius: "8px", overflow: "hidden",
-              border: "1px solid rgba(255,255,255,0.1)",
-              position: "relative",
-            }}>
-              <Image
-                src={form.coverImage}
-                alt="Cover preview"
-                fill
-                style={{ objectFit: "cover" }}
-                onError={() => set("coverImage", "")}
-              />
-            </div>
-          )}
-        </label>
+        </div>
 
         {/* Price + Validity */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
