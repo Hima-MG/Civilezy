@@ -2,7 +2,12 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import {
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
 import { storage } from "@/lib/firebase";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -27,35 +32,66 @@ type UploadStatus =
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface Props {
-  /** Current cover URL (empty string when none). Controlled by parent. */
   value: string;
-  /** Called with the Firebase Storage download URL after a successful upload. */
   onChange: (url: string) => void;
-  /** Used to derive the storage path: ebooks/covers/{slug}.{ext} */
   slug: string;
+  /** Called with true when upload starts, false when it finishes (success or error). */
+  onUploadStateChange?: (uploading: boolean) => void;
+  /** Called after the image is successfully deleted from Storage. */
+  onDeleted?: () => void;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Extract the Storage path from a Firebase download URL. */
+function storagePathFromUrl(url: string): string | null {
+  try {
+    const match = url.match(/\/o\/(.+?)(?:\?|$)/);
+    if (!match) return null;
+    return decodeURIComponent(match[1]);
+  } catch {
+    return null;
+  }
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function CoverImageUpload({ value, onChange, slug }: Props) {
+export default function CoverImageUpload({
+  value,
+  onChange,
+  slug,
+  onUploadStateChange,
+  onDeleted,
+}: Props) {
   const [status, setStatus] = useState<UploadStatus>({ tag: "idle" });
   const [dragActive, setDragActive] = useState(false);
-  // Tracks drag-enter depth so child hover doesn't flicker the indicator
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Tracks the exact Storage path so we can delete it later
+  const storagePathRef = useRef<string | null>(null);
   const dragDepth = useRef(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // When a parent edit loads an existing coverImage, reset status to idle
-  // so the preview is shown, not the drop zone.
+  // When an existing URL is loaded (edit mode), parse the path from it
   useEffect(() => {
-    if (value && status.tag === "idle") return; // nothing to reset
+    if (value && storagePathRef.current === null) {
+      storagePathRef.current = storagePathFromUrl(value);
+    }
+    if (!value) {
+      storagePathRef.current = null;
+    }
+  }, [value]);
+
+  // Clear error state when parent sets a new value
+  useEffect(() => {
     if (value && status.tag === "error") setStatus({ tag: "idle" });
   }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Core upload logic ──
+  // ── Upload ──
 
   const upload = useCallback(
     (file: File) => {
-      // Type validation
       if (!ALLOWED_MIME.has(file.type)) {
         setStatus({
           tag: "error",
@@ -63,8 +99,6 @@ export default function CoverImageUpload({ value, onChange, slug }: Props) {
         });
         return;
       }
-
-      // Size validation
       if (file.size > MAX_BYTES) {
         const mb = (file.size / 1024 / 1024).toFixed(1);
         setStatus({
@@ -76,17 +110,15 @@ export default function CoverImageUpload({ value, onChange, slug }: Props) {
 
       const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
       const safeslug = slug.trim() || `ebook-${Date.now()}`;
-      const storagePath = `ebooks/covers/${safeslug}.${ext}`;
+      const path = `ebooks/covers/${safeslug}.${ext}`;
       const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
 
-      setStatus({
-        tag: "uploading",
-        progress: 0,
-        fileName: file.name,
-        fileSizeMB,
-      });
+      storagePathRef.current = path;
+      setDeleteError(null);
+      setStatus({ tag: "uploading", progress: 0, fileName: file.name, fileSizeMB });
+      onUploadStateChange?.(true);
 
-      const task = uploadBytesResumable(ref(storage, storagePath), file, {
+      const task = uploadBytesResumable(ref(storage, path), file, {
         contentType: file.type,
       });
 
@@ -100,6 +132,7 @@ export default function CoverImageUpload({ value, onChange, slug }: Props) {
         },
         (err) => {
           console.error("[CoverImageUpload] upload error:", err);
+          onUploadStateChange?.(false);
           setStatus({
             tag: "error",
             message:
@@ -114,20 +147,61 @@ export default function CoverImageUpload({ value, onChange, slug }: Props) {
             onChange(url);
             setStatus({ tag: "done", fileName: file.name });
           } catch {
-            setStatus({ tag: "error", message: "Upload completed but URL retrieval failed." });
+            setStatus({
+              tag: "error",
+              message: "Upload completed but URL retrieval failed.",
+            });
+          } finally {
+            onUploadStateChange?.(false);
           }
         }
       );
     },
-    [slug, onChange]
+    [slug, onChange, onUploadStateChange]
   );
+
+  // ── Delete ──
+
+  const handleDelete = useCallback(async () => {
+    const path =
+      storagePathRef.current ??
+      (value ? storagePathFromUrl(value) : null);
+
+    setDeleting(true);
+    setDeleteError(null);
+
+    if (path) {
+      try {
+        await deleteObject(ref(storage, path));
+      } catch (err: unknown) {
+        const code = (err as { code?: string })?.code;
+        // object-not-found is fine — already gone, proceed with clearing
+        if (code !== "storage/object-not-found") {
+          console.error("[CoverImageUpload] delete error:", err);
+          setDeleteError(
+            code === "storage/unauthorized"
+              ? "Permission denied — cannot delete this image."
+              : "Failed to delete image from Storage. Try again."
+          );
+          setDeleting(false);
+          return;
+        }
+      }
+    }
+
+    storagePathRef.current = null;
+    onChange("");
+    onDeleted?.();
+    setStatus({ tag: "idle" });
+    setDeleting(false);
+  }, [value, onChange, onDeleted]);
 
   // ── Event handlers ──
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) upload(file);
-    e.target.value = ""; // reset so same file can be re-selected
+    e.target.value = "";
   };
 
   const handleDragEnter = (e: React.DragEvent) => {
@@ -143,7 +217,7 @@ export default function CoverImageUpload({ value, onChange, slug }: Props) {
   };
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault(); // required to allow drop
+    e.preventDefault();
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -158,11 +232,10 @@ export default function CoverImageUpload({ value, onChange, slug }: Props) {
 
   const handleReplace = () => {
     setStatus({ tag: "idle" });
-    // Small timeout so the input isn't clicked while React is re-rendering
     setTimeout(openPicker, 50);
   };
 
-  // ── Derived booleans ──
+  // ── Derived ──
 
   const isUploading = status.tag === "uploading";
   const hasImage = !!value && !isUploading;
@@ -172,7 +245,6 @@ export default function CoverImageUpload({ value, onChange, slug }: Props) {
 
   return (
     <div style={{ fontFamily: "Nunito, sans-serif" }}>
-      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -182,16 +254,43 @@ export default function CoverImageUpload({ value, onChange, slug }: Props) {
         aria-label="Upload cover image"
       />
 
-      {/* ── Preview state ── */}
+      {/* Delete error banner */}
+      {deleteError && (
+        <div
+          style={{
+            display: "flex", alignItems: "center", gap: "8px",
+            marginBottom: "8px", padding: "10px 14px",
+            background: "rgba(239,68,68,0.1)",
+            border: "1px solid rgba(239,68,68,0.25)",
+            borderRadius: "10px", color: "#f87171", fontSize: "13px",
+          }}
+        >
+          <span style={{ flexShrink: 0 }}>⚠️</span>
+          <span>{deleteError}</span>
+          <button
+            onClick={() => setDeleteError(null)}
+            style={{
+              marginLeft: "auto", background: "none", border: "none",
+              color: "#f87171", cursor: "pointer", fontSize: "16px", lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {/* Preview */}
       {hasImage && (
         <PreviewPanel
           url={value}
           fileName={status.tag === "done" ? status.fileName : undefined}
           onReplace={handleReplace}
+          onDelete={handleDelete}
+          deleting={deleting}
         />
       )}
 
-      {/* ── Upload progress ── */}
+      {/* Upload progress */}
       {isUploading && status.tag === "uploading" && (
         <ProgressPanel
           fileName={status.fileName}
@@ -200,25 +299,23 @@ export default function CoverImageUpload({ value, onChange, slug }: Props) {
         />
       )}
 
-      {/* ── Drop zone (idle + error) ── */}
+      {/* Drop zone */}
       {showDropZone && (
         <>
           {status.tag === "error" && (
-            <div style={{
-              display: "flex", alignItems: "center", gap: "8px",
-              marginBottom: "8px",
-              padding: "10px 14px",
-              background: "rgba(239,68,68,0.1)",
-              border: "1px solid rgba(239,68,68,0.25)",
-              borderRadius: "10px",
-              color: "#f87171",
-              fontSize: "13px",
-            }}>
+            <div
+              style={{
+                display: "flex", alignItems: "center", gap: "8px",
+                marginBottom: "8px", padding: "10px 14px",
+                background: "rgba(239,68,68,0.1)",
+                border: "1px solid rgba(239,68,68,0.25)",
+                borderRadius: "10px", color: "#f87171", fontSize: "13px",
+              }}
+            >
               <span style={{ flexShrink: 0 }}>⚠️</span>
               <span>{status.message}</span>
             </div>
           )}
-
           <DropZone
             dragActive={dragActive}
             hasError={status.tag === "error"}
@@ -275,68 +372,64 @@ function DropZone({
       onDragOver={onDragOver}
       onDrop={onDrop}
       onClick={onClick}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick(); }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onClick();
+      }}
       style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "10px",
-        padding: "32px 24px",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        gap: "10px", padding: "32px 24px",
         border: `2px dashed ${borderColor}`,
-        borderRadius: "14px",
-        background: bg,
-        cursor: "pointer",
-        transition: "all 0.2s ease",
-        userSelect: "none",
-        outline: "none",
+        borderRadius: "14px", background: bg,
+        cursor: "pointer", transition: "all 0.2s ease",
+        userSelect: "none", outline: "none",
       }}
     >
-      {/* Icon */}
-      <div style={{
-        width: "52px", height: "52px",
-        borderRadius: "14px",
-        background: dragActive
-          ? "rgba(255,98,0,0.2)"
-          : "rgba(255,255,255,0.06)",
-        border: `1px solid ${dragActive ? "rgba(255,98,0,0.35)" : "rgba(255,255,255,0.1)"}`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: "22px",
-        transition: "all 0.2s",
-        transform: dragActive ? "scale(1.1)" : "scale(1)",
-      }}>
+      <div
+        style={{
+          width: "52px", height: "52px", borderRadius: "14px",
+          background: dragActive ? "rgba(255,98,0,0.2)" : "rgba(255,255,255,0.06)",
+          border: `1px solid ${dragActive ? "rgba(255,98,0,0.35)" : "rgba(255,255,255,0.1)"}`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: "22px", transition: "all 0.2s",
+          transform: dragActive ? "scale(1.1)" : "scale(1)",
+        }}
+      >
         {dragActive ? "⬇️" : "🖼️"}
       </div>
 
-      {/* Text */}
       <div style={{ textAlign: "center" }}>
-        <div style={{
-          fontSize: "14px", fontWeight: 700,
-          color: dragActive ? "#FF8534" : "rgba(255,255,255,0.75)",
-          marginBottom: "4px",
-          transition: "color 0.2s",
-        }}>
+        <div
+          style={{
+            fontSize: "14px", fontWeight: 700, marginBottom: "4px",
+            color: dragActive ? "#FF8534" : "rgba(255,255,255,0.75)",
+            transition: "color 0.2s",
+          }}
+        >
           {dragActive ? "Drop to upload" : "Drag & drop your cover image"}
         </div>
         <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)" }}>
           or{" "}
-          <span style={{
-            color: "#FF8534", fontWeight: 700,
-            textDecoration: "underline", textUnderlineOffset: "2px",
-          }}>
+          <span
+            style={{
+              color: "#FF8534", fontWeight: 700,
+              textDecoration: "underline", textUnderlineOffset: "2px",
+            }}
+          >
             browse files
           </span>
         </div>
       </div>
 
-      {/* Format hint */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: "6px",
-        padding: "4px 12px",
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: "20px",
-      }}>
+      <div
+        style={{
+          display: "flex", alignItems: "center", gap: "6px",
+          padding: "4px 12px",
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: "20px",
+        }}
+      >
         <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)" }}>
           JPG · PNG · WebP
         </span>
@@ -359,75 +452,81 @@ function ProgressPanel({
   progress: number;
 }) {
   return (
-    <div style={{
-      padding: "20px",
-      background: "rgba(255,255,255,0.03)",
-      border: "1px solid rgba(255,98,0,0.2)",
-      borderRadius: "14px",
-    }}>
-      {/* File info row */}
-      <div style={{
-        display: "flex", alignItems: "center",
-        gap: "12px", marginBottom: "16px",
-      }}>
-        {/* Spinning icon */}
-        <div style={{
-          width: "40px", height: "40px", flexShrink: 0,
-          borderRadius: "10px",
-          background: "rgba(255,98,0,0.12)",
-          border: "1px solid rgba(255,98,0,0.2)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: "18px",
-        }}>
+    <div
+      style={{
+        padding: "20px",
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(255,98,0,0.2)",
+        borderRadius: "14px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex", alignItems: "center",
+          gap: "12px", marginBottom: "16px",
+        }}
+      >
+        <div
+          style={{
+            width: "40px", height: "40px", flexShrink: 0,
+            borderRadius: "10px",
+            background: "rgba(255,98,0,0.12)",
+            border: "1px solid rgba(255,98,0,0.2)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "18px",
+          }}
+        >
           🖼️
         </div>
-
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{
-            fontSize: "13px", fontWeight: 700, color: "#fff",
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          }}>
+          <div
+            style={{
+              fontSize: "13px", fontWeight: 700, color: "#fff",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            }}
+          >
             {fileName}
           </div>
           <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>
             {fileSizeMB} MB · Uploading…
           </div>
         </div>
-
-        <div style={{
-          fontFamily: "Rajdhani, sans-serif",
-          fontSize: "18px", fontWeight: 700,
-          color: "#FF8534", flexShrink: 0,
-        }}>
+        <div
+          style={{
+            fontFamily: "Rajdhani, sans-serif",
+            fontSize: "18px", fontWeight: 700,
+            color: "#FF8534", flexShrink: 0,
+          }}
+        >
           {progress}%
         </div>
       </div>
 
-      {/* Progress bar track */}
-      <div style={{
-        height: "6px",
-        background: "rgba(255,255,255,0.08)",
-        borderRadius: "3px",
-        overflow: "hidden",
-        position: "relative",
-      }}>
-        {/* Fill */}
-        <div style={{
-          position: "absolute", left: 0, top: 0, bottom: 0,
-          width: `${progress}%`,
-          background: "linear-gradient(90deg, #FF6200, #FF8534)",
-          borderRadius: "3px",
-          transition: "width 0.15s ease",
-          boxShadow: "0 0 8px rgba(255,98,0,0.5)",
-        }} />
-
-        {/* Shimmer overlay */}
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)",
-          backgroundSize: "200% 100%",
-          animation: "shimmer 1.4s linear infinite",
-        }} />
+      <div
+        style={{
+          height: "6px",
+          background: "rgba(255,255,255,0.08)",
+          borderRadius: "3px", overflow: "hidden", position: "relative",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute", left: 0, top: 0, bottom: 0,
+            width: `${progress}%`,
+            background: "linear-gradient(90deg, #FF6200, #FF8534)",
+            borderRadius: "3px", transition: "width 0.15s ease",
+            boxShadow: "0 0 8px rgba(255,98,0,0.5)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute", inset: 0,
+            background:
+              "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%)",
+            backgroundSize: "200% 100%",
+            animation: "shimmer 1.4s linear infinite",
+          }}
+        />
       </div>
 
       <style>{`
@@ -444,31 +543,37 @@ function PreviewPanel({
   url,
   fileName,
   onReplace,
+  onDelete,
+  deleting,
 }: {
   url: string;
   fileName?: string;
   onReplace: () => void;
+  onDelete: () => void;
+  deleting: boolean;
 }) {
   const [imgErr, setImgErr] = useState(false);
 
   return (
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      gap: "16px",
-      padding: "16px",
-      background: "rgba(255,255,255,0.03)",
-      border: "1px solid rgba(34,197,94,0.2)",
-      borderRadius: "14px",
-    }}>
+    <div
+      style={{
+        display: "flex", alignItems: "flex-start",
+        gap: "16px", padding: "16px",
+        background: "rgba(255,255,255,0.03)",
+        border: "1px solid rgba(34,197,94,0.2)",
+        borderRadius: "14px",
+      }}
+    >
       {/* Thumbnail */}
-      <div style={{
-        width: "72px", height: "96px",
-        flexShrink: 0, borderRadius: "8px",
-        overflow: "hidden", position: "relative",
-        background: "rgba(255,255,255,0.06)",
-        border: "1px solid rgba(255,255,255,0.1)",
-      }}>
+      <div
+        style={{
+          width: "72px", height: "96px",
+          flexShrink: 0, borderRadius: "8px",
+          overflow: "hidden", position: "relative",
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}
+      >
         {!imgErr ? (
           <Image
             src={url}
@@ -479,11 +584,13 @@ function PreviewPanel({
             onError={() => setImgErr(true)}
           />
         ) : (
-          <div style={{
-            width: "100%", height: "100%",
-            display: "flex", alignItems: "center",
-            justifyContent: "center", fontSize: "24px",
-          }}>
+          <div
+            style={{
+              width: "100%", height: "100%",
+              display: "flex", alignItems: "center",
+              justifyContent: "center", fontSize: "24px",
+            }}
+          >
             📖
           </div>
         )}
@@ -491,57 +598,88 @@ function PreviewPanel({
 
       {/* Info + actions */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        {/* Status badge */}
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: "5px",
-          padding: "3px 10px",
-          background: "rgba(34,197,94,0.12)",
-          border: "1px solid rgba(34,197,94,0.25)",
-          borderRadius: "20px",
-          marginBottom: "8px",
-        }}>
+        {/* Success badge */}
+        <div
+          style={{
+            display: "inline-flex", alignItems: "center", gap: "5px",
+            padding: "3px 10px",
+            background: "rgba(34,197,94,0.12)",
+            border: "1px solid rgba(34,197,94,0.25)",
+            borderRadius: "20px", marginBottom: "8px",
+          }}
+        >
           <span style={{ fontSize: "10px" }}>✓</span>
-          <span style={{
-            fontSize: "10px", fontWeight: 700,
-            color: "#22c55e",
-            fontFamily: "Rajdhani, sans-serif",
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-          }}>
+          <span
+            style={{
+              fontSize: "10px", fontWeight: 700, color: "#22c55e",
+              fontFamily: "Rajdhani, sans-serif",
+              letterSpacing: "0.06em", textTransform: "uppercase",
+            }}
+          >
             Image Uploaded
           </span>
         </div>
 
-        {/* File name if known */}
+        {/* File name */}
         {fileName && (
-          <div style={{
-            fontSize: "12px", color: "rgba(255,255,255,0.5)",
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            marginBottom: "12px",
-          }}>
+          <div
+            style={{
+              fontSize: "12px", color: "rgba(255,255,255,0.5)",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              marginBottom: "12px",
+            }}
+          >
             {fileName}
           </div>
         )}
 
-        {/* Replace button */}
-        <button
-          onClick={onReplace}
-          type="button"
-          style={{
-            display: "inline-flex", alignItems: "center", gap: "6px",
-            padding: "7px 14px",
-            background: "rgba(255,255,255,0.07)",
-            border: "1px solid rgba(255,255,255,0.14)",
-            borderRadius: "8px",
-            color: "rgba(255,255,255,0.7)",
-            fontSize: "12px", fontWeight: 700,
-            fontFamily: "Nunito, sans-serif",
-            cursor: "pointer",
-            transition: "all 0.2s",
-          }}
-        >
-          <span style={{ fontSize: "11px" }}>🔄</span> Replace Image
-        </button>
+        {/* Action buttons */}
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          {/* Replace */}
+          <button
+            type="button"
+            onClick={onReplace}
+            disabled={deleting}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "6px",
+              padding: "7px 14px",
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.14)",
+              borderRadius: "8px",
+              color: deleting ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.7)",
+              fontSize: "12px", fontWeight: 700,
+              fontFamily: "Nunito, sans-serif",
+              cursor: deleting ? "not-allowed" : "pointer",
+              transition: "all 0.2s",
+            }}
+          >
+            <span style={{ fontSize: "11px" }}>🔄</span> Replace
+          </button>
+
+          {/* Delete */}
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={deleting}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "6px",
+              padding: "7px 14px",
+              background: deleting
+                ? "rgba(239,68,68,0.05)"
+                : "rgba(239,68,68,0.1)",
+              border: "1px solid rgba(239,68,68,0.3)",
+              borderRadius: "8px",
+              color: deleting ? "rgba(239,68,68,0.4)" : "#f87171",
+              fontSize: "12px", fontWeight: 700,
+              fontFamily: "Nunito, sans-serif",
+              cursor: deleting ? "not-allowed" : "pointer",
+              transition: "all 0.2s",
+            }}
+          >
+            <span style={{ fontSize: "11px" }}>🗑️</span>
+            {deleting ? "Deleting…" : "Delete"}
+          </button>
+        </div>
       </div>
     </div>
   );

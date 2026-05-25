@@ -107,6 +107,7 @@ export default function AdminEbooksPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>({ ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [slugManual, setSlugManual] = useState(false);
@@ -249,6 +250,17 @@ export default function AdminEbooksPage() {
       flash("❌ Delete failed");
     }
   };
+
+  // Called after CoverImageUpload successfully removes the file from Storage
+  const handleCoverDeleted = useCallback(async () => {
+    if (!editingId) return;
+    try {
+      await updateEbook(editingId, { coverImage: "" });
+      flash("🗑️ Cover image removed");
+    } catch {
+      flash("❌ Failed to clear cover in Firestore");
+    }
+  }, [editingId]);
 
   const resetForm = () => {
     setForm({ ...EMPTY_FORM });
@@ -394,6 +406,9 @@ export default function AdminEbooksPage() {
           form={form}
           set={set}
           saving={saving}
+          uploadingCover={uploadingCover}
+          onCoverUploadStateChange={setUploadingCover}
+          onCoverDeleted={handleCoverDeleted}
           editingId={editingId}
           slugManual={slugManual}
           setSlugManual={setSlugManual}
@@ -579,12 +594,16 @@ function EbookRow({
 // ── Form ──────────────────────────────────────────────────────────────────────
 
 function EbookForm({
-  form, set, saving, editingId, slugManual, setSlugManual,
+  form, set, saving, uploadingCover, onCoverUploadStateChange, onCoverDeleted,
+  editingId, slugManual, setSlugManual,
   addTag, removeTag, onSave, onCancel,
 }: {
   form: FormState;
   set: (key: keyof FormState, val: string | boolean | string[]) => void;
   saving: boolean;
+  uploadingCover: boolean;
+  onCoverUploadStateChange: (uploading: boolean) => void;
+  onCoverDeleted: () => void;
   editingId: string | null;
   slugManual: boolean;
   setSlugManual: (v: boolean) => void;
@@ -682,6 +701,8 @@ function EbookForm({
             value={form.coverImage}
             onChange={(url) => set("coverImage", url)}
             slug={form.slug}
+            onUploadStateChange={onCoverUploadStateChange}
+            onDeleted={onCoverDeleted}
           />
         </div>
 
@@ -778,15 +799,20 @@ function EbookForm({
         </div>
 
         {/* Buttons */}
-        <div style={{ display: "flex", gap: "10px", paddingTop: "4px" }}>
+        <div style={{ display: "flex", gap: "10px", paddingTop: "4px", flexWrap: "wrap", alignItems: "center" }}>
           <button
             onClick={onSave}
-            disabled={saving}
-            style={{ ...btn.primary, opacity: saving ? 0.6 : 1 }}
+            disabled={saving || uploadingCover}
+            style={{ ...btn.primary, opacity: (saving || uploadingCover) ? 0.55 : 1, cursor: (saving || uploadingCover) ? "not-allowed" : "pointer" }}
           >
-            {saving ? "Saving…" : editingId ? "Update E-Book" : "Publish E-Book"}
+            {saving ? "Saving…" : uploadingCover ? "⏳ Uploading image…" : editingId ? "Update E-Book" : "Publish E-Book"}
           </button>
           <button onClick={onCancel} style={btn.secondary}>Cancel</button>
+          {uploadingCover && (
+            <span style={{ fontSize: "12px", color: "rgba(255,184,0,0.8)", fontWeight: 600 }}>
+              Wait for image upload to finish before saving.
+            </span>
+          )}
         </div>
       </div>
     </div>
