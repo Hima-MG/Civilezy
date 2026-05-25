@@ -304,6 +304,7 @@ function SectionLabel({ text }: { text: string }) {
 
 function FeaturedHeroCard({ ebook }: { ebook: Ebook }) {
   const [hovered, setHovered] = useState(false);
+  const [coverErr, setCoverErr] = useState(false);
 
   return (
     <>
@@ -333,13 +334,17 @@ function FeaturedHeroCard({ ebook }: { ebook: Ebook }) {
           minHeight: "300px",
           overflow: "hidden",
         }}>
-          {ebook.coverImage ? (
+          {ebook.coverImage && !coverErr ? (
             <Image
               src={ebook.coverImage}
               alt={ebook.title}
               fill
               sizes="260px"
               style={{ objectFit: "cover" }}
+              onError={() => {
+                console.warn(`[EbooksListing] Featured cover failed to load for "${ebook.title}":`, ebook.coverImage);
+                setCoverErr(true);
+              }}
             />
           ) : (
             <div style={{

@@ -11,6 +11,7 @@ interface Props {
 
 export default function EbookCard({ ebook }: Props) {
   const [hovered, setHovered] = useState(false);
+  const [imgErr, setImgErr] = useState(false);
   const displayFeatures = ebook.features.slice(0, 3);
 
   return (
@@ -41,13 +42,17 @@ export default function EbookCard({ ebook }: Props) {
         overflow: "hidden",
         flexShrink: 0,
       }}>
-        {ebook.coverImage ? (
+        {ebook.coverImage && !imgErr ? (
           <Image
             src={ebook.coverImage}
             alt={ebook.title}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             style={{ objectFit: "cover", transition: "transform 0.4s ease" }}
+            onError={() => {
+              console.warn(`[EbookCard] Cover failed to load for "${ebook.title}":`, ebook.coverImage);
+              setImgErr(true);
+            }}
           />
         ) : (
           <div style={{

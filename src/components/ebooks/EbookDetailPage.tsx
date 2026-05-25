@@ -320,6 +320,8 @@ function EbookContent({ ebook }: { ebook: Ebook }) {
 // ── Hero section ──────────────────────────────────────────────────────────────
 
 function HeroSection({ ebook }: { ebook: Ebook }) {
+  const [coverErr, setCoverErr] = useState(false);
+
   return (
     <>
       <style>{`
@@ -340,7 +342,7 @@ function HeroSection({ ebook }: { ebook: Ebook }) {
             background: "linear-gradient(135deg, #0B1E3D, #04152d)",
             boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
           }}>
-            {ebook.coverImage ? (
+            {ebook.coverImage && !coverErr ? (
               <Image
                 src={ebook.coverImage}
                 alt={ebook.title}
@@ -348,6 +350,10 @@ function HeroSection({ ebook }: { ebook: Ebook }) {
                 sizes="300px"
                 style={{ objectFit: "cover" }}
                 priority
+                onError={() => {
+                  console.warn(`[EbookDetailPage] Cover failed to load for "${ebook.title}":`, ebook.coverImage);
+                  setCoverErr(true);
+                }}
               />
             ) : (
               <div style={{

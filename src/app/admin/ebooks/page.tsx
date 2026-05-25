@@ -463,6 +463,8 @@ function EbookRow({
   onToggleFeatured: () => void;
   onTogglePublished: () => void;
 }) {
+  const [thumbErr, setThumbErr] = useState(false);
+
   return (
     <div style={{
       background: "rgba(255,255,255,0.04)",
@@ -479,8 +481,18 @@ function EbookRow({
         background: "rgba(255,255,255,0.06)",
         flexShrink: 0, position: "relative",
       }}>
-        {ebook.coverImage ? (
-          <Image src={ebook.coverImage} alt={ebook.title} fill style={{ objectFit: "cover" }} />
+        {ebook.coverImage && !thumbErr ? (
+          <Image
+            src={ebook.coverImage}
+            alt={ebook.title}
+            fill
+            sizes="42px"
+            style={{ objectFit: "cover" }}
+            onError={() => {
+              console.warn(`[AdminEbookRow] Thumbnail failed for "${ebook.title}":`, ebook.coverImage);
+              setThumbErr(true);
+            }}
+          />
         ) : (
           <div style={{
             width: "100%", height: "100%",
