@@ -160,11 +160,14 @@ export default function StudentTicketDetailPage() {
           resolvedAt: raw.resolvedAt?.toDate?.()?.toISOString() ?? prev.resolvedAt,
           // ── Attachment URLs pushed by background upload ───────────────────
           // Use `!== undefined` (not `??`) so an explicit null clears a stale value
-          attachments:        raw.attachments        !== undefined ? (raw.attachments        as string[])        : prev.attachments,
-          screenshotUrl:      raw.screenshotUrl      !== undefined ? (raw.screenshotUrl      as string | null)   : prev.screenshotUrl,
-          voiceNoteUrl:       raw.voiceNoteUrl       !== undefined ? (raw.voiceNoteUrl       as string | null)   : prev.voiceNoteUrl,
-          voiceDuration:      raw.voiceDuration      !== undefined ? (raw.voiceDuration      as number | null)   : prev.voiceDuration,
-          screenRecordingUrl: raw.screenRecordingUrl !== undefined ? (raw.screenRecordingUrl as string | null)   : prev.screenRecordingUrl,
+          attachments:        raw.attachments        !== undefined ? (raw.attachments        as string[])                            : prev.attachments,
+          screenshotUrl:      raw.screenshotUrl      !== undefined ? (raw.screenshotUrl      as string | null)                      : prev.screenshotUrl,
+          voiceNotes:         raw.voiceNotes         !== undefined ? (raw.voiceNotes         as Array<{url: string; duration: number}>) : prev.voiceNotes,
+          screenRecordings:   raw.screenRecordings   !== undefined ? (raw.screenRecordings   as string[])                            : prev.screenRecordings,
+          // Legacy flat fields — backward compat for existing tickets
+          voiceNoteUrl:       raw.voiceNoteUrl       !== undefined ? (raw.voiceNoteUrl       as string | null)                      : prev.voiceNoteUrl,
+          voiceDuration:      raw.voiceDuration      !== undefined ? (raw.voiceDuration      as number | null)                      : prev.voiceDuration,
+          screenRecordingUrl: raw.screenRecordingUrl !== undefined ? (raw.screenRecordingUrl as string | null)                      : prev.screenRecordingUrl,
         };
       });
     }, (err) => {
@@ -787,8 +790,12 @@ function AttachmentsBlock({
     ...(!ticket.attachments?.length && ticket.screenshotUrl ? [ticket.screenshotUrl] : []),
   ];
 
-  const hasAudio = !!ticket.voiceNoteUrl;
-  const hasVideo = !!ticket.screenRecordingUrl;
+  // Support both new schema (voiceNotes[], screenRecordings[]) and legacy flat fields
+  const voiceUrl = ticket.voiceNotes?.[0]?.url ?? ticket.voiceNoteUrl ?? null;
+  const voiceDuration = ticket.voiceNotes?.[0]?.duration ?? ticket.voiceDuration ?? null;
+  const videoUrl = ticket.screenRecordings?.[0] ?? ticket.screenRecordingUrl ?? null;
+  const hasAudio = !!voiceUrl;
+  const hasVideo = !!videoUrl;
 
   if (!images.length && !hasAudio && !hasVideo) return null;
 
@@ -837,17 +844,17 @@ function AttachmentsBlock({
       {hasAudio && (
         <div style={{ marginBottom: hasVideo ? "16px" : 0 }}>
           <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginBottom: "8px" }}>
-            🎙️ Voice Note{ticket.voiceDuration ? ` (${Math.floor(ticket.voiceDuration / 60)}:${(ticket.voiceDuration % 60).toString().padStart(2, "0")})` : ""}
+            🎙️ Voice Note{voiceDuration ? ` (${Math.floor(voiceDuration / 60)}:${(voiceDuration % 60).toString().padStart(2, "0")})` : ""}
           </div>
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
           <audio
             controls
-            src={ticket.voiceNoteUrl!}
+            src={voiceUrl!}
             style={{ width: "100%", maxWidth: "400px", height: "40px" }}
           />
           <div style={{ marginTop: "6px" }}>
             <a
-              href={ticket.voiceNoteUrl!}
+              href={voiceUrl!}
               download
               target="_blank"
               rel="noopener noreferrer"
@@ -868,14 +875,14 @@ function AttachmentsBlock({
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
           <video
             controls
-            src={ticket.screenRecordingUrl!}
+            src={videoUrl!}
             style={{
               width: "100%", maxWidth: "480px", borderRadius: "12px",
               border: "1px solid rgba(255,255,255,0.1)", display: "block",
             }}
           />
           <a
-            href={ticket.screenRecordingUrl!}
+            href={videoUrl!}
             download target="_blank" rel="noopener noreferrer"
             style={{
               display: "inline-flex", alignItems: "center", gap: "5px",

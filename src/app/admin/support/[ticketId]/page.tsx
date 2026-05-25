@@ -72,7 +72,9 @@ export default function AdminTicketDetailPage() {
       const t = tJson.ticket!;
       console.log(
         "[admin-detail] ticket loaded — doc id:", t.id, "| ticketId:", t.ticketId,
-        "| attachments:", t.attachments, "| voice:", t.voiceNoteUrl, "| video:", t.screenRecordingUrl
+        "| attachments:", t.attachments,
+        "| voiceNotes:", t.voiceNotes, "| screenRecordings:", t.screenRecordings,
+        "| (legacy) voice:", t.voiceNoteUrl, "| video:", t.screenRecordingUrl
       );
 
       // Step 2: fetch messages using ticket.ticketId (TECH-XXXXXX), NOT the Firestore doc ID
@@ -640,8 +642,12 @@ function AdminMediaCard({
     ...(ticket.attachments ?? []),
     ...(!ticket.attachments?.length && ticket.screenshotUrl ? [ticket.screenshotUrl] : []),
   ];
-  const hasAudio = !!ticket.voiceNoteUrl;
-  const hasVideo = !!ticket.screenRecordingUrl;
+  // Support both new schema (voiceNotes[], screenRecordings[]) and legacy flat fields
+  const voiceUrl = ticket.voiceNotes?.[0]?.url ?? ticket.voiceNoteUrl ?? null;
+  const voiceDuration = ticket.voiceNotes?.[0]?.duration ?? ticket.voiceDuration ?? null;
+  const videoUrl = ticket.screenRecordings?.[0] ?? ticket.screenRecordingUrl ?? null;
+  const hasAudio = !!voiceUrl;
+  const hasVideo = !!videoUrl;
 
   // ── No media at all ───────────────────────────────────────────────────────
   if (!images.length && !hasAudio && !hasVideo) {
@@ -719,14 +725,14 @@ function AdminMediaCard({
       {hasAudio && (
         <div style={{ marginBottom: hasVideo ? "16px" : 0 }}>
           <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>
-            🎙️ Voice Note{ticket.voiceDuration
-              ? ` — ${Math.floor(ticket.voiceDuration / 60)}:${(ticket.voiceDuration % 60).toString().padStart(2, "0")}`
+            🎙️ Voice Note{voiceDuration
+              ? ` — ${Math.floor(voiceDuration / 60)}:${(voiceDuration % 60).toString().padStart(2, "0")}`
               : ""}
           </div>
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-          <audio controls src={ticket.voiceNoteUrl!} style={{ width: "100%", maxWidth: "420px", height: "40px" }} />
+          <audio controls src={voiceUrl!} style={{ width: "100%", maxWidth: "420px", height: "40px" }} />
           <div style={{ marginTop: "6px" }}>
-            <a href={ticket.voiceNoteUrl!} download target="_blank" rel="noopener noreferrer"
+            <a href={voiceUrl!} download target="_blank" rel="noopener noreferrer"
               style={{ fontSize: "12px", color: "#60a5fa", textDecoration: "none" }}>
               ⬇️ Download Voice Note
             </a>
@@ -743,14 +749,14 @@ function AdminMediaCard({
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
           <video
             controls
-            src={ticket.screenRecordingUrl!}
+            src={videoUrl!}
             style={{
               width: "100%", borderRadius: "10px",
               border: "1px solid rgba(255,255,255,0.1)", display: "block",
             }}
           />
           <div style={{ marginTop: "8px" }}>
-            <a href={ticket.screenRecordingUrl!} download target="_blank" rel="noopener noreferrer"
+            <a href={videoUrl!} download target="_blank" rel="noopener noreferrer"
               style={{ fontSize: "12px", color: "#60a5fa", textDecoration: "none" }}>
               ⬇️ Download Screen Recording
             </a>

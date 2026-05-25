@@ -181,6 +181,7 @@ export default function TechnicalSupportModal() {
   // Ref for retry (snapshot of files at submit time)
   const uploadSnapshotRef = useRef<{
     docId: string;
+    ticketId: string;
     screenshots: File[];
     voice: Blob | null;
     voiceDur: number;
@@ -399,6 +400,7 @@ export default function TechnicalSupportModal() {
   //
   async function backgroundUpload(
     docId: string,
+    ticketId: string,
     files: File[],
     voiceBlobData: Blob | null,
     voiceDur: number,
@@ -429,7 +431,7 @@ export default function TechnicalSupportModal() {
     }
 
     setUploadState({ items: tasks, allDone: false, failedCount: 0 });
-    console.log(`[upload] ▶ Starting ${tasks.length} upload(s) in parallel`);
+    console.log(`[upload] ▶ Starting ${tasks.length} upload(s) in parallel for ticket ${ticketId}`);
 
     // ── ALL uploads run simultaneously ────────────────────────────────────────
     const [screenshotResults, voiceUrl, videoUrl] = await Promise.all([
@@ -447,11 +449,14 @@ export default function TechnicalSupportModal() {
 
             const ext = compressed.type === "image/webp" ? "webp" : "jpg";
             const baseName = file.name.replace(/\.[^.]+$/, "");
+            const storagePath = `support-attachments/${ticketId}/images/${ts}_${i}_${encodeURIComponent(baseName)}.${ext}`;
+            console.log(`[upload] ⬆ Upload started: ${tasks[i].label} → ${storagePath}`);
             const url = await uploadWithProgress(
               compressed,
-              `support_screenshots/${ts}_${i}_${encodeURIComponent(baseName)}.${ext}`,
+              storagePath,
               (pct) => setUploadState(p => p ? patchItem(p, i, { progress: pct }) : p)
             );
+            if (url) console.log(`[upload] ✅ URL generated (screenshot[${i}]): ${url.substring(0, 80)}...`);
             console.log(`[upload] screenshot[${i}] done in ${Math.round(performance.now() - tFile)}ms — ${url ? "✓" : "✗"}`);
             setUploadState(p => p ? patchItem(p, i, { status: url ? "done" : "failed", progress: 100 }) : p);
             return url;
@@ -469,11 +474,14 @@ export default function TechnicalSupportModal() {
             const tVoice = performance.now();
             setUploadState(p => p ? patchItem(p, voiceIdx, { status: "uploading", progress: 0 }) : p);
             try {
+              const voicePath = `support-attachments/${ticketId}/voice/${ts}_voice.webm`;
+              console.log(`[upload] ⬆ Upload started: Voice note → ${voicePath}`);
               const url = await uploadWithProgress(
                 voiceBlobData,
-                `support_voice/${ts}_voice.webm`,
+                voicePath,
                 (pct) => setUploadState(p => p ? patchItem(p, voiceIdx, { progress: pct }) : p)
               );
+              if (url) console.log(`[upload] ✅ URL generated (voice): ${url.substring(0, 80)}...`);
               console.log(`[upload] voice done in ${Math.round(performance.now() - tVoice)}ms — ${url ? "✓" : "✗"}`);
               setUploadState(p => p ? patchItem(p, voiceIdx, { status: url ? "done" : "failed", progress: 100 }) : p);
               return url;
@@ -491,11 +499,14 @@ export default function TechnicalSupportModal() {
             const tVideo = performance.now();
             setUploadState(p => p ? patchItem(p, videoIdx, { status: "uploading", progress: 0 }) : p);
             try {
+              const videoPath = `support-attachments/${ticketId}/recordings/${ts}_${encodeURIComponent(videoFile.name)}`;
+              console.log(`[upload] ⬆ Upload started: Screen recording → ${videoPath}`);
               const url = await uploadWithProgress(
                 videoFile,
-                `support_screen/${ts}_${encodeURIComponent(videoFile.name)}`,
+                videoPath,
                 (pct) => setUploadState(p => p ? patchItem(p, videoIdx, { progress: pct }) : p)
               );
+              if (url) console.log(`[upload] ✅ URL generated (video): ${url.substring(0, 80)}...`);
               console.log(`[upload] video done in ${Math.round(performance.now() - tVideo)}ms — ${url ? "✓" : "✗"}`);
               setUploadState(p => p ? patchItem(p, videoIdx, { status: url ? "done" : "failed", progress: 100 }) : p);
               return url;
@@ -516,13 +527,13 @@ export default function TechnicalSupportModal() {
     const attachments = screenshotResults.filter((u): u is string => !!u);
     const patch: Record<string, unknown> = {};
     if (attachments.length) { patch.attachments = attachments; patch.screenshotUrl = attachments[0]; }
-    if (voiceUrl) { patch.voiceNoteUrl = voiceUrl; patch.voiceDuration = voiceDur; }
-    if (videoUrl) patch.screenRecordingUrl = videoUrl;
+    if (voiceUrl) patch.voiceNotes = [{ url: voiceUrl, duration: voiceDur }];
+    if (videoUrl) patch.screenRecordings = [videoUrl];
 
     if (Object.keys(patch).length > 0) {
       const tPatch = performance.now();
       const patchPayload = { id: docId, ...patch };
-      console.log(`[upload] PATCH payload — docId: ${docId}, fields:`, Object.keys(patch).join(", "));
+      console.log(`[upload] PATCH payload — docId: ${docId}, ticketId: ${ticketId}, fields:`, Object.keys(patch).join(", "));
       fetch("/api/tickets/update", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -535,7 +546,7 @@ export default function TechnicalSupportModal() {
             try { errBody = JSON.stringify(await res.json()); } catch { /* ignore */ }
             console.error(`[upload] ✗ PATCH FAILED — HTTP ${res.status} after ${elapsed}ms`, errBody);
           } else {
-            console.log(`[upload] ✓ PATCH done in ${elapsed}ms — attachment URLs saved to Firestore`);
+            console.log(`[upload] ✅ Firestore updated — attachment URLs saved to ticket ${ticketId} in ${elapsed}ms`);
           }
         })
         .catch(err => console.warn("[upload] PATCH network error:", err));
@@ -551,7 +562,7 @@ export default function TechnicalSupportModal() {
   // ── Retry failed uploads ──────────────────────────────────────────────────
   function handleRetryUploads() {
     if (!uploadSnapshotRef.current || !uploadState) return;
-    const { docId, screenshots: sc, voice, voiceDur, video } = uploadSnapshotRef.current;
+    const { docId, ticketId, screenshots: sc, voice, voiceDur, video } = uploadSnapshotRef.current;
 
     const scCount = sc.length;
     const voiceIdx = scCount;
@@ -569,7 +580,7 @@ export default function TechnicalSupportModal() {
     });
 
     if (retryScreenshots.length || retryVoice || retryVideo) {
-      backgroundUpload(docId, retryScreenshots, retryVoice, voiceDur, retryVideo);
+      backgroundUpload(docId, ticketId, retryScreenshots, retryVoice, voiceDur, retryVideo);
     }
   }
 
@@ -611,9 +622,8 @@ export default function TechnicalSupportModal() {
           // Attachments are empty — uploaded in background after success
           screenshotUrl: null,
           attachments: [],
-          voiceNoteUrl: null,
-          voiceDuration: voiceDurSnap || null,
-          screenRecordingUrl: null,
+          voiceNotes: [],
+          screenRecordings: [],
         }),
       });
 
@@ -634,6 +644,7 @@ export default function TechnicalSupportModal() {
       // Store snapshot for potential retry
       uploadSnapshotRef.current = {
         docId,
+        ticketId,
         screenshots: screenshotSnap,
         voice: voiceBlobSnap,
         voiceDur: voiceDurSnap,
@@ -661,7 +672,7 @@ export default function TechnicalSupportModal() {
       const hasAttachments = screenshotSnap.length > 0 || !!voiceBlobSnap || !!screenRecSnap;
       if (hasAttachments) {
         // Intentionally NOT awaited — runs fully in background
-        backgroundUpload(docId, screenshotSnap, voiceBlobSnap, voiceDurSnap, screenRecSnap);
+        backgroundUpload(docId, ticketId, screenshotSnap, voiceBlobSnap, voiceDurSnap, screenRecSnap);
       }
 
     } catch (err) {

@@ -60,6 +60,9 @@ export async function POST(req: NextRequest) {
       screenshotUrl: string | null;
       studentUid: string | null;
       attachments?: string[];
+      voiceNotes?: Array<{ url: string; duration: number }>;
+      screenRecordings?: string[];
+      // legacy fields
       voiceNoteUrl?: string | null;
       voiceDuration?: number | null;
       screenRecordingUrl?: string | null;
@@ -95,9 +98,8 @@ export async function POST(req: NextRequest) {
       description: description.trim(),
       screenshotUrl: body.screenshotUrl ?? null,
       attachments: body.attachments ?? [],
-      voiceNoteUrl: body.voiceNoteUrl ?? null,
-      voiceDuration: body.voiceDuration ?? null,
-      screenRecordingUrl: body.screenRecordingUrl ?? null,
+      voiceNotes: body.voiceNotes ?? [],
+      screenRecordings: body.screenRecordings ?? [],
       studentUid: body.studentUid ?? null,
       status: "OPEN" as TicketStatus,
       priority,

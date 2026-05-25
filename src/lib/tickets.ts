@@ -49,6 +49,9 @@ export interface SupportTicket {
   screenshotUrl: string | null;
   // Rich attachments (added May 2026 — optional for backward compat with old tickets)
   attachments?: string[];
+  voiceNotes?: Array<{ url: string; duration: number }>;
+  screenRecordings?: string[];
+  // Legacy flat fields — kept for backward compat with tickets created before schema update
   voiceNoteUrl?: string | null;
   voiceDuration?: number | null;
   screenRecordingUrl?: string | null;
