@@ -3,10 +3,7 @@
 import { useState, useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const ADMIN_KEY = "civilezy_admin_auth";
-// Simple passphrase — only blocks accidental access; Firestore rules handle real security
-const PASSPHRASE = "civilezy2026admin";
+import { ADMIN_SESSION_KEY, ADMIN_PASSPHRASE } from "@/lib/adminAuth";
 
 const NAV_ITEMS = [
   { href: "/admin/questions",     label: "Questions",     icon: "📚" },
@@ -25,15 +22,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const stored = sessionStorage.getItem(ADMIN_KEY);
-      if (stored === PASSPHRASE) setAuthed(true);
+      const stored = sessionStorage.getItem(ADMIN_SESSION_KEY);
+      if (stored === ADMIN_PASSPHRASE) setAuthed(true);
       setChecking(false);
     }
   }, []);
 
   const handleLogin = () => {
-    if (input === PASSPHRASE) {
-      sessionStorage.setItem(ADMIN_KEY, input);
+    if (input === ADMIN_PASSPHRASE) {
+      sessionStorage.setItem(ADMIN_SESSION_KEY, input);
       setAuthed(true);
       setError("");
     } else {
@@ -131,7 +128,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </nav>
         </div>
         <button
-          onClick={() => { sessionStorage.removeItem(ADMIN_KEY); setAuthed(false); }}
+          onClick={() => { sessionStorage.removeItem(ADMIN_SESSION_KEY); setAuthed(false); }}
           style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", background: "none", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "6px 14px", cursor: "pointer", flexShrink: 0 }}
         >
           Logout

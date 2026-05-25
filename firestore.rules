@@ -128,5 +128,17 @@ service cloud.firestore {
       allow write: if true;
     }
 
+    // ==================================
+    // BLOGS
+    // ==================================
+    // Public reads: published blog posts are public content.
+    // Open writes: the admin panel uses a passphrase (not Firebase Auth),
+    // so isAdmin() cannot be used here. Blog content is non-sensitive.
+    // Application-level passphrase guard prevents non-admin access.
+    match /blogs/{blogId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
   }
 }

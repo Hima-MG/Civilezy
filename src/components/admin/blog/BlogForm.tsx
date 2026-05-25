@@ -465,7 +465,17 @@ export default function BlogForm({ initial, mode }: Props) {
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               {imagePreview ? (
                 <div style={{ position: "relative", borderRadius: "10px", overflow: "hidden", aspectRatio: "16/9" }}>
-                  <Image src={imagePreview} alt="Featured" fill style={{ objectFit: "cover" }} />
+                  {/* Use plain <img> for local blob:// previews; Next.js <Image> for remote URLs */}
+                  {imagePreview.startsWith("blob:") ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={imagePreview}
+                      alt="Featured preview"
+                      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    />
+                  ) : (
+                    <Image src={imagePreview} alt="Featured" fill style={{ objectFit: "cover" }} />
+                  )}
                   <button
                     onClick={() => { setImagePreview(""); setImageFile(null); setImageUrl(""); }}
                     style={{ position: "absolute", top: "8px", right: "8px", background: "rgba(0,0,0,0.7)", border: "none", borderRadius: "6px", color: "#fff", padding: "4px 8px", cursor: "pointer", fontSize: "12px" }}

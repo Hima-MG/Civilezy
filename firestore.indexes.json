@@ -12,7 +12,7 @@
       "collectionGroup": "support_tickets",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "ticketId", "order": "ASCENDING" },
+        { "fieldPath": "ticketId",  "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
@@ -20,8 +20,34 @@
       "collectionGroup": "ticket_messages",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "ticketId",   "order": "ASCENDING" },
-        { "fieldPath": "createdAt",  "order": "ASCENDING" }
+        { "fieldPath": "ticketId",  "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "blogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status",      "order": "ASCENDING" },
+        { "fieldPath": "publishedAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "blogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status",     "order": "ASCENDING" },
+        { "fieldPath": "isFeatured", "order": "ASCENDING" },
+        { "fieldPath": "publishedAt","order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "blogs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status",     "order": "ASCENDING" },
+        { "fieldPath": "category",   "order": "ASCENDING" },
+        { "fieldPath": "publishedAt","order": "DESCENDING" }
       ]
     }
   ],
