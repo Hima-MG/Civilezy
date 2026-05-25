@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/admin/announcements", label: "Announcements", icon: "📣" },
   { href: "/admin/support",       label: "Support",       icon: "🛠️" },
   { href: "/admin/ebooks",        label: "E-Books",       icon: "📖" },
+  { href: "/admin/blogs",         label: "Blogs",         icon: "📰" },
 ] as const;
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

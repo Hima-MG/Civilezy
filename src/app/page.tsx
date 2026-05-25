@@ -12,7 +12,6 @@ import ComparisonSection from "@/components/sections/ComparisonSection";
 import Footer from "@/components/sections/Footer";
 import TickerSection from "@/components/sections/TickerSection";
 import AppDownloadSection from "@/components/sections/AppDownloadSection";
-import BlogSection from "@/components/sections/BlogSection";
 import ExploreCivilezy from "@/components/sections/ExploreCivilezy";
 import FeaturedEbooks from "@/components/sections/FeaturedEbooks";
 
@@ -31,7 +30,6 @@ export default function Home() {
       <TestimonialsSection />
       {/* <DepartmentSection /> */}
       <FeaturedEbooks />
-      <BlogSection />
       <ExploreCivilezy />
       <FinalCTASection />
       <Footer />

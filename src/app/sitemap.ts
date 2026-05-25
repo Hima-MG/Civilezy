@@ -18,32 +18,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/courses/iti`,                   lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/courses/diploma`,               lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/courses/btech`,                 lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${BASE_URL}/courses/kwa-ae`,                lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${BASE_URL}/courses/pwd`,                   lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/courses/surveyor`,              lastModified: now, changeFrequency: "monthly", priority: 0.8 },
 
-    // ── Blog index ──────────────────────────────────────────────────────────
-    { url: `${BASE_URL}/blog`,                          lastModified: now, changeFrequency: "weekly",  priority: 0.85 },
-
-    // ── Blog articles ────────────────────────────────────────────────────────
-    {
-      url:             `${BASE_URL}/blog/how-to-crack-kerala-psc-civil-engineering`,
-      lastModified:    new Date("2026-04-20"),
-      changeFrequency: "monthly",
-      priority:        0.85,
-    },
-    {
-      url:             `${BASE_URL}/blog/top-100-psc-civil-questions-kerala`,
-      lastModified:    new Date("2026-04-20"),
-      changeFrequency: "monthly",
-      priority:        0.85,
-    },
-    {
-      url:             `${BASE_URL}/blog/best-books-civil-psc-kerala`,
-      lastModified:    new Date("2026-04-20"),
-      changeFrequency: "monthly",
-      priority:        0.80,
-    },
+    // ── Blog ────────────────────────────────────────────────────────────────
+    { url: `${BASE_URL}/blogs`,                          lastModified: now, changeFrequency: "daily",   priority: 0.85 },
 
     // ── Company / legal ──────────────────────────────────────────────────────
     { url: `${BASE_URL}/about`,          lastModified: now, changeFrequency: "monthly", priority: 0.6 },

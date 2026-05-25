@@ -23,8 +23,9 @@ const FOOTER_NAV: Record<string, { label: string; href: string; external?: boole
   ],
   Resources: [
     { label:"Game Arena",         href:"/game-arena"       },
-    { label:"Blog & Guides",      href:"/blog"             },
+    { label:"Blog & Guides",      href:"/blogs"            },
     { label:"Pricing Plans",      href:"/pricing"          },
+    { label:"E-Books",            href:"/ebooks"           },
   ],
   Company: [
     { label:"About Us",         href:EXTERNAL_URLS.about,         external:true },

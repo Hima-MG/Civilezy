@@ -197,24 +197,27 @@ const COURSE_CARDS = [
   },
 ] as const;
 
-const BLOG_POSTS = [
+const RESOURCE_LINKS = [
   {
-    href: "/blog/how-to-crack-kerala-psc-civil-engineering",
-    title: "How to Crack Kerala PSC Civil Engineering Exam",
-    desc: "Complete roadmap from syllabus to rank – what to study, how to study, and what to avoid.",
-    tag: "Strategy",
-  },
-  {
-    href: "/blog/top-100-psc-civil-questions-kerala",
-    title: "Top 100 PSC Civil Engineering Questions (with Answers)",
-    desc: "Most repeated and high-weightage MCQs from past Kerala PSC civil engineering exams.",
+    href: "/game-arena",
+    title: "Game Arena — Free Practice",
+    desc: "Timed PSC MCQs, live leaderboard, and instant feedback. Kerala Civil PSC-specific — free forever.",
     tag: "Practice",
+    emoji: "🎮",
   },
   {
-    href: "/blog/best-books-civil-psc-kerala",
-    title: "Best Books for Civil PSC Kerala (All Categories)",
-    desc: "Curated booklist for ITI, Diploma, B.Tech & Surveyor PSC civil engineering preparation.",
+    href: "/ebooks",
+    title: "E-Books & Study Material",
+    desc: "Quick revision e-books for Overseer Gr.1, Diploma and AE levels. Download and study anywhere.",
     tag: "Resources",
+    emoji: "📖",
+  },
+  {
+    href: "/pricing",
+    title: "Course Plans — ITI / Diploma / AE",
+    desc: "Full preparation with Malayalam audio lessons, mock tests, and pool-mapped syllabus from ₹1,800/month.",
+    tag: "Courses",
+    emoji: "📚",
   },
 ];
 
@@ -592,31 +595,32 @@ export default function CivilPSCCoachingKeralaPage() {
           </div>
         </section>
 
-        {/* ─── BLOG RESOURCES ────────────────────────────────────────────────── */}
-        <section aria-labelledby="blog-heading" style={{ padding: "84px 5%" }}>
+        {/* ─── RESOURCES ─────────────────────────────────────────────────────── */}
+        <section aria-labelledby="resources-heading" style={{ padding: "84px 5%" }}>
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: "52px" }}>
-              <h2 id="blog-heading" style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "clamp(1.8rem, 4vw, 2.9rem)", fontWeight: 700, color: "#fff" }}>
+              <h2 id="resources-heading" style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "clamp(1.8rem, 4vw, 2.9rem)", fontWeight: 700, color: "#fff" }}>
                 Free <span style={{ color: "#FF6200" }}>Study Resources</span>
               </h2>
               <p style={{ color: "rgba(255,255,255,0.55)", marginTop: "14px" }}>
-                Expert guides written for Kerala PSC Civil Engineering aspirants
+                Everything you need to prepare and rank — all in one place
               </p>
             </div>
 
             <div className="blog-grid">
-              {BLOG_POSTS.map((post) => (
+              {RESOURCE_LINKS.map((item) => (
                 <Link
-                  key={post.href}
-                  href={post.href}
+                  key={item.href}
+                  href={item.href}
                   style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "18px", padding: "30px 26px", textDecoration: "none", display: "block", transition: "border-color 0.2s" }}
                 >
+                  <div style={{ fontSize: "2rem", marginBottom: "14px" }}>{item.emoji}</div>
                   <span style={{ display: "inline-block", background: "rgba(255,98,0,0.12)", border: "1px solid rgba(255,98,0,0.25)", borderRadius: "100px", padding: "4px 14px", fontSize: "12px", fontWeight: 600, color: "#FF8534", marginBottom: "16px" }}>
-                    {post.tag}
+                    {item.tag}
                   </span>
-                  <h3 style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "1.15rem", fontWeight: 700, color: "#fff", marginBottom: "10px", lineHeight: 1.32 }}>{post.title}</h3>
-                  <p style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.68 }}>{post.desc}</p>
-                  <div style={{ marginTop: "18px", fontSize: "13px", color: "#FF8534", fontWeight: 700 }}>Read article →</div>
+                  <h3 style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "1.15rem", fontWeight: 700, color: "#fff", marginBottom: "10px", lineHeight: 1.32 }}>{item.title}</h3>
+                  <p style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.68 }}>{item.desc}</p>
+                  <div style={{ marginTop: "18px", fontSize: "13px", color: "#FF8534", fontWeight: 700 }}>Explore →</div>
                 </Link>
               ))}
             </div>

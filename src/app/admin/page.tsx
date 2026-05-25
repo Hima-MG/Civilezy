@@ -49,6 +49,17 @@ const CARDS = [
     hoverBorder: "rgba(167,139,250,0.45)",
     action:  "Manage E-Books →",
   },
+  {
+    href:    "/admin/blogs",
+    icon:    "📰",
+    title:   "Blog Manager",
+    desc:    "Create, edit, and publish blog posts. Manage categories, featured images, SEO metadata, and view analytics.",
+    accent:  "#38bdf8",
+    accentBg:"rgba(56,189,248,0.10)",
+    border:  "rgba(56,189,248,0.22)",
+    hoverBorder: "rgba(56,189,248,0.45)",
+    action:  "Manage Blogs →",
+  },
 ] as const;
 
 export default function AdminHomePage() {

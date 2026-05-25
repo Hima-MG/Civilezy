@@ -16,13 +16,6 @@ const COURSE_ITEMS = [
   { label: "Surveyor Course", href: "/courses/surveyor" },
 ] as const;
 
-// Links rendered as plain anchors in desktop nav (no dropdown)
-const PLAIN_LINKS = [
-  { label: "Home",       href: "/"           },
-  { label: "Game Arena", href: "/game-arena" },
-  { label: "Pricing",    href: "/pricing"    },
-  { label: "Blog",       href: "/blog"       },
-] as const;
 
 export default function Navbar() {
   const [menuOpen,    setMenuOpen]    = useState(false);
@@ -272,13 +265,13 @@ export default function Navbar() {
             </Link>
           </li>
 
-          {/* Blog */}
+          {/* Blogs */}
           <li style={{ listStyle: "none" }}>
             <Link
-              href="/blog"
-              style={navLinkStyle(pathname?.startsWith("/blog") ?? false)}
+              href="/blogs"
+              style={navLinkStyle(pathname?.startsWith("/blogs") ?? false)}
               onMouseEnter={(e) => { e.currentTarget.style.color = "#FF8534"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = (pathname?.startsWith("/blog") ?? false) ? "#FF8534" : "rgba(255,255,255,0.85)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = (pathname?.startsWith("/blogs") ?? false) ? "#FF8534" : "rgba(255,255,255,0.85)"; }}
             >
               Blog
             </Link>
@@ -551,12 +544,12 @@ export default function Navbar() {
             </Link>
           </li>
 
-          {/* Blog */}
+          {/* Blogs */}
           <li style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             <Link
-              href="/blog"
+              href="/blogs"
               onClick={() => setMenuOpen(false)}
-              style={{ display: "block", color: (pathname?.startsWith("/blog") ?? false) ? "#FF8534" : "rgba(255,255,255,0.85)", textDecoration: "none", fontSize: "16px", fontWeight: (pathname?.startsWith("/blog") ?? false) ? 700 : 500, padding: "14px 0", fontFamily: "Nunito, sans-serif" }}
+              style={{ display: "block", color: (pathname?.startsWith("/blogs") ?? false) ? "#FF8534" : "rgba(255,255,255,0.85)", textDecoration: "none", fontSize: "16px", fontWeight: (pathname?.startsWith("/blogs") ?? false) ? 700 : 500, padding: "14px 0", fontFamily: "Nunito, sans-serif" }}
             >
               Blog
             </Link>
@@ -672,9 +665,6 @@ export default function Navbar() {
     </>
   );
 }
-
-// Unused import guard
-void (PLAIN_LINKS);
 
 function bar(open: boolean, i: number): React.CSSProperties {
   const base: React.CSSProperties = {

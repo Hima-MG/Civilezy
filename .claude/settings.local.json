@@ -51,7 +51,9 @@
       "Bash(git push *)",
       "Bash(git add *)",
       "Bash(Get-ChildItem -Recurse -Directory)",
-      "Bash(Select-String -Pattern \"\\(error|warning|admin/ebooks|Compiled|Failed\\)\")"
+      "Bash(Select-String -Pattern \"\\(error|warning|admin/ebooks|Compiled|Failed\\)\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\" -Directory)",
+      "Bash(Select-Object Name)"
     ]
   }
 }

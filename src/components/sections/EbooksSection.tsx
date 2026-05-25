@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { EBOOKS } from "@/data/ebookData";
 
 const featured = EBOOKS[0];
@@ -169,9 +170,11 @@ export default function EbooksSection() {
           />
 
           {/* CEO image — place file at /public/ceo-banner.png */}
-          <img
+          <Image
             src="/ceo-banner.png"
             alt="CivilEzy Founder"
+            width={420}
+            height={560}
             className="ebh-ceo-img"
             onError={(e) => { e.currentTarget.style.display = "none"; }}
           />
