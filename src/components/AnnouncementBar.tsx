@@ -94,7 +94,7 @@ export default function AnnouncementBar() {
           setBarHeight(BAR_HEIGHT);
         }
       })
-      .catch(() => {});
+      .catch((err) => console.error("[AnnouncementBar] fetch failed:", err));
   }, [dismissed, setBarHeight]);
 
   const handleDismiss = (e: React.MouseEvent) => {

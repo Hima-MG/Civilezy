@@ -101,7 +101,8 @@ export default function AdminAnnouncementsPage() {
       resetForm();
       setTab("list");
       await fetchAll();
-    } catch {
+    } catch (err) {
+      console.error("[AnnouncementAdmin] save failed:", err);
       flash("❌ Save failed — please try again");
     } finally {
       setSaving(false);
@@ -130,7 +131,8 @@ export default function AdminAnnouncementsPage() {
       await updateAnnouncement(ann.id, { isActive: !ann.isActive });
       flash(ann.isActive ? "Deactivated" : "Activated");
       await fetchAll();
-    } catch {
+    } catch (err) {
+      console.error("[AnnouncementAdmin] toggle failed:", err);
       flash("Toggle failed");
     }
   };
@@ -143,7 +145,8 @@ export default function AdminAnnouncementsPage() {
       setDeleteId(null);
       flash("🗑️ Deleted");
       await fetchAll();
-    } catch {
+    } catch (err) {
+      console.error("[AnnouncementAdmin] delete failed:", err);
       flash("Delete failed");
     }
   };
