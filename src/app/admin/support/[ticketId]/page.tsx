@@ -56,6 +56,9 @@ export default function AdminTicketDetailPage() {
   const [savingNotes, setSavingNotes] = useState(false);
   const [sendingReply, setSendingReply] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
+  // Prevents silent auto-refresh from overwriting form fields the admin is actively editing.
+  const formDirtyRef = useRef(false);   // status / priority / assignedTo
+  const notesDirtyRef = useRef(false);  // adminNotes
 
   const showFlash = (msg: string, type: "ok" | "err" = "ok") => {
     setFlash(msg);
@@ -101,10 +104,17 @@ export default function AdminTicketDetailPage() {
 
       setTicket(t);
       setMessages(mJson.messages ?? []);
-      setNewStatus(t.status);
-      setNewPriority(t.priority);
-      setAssignedTo(t.assignedTo ?? "");
-      setAdminNotes(t.adminNotes ?? "");
+      // Only reset form fields if the admin hasn't touched them (dirty = false) or this is
+      // an explicit refresh (silent = false).  Prevents the 15 s background poll from
+      // silently reverting a dropdown the admin has changed but not yet saved.
+      if (!silent || !formDirtyRef.current) {
+        setNewStatus(t.status);
+        setNewPriority(t.priority);
+        setAssignedTo(t.assignedTo ?? "");
+      }
+      if (!silent || !notesDirtyRef.current) {
+        setAdminNotes(t.adminNotes ?? "");
+      }
       console.log("State updated");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -171,6 +181,7 @@ export default function AdminTicketDetailPage() {
       console.log("[admin-detail] update response:", res.status, j);
       if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
       setTicket((t) => t ? { ...t, status: newStatus, priority: newPriority, assignedTo: assignedTo || null } : t);
+      formDirtyRef.current = false;
 
       // Email notifications
       const emailPayload = {
@@ -220,6 +231,7 @@ export default function AdminTicketDetailPage() {
       console.log("[admin-detail] notes response:", res.status, j);
       if (!res.ok) throw new Error(j.error ?? `HTTP ${res.status}`);
       setTicket((t) => t ? { ...t, adminNotes } : t);
+      notesDirtyRef.current = false;
       showFlash("Notes saved");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -488,13 +500,13 @@ export default function AdminTicketDetailPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div>
                 <SideLabel>Status</SideLabel>
-                <select value={newStatus} onChange={(e) => setNewStatus(e.target.value as TicketStatus)} style={selectStyle}>
+                <select value={newStatus} onChange={(e) => { setNewStatus(e.target.value as TicketStatus); formDirtyRef.current = true; }} style={selectStyle}>
                   {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
                 </select>
               </div>
               <div>
                 <SideLabel>Priority</SideLabel>
-                <select value={newPriority} onChange={(e) => setNewPriority(e.target.value as TicketPriority)} style={selectStyle}>
+                <select value={newPriority} onChange={(e) => { setNewPriority(e.target.value as TicketPriority); formDirtyRef.current = true; }} style={selectStyle}>
                   <option value="HIGH">High</option>
                   <option value="MEDIUM">Medium</option>
                   <option value="LOW">Low</option>
@@ -503,7 +515,7 @@ export default function AdminTicketDetailPage() {
               <div>
                 <SideLabel>Assigned To</SideLabel>
                 <input type="text" placeholder="Team member name" value={assignedTo}
-                  onChange={(e) => setAssignedTo(e.target.value)} style={inputStyle} />
+                  onChange={(e) => { setAssignedTo(e.target.value); formDirtyRef.current = true; }} style={inputStyle} />
               </div>
               <button onClick={handleStatusUpdate} disabled={savingStatus} style={primaryBtnStyle(savingStatus)}>
                 {savingStatus ? "Saving…" : "Save Changes"}
@@ -522,7 +534,7 @@ export default function AdminTicketDetailPage() {
 
           <Card title="Internal Notes">
             <textarea rows={5} placeholder="Internal notes (not visible to student)..."
-              value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)}
+              value={adminNotes} onChange={(e) => { setAdminNotes(e.target.value); notesDirtyRef.current = true; }}
               style={{ ...inputStyle, resize: "vertical", height: "auto", fontFamily: "Nunito, sans-serif", lineHeight: "1.6" }}
             />
             <button onClick={handleSaveNotes} disabled={savingNotes} style={{ ...primaryBtnStyle(savingNotes), marginTop: "10px" }}>

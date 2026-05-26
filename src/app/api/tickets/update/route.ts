@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 
+const STATUS_NORM: Record<string, string> = {
+  open: "OPEN", "in progress": "IN_PROGRESS", in_progress: "IN_PROGRESS",
+  "waiting for student": "WAITING_FOR_STUDENT", waiting_for_student: "WAITING_FOR_STUDENT",
+  resolved: "RESOLVED", closed: "CLOSED", reopened: "REOPENED",
+};
+function normalizeStatus(s: unknown): string | undefined {
+  if (typeof s !== "string") return s as undefined;
+  return STATUS_NORM[s.toLowerCase()] ?? s;
+}
+
 // PATCH /api/tickets/update  { id, status?, priority?, assignedTo?, adminNotes?, _event? }
 export async function PATCH(req: NextRequest) {
   try {
@@ -21,6 +31,9 @@ export async function PATCH(req: NextRequest) {
 
     const { id, _event, ...fields } = body;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
+    // Ensure status is always stored in canonical uppercase form
+    if (fields.status) fields.status = normalizeStatus(fields.status);
 
     // Log when attachment fields arrive (helps diagnose the upload→Firestore pipeline)
     const attachmentFields = ["attachments", "screenshotUrl", "voiceNoteUrl", "voiceDuration", "screenRecordingUrl"];

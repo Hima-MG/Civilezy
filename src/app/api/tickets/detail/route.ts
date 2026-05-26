@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 
+const STATUS_NORM: Record<string, string> = {
+  open: "OPEN", "in progress": "IN_PROGRESS", in_progress: "IN_PROGRESS",
+  "waiting for student": "WAITING_FOR_STUDENT", waiting_for_student: "WAITING_FOR_STUDENT",
+  resolved: "RESOLVED", closed: "CLOSED", reopened: "REOPENED",
+};
+function normalizeStatus(s: unknown): string | undefined {
+  if (typeof s !== "string") return s as undefined;
+  return STATUS_NORM[s.toLowerCase()] ?? s;
+}
+
 function serializeDoc(id: string, data: FirebaseFirestore.DocumentData) {
   return {
     id,
     ...data,
+    status: normalizeStatus(data.status),
     createdAt: data.createdAt?.toDate?.()?.toISOString() ?? null,
     updatedAt: data.updatedAt?.toDate?.()?.toISOString() ?? null,
     resolvedAt: data.resolvedAt?.toDate?.()?.toISOString() ?? null,

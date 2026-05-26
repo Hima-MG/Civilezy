@@ -24,6 +24,33 @@ export type TicketStatus =
   | "REOPENED"
   | "CLOSED";
 
+// Single source of truth — use these constants instead of raw strings everywhere.
+export const TICKET_STATUS = {
+  OPEN:                "OPEN",
+  IN_PROGRESS:         "IN_PROGRESS",
+  WAITING_FOR_STUDENT: "WAITING_FOR_STUDENT",
+  RESOLVED:            "RESOLVED",
+  REOPENED:            "REOPENED",
+  CLOSED:              "CLOSED",
+} as const satisfies Record<string, TicketStatus>;
+
+// Normalises legacy or mixed-case status values stored in Firestore to the canonical
+// uppercase form expected everywhere in the app.
+export function normalizeTicketStatus(status: string | null | undefined): TicketStatus | null {
+  if (!status) return null;
+  const map: Record<string, TicketStatus> = {
+    open:                  "OPEN",
+    in_progress:           "IN_PROGRESS",
+    "in progress":         "IN_PROGRESS",
+    waiting_for_student:   "WAITING_FOR_STUDENT",
+    "waiting for student": "WAITING_FOR_STUDENT",
+    resolved:              "RESOLVED",
+    closed:                "CLOSED",
+    reopened:              "REOPENED",
+  };
+  return map[status.toLowerCase()] ?? (status as TicketStatus);
+}
+
 export type TicketPriority = "HIGH" | "MEDIUM" | "LOW";
 
 export type TicketCategory =
