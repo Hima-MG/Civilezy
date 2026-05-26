@@ -13,6 +13,7 @@ import {
   STATUS_COLORS,
   PRIORITY_COLORS,
   formatDate,
+  normalizeTicketStatus,
   type ApiTicket,
   type ApiMessage,
 } from "@/lib/tickets";
@@ -152,7 +153,7 @@ export default function StudentTicketDetailPage() {
         return {
           ...prev,
           // ── Ticket metadata ──────────────────────────────────────────────
-          status:     raw.status     !== undefined ? (raw.status     as ApiTicket["status"])   : prev.status,
+          status:     raw.status     !== undefined ? ((normalizeTicketStatus(raw.status as string) ?? raw.status) as ApiTicket["status"]) : prev.status,
           priority:   raw.priority   !== undefined ? (raw.priority   as ApiTicket["priority"]) : prev.priority,
           assignedTo: raw.assignedTo !== undefined ? (raw.assignedTo as string | null)         : prev.assignedTo,
           adminNotes: raw.adminNotes !== undefined ? (raw.adminNotes as string | null)         : prev.adminNotes,

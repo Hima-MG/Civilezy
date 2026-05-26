@@ -97,13 +97,18 @@ export default function AdminTicketDetailPage() {
         "| (legacy) voice:", t.voiceNoteUrl, "| video:", t.screenRecordingUrl
       );
 
-      // Step 2: fetch messages using ticket.ticketId (TECH-XXXXXX), NOT the Firestore doc ID
-      const mRes = await fetch(`/api/tickets/messages?ticketId=${encodeURIComponent(t.ticketId)}`);
+      // Steps 2 + 3: fetch messages AND events in parallel (both keyed on TECH-XXXXXX)
+      const [mRes, eRes] = await Promise.all([
+        fetch(`/api/tickets/messages?ticketId=${encodeURIComponent(t.ticketId)}`),
+        fetch(`/api/tickets/events?ticketId=${encodeURIComponent(t.ticketId)}`),
+      ]);
       const mJson = await mRes.json() as { messages?: ApiMessage[]; error?: string };
+      const eJson = await eRes.json() as { events?: TicketEvent[]; error?: string };
       if (!mRes.ok) throw new Error(mJson.error ?? `HTTP ${mRes.status}`);
 
       setTicket(t);
       setMessages(mJson.messages ?? []);
+      setEvents(eJson.events ?? []);
       // Only reset form fields if the admin hasn't touched them (dirty = false) or this is
       // an explicit refresh (silent = false).  Prevents the 15 s background poll from
       // silently reverting a dropdown the admin has changed but not yet saved.

@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 
 const RESEND_API = "https://api.resend.com/emails";
 const FROM = "CivilEzy Support <support@civilezy.in>";
+
+const STATUS_LABEL: Record<string, string> = {
+  OPEN: "Open", IN_PROGRESS: "In Progress",
+  WAITING_FOR_STUDENT: "Waiting for Student",
+  RESOLVED: "Resolved", CLOSED: "Closed", REOPENED: "Reopened",
+};
+function statusLabel(s: string | undefined): string {
+  if (!s) return "—";
+  return STATUS_LABEL[s.toUpperCase()] ?? s.replace(/_/g, " ");
+}
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://civilezy.in";
 const TECH_HEAD_EMAIL = process.env.TECH_HEAD_EMAIL ?? "";
 const RESEND_API_KEY = process.env.RESEND_API_KEY ?? "";
@@ -100,7 +110,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (type === "status_update") {
-      const statusLabel = ticket.status?.replace(/_/g, " ") ?? ticket.status;
+      const label = statusLabel(ticket.status);
       await sendEmail(
         ticket.studentEmail,
         `Ticket ${ticket.ticketId} — Status Updated`,
@@ -108,7 +118,7 @@ export async function POST(req: NextRequest) {
           <p style="font-size:16px;font-weight:700;color:#fff;margin-top:0">Hi ${ticket.studentName},</p>
           <p style="color:rgba(255,255,255,0.7);line-height:1.6">There's an update on your support ticket.</p>
           <div class="field"><div class="label">Ticket ID</div><div class="value" style="color:#60a5fa">${ticket.ticketId}</div></div>
-          <div class="field"><div class="label">New Status</div><div class="value" style="color:#fb923c">${statusLabel}</div></div>
+          <div class="field"><div class="label">New Status</div><div class="value" style="color:#fb923c">${label}</div></div>
           <p style="margin-top:20px"><a href="${base}/support/${ticket.id}" class="btn" style="background:linear-gradient(135deg,#FF6200,#FF8534)">View Ticket</a></p>
         `)
       );

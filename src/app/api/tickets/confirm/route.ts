@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 
+const STATUS_NORM: Record<string, string> = {
+  open: "OPEN", "in progress": "IN_PROGRESS", in_progress: "IN_PROGRESS",
+  "waiting for student": "WAITING_FOR_STUDENT", waiting_for_student: "WAITING_FOR_STUDENT",
+  resolved: "RESOLVED", closed: "CLOSED", reopened: "REOPENED",
+};
+function normalizeStatus(s: string | undefined): string {
+  if (!s) return s ?? "";
+  return STATUS_NORM[s.toLowerCase()] ?? s;
+}
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://civilezy.in";
 
 export async function GET(req: NextRequest) {
@@ -23,8 +33,9 @@ export async function GET(req: NextRequest) {
     }
 
     const ticket = snap.data()!;
+    const currentStatus = normalizeStatus(ticket.status as string | undefined);
 
-    if (!["WAITING_FOR_STUDENT", "RESOLVED"].includes(ticket.status as string)) {
+    if (!["WAITING_FOR_STUDENT", "RESOLVED"].includes(currentStatus)) {
       return NextResponse.redirect(`${SITE_URL}/support/${id}?msg=already_handled`);
     }
 

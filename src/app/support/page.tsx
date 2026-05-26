@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSupportModal } from "@/contexts/SupportContext";
 import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { STATUS_LABELS, STATUS_COLORS, PRIORITY_COLORS, formatDate, type ApiTicket } from "@/lib/tickets";
+import { STATUS_LABELS, STATUS_COLORS, PRIORITY_COLORS, formatDate, normalizeTicketStatus, type ApiTicket } from "@/lib/tickets";
 
 export default function StudentSupportPage() {
   const { user, loading: authLoading } = useAuth();
@@ -72,6 +72,7 @@ export default function StudentSupportPage() {
           return {
             id: d.id,
             ...raw,
+            status: normalizeTicketStatus(raw.status as string) ?? raw.status,
             createdAt: raw.createdAt?.toDate?.()?.toISOString() ?? null,
             updatedAt: raw.updatedAt?.toDate?.()?.toISOString() ?? null,
             resolvedAt: raw.resolvedAt?.toDate?.()?.toISOString() ?? null,
