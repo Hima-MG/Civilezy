@@ -62,11 +62,20 @@ export default function AdminSupportPage() {
     setTimeout(() => setFlash(null), 6000);
   }, []);
 
-  const fetchTickets = useCallback(async () => {
-    setLoading(true);
-    setLoadError("");
+  // ── ROOT-CAUSE FIX ────────────────────────────────────────────────────────
+  // `silent=true` → background auto-refresh that does NOT call setLoading(true).
+  // Previously every auto-refresh call set setLoading(true), which replaced the
+  // entire ticket table with a spinner every 30 s — perceived as "page reloading."
+  // Now the initial/manual load uses silent=false (spinner shown once on mount),
+  // and the 30-second background refresh uses silent=true (table stays visible).
+  const fetchTickets = useCallback(async (silent = false) => {
+    if (!silent) {
+      console.log("Loading tickets");
+      setLoading(true);
+      setLoadError("");
+    }
     try {
-      console.log("[admin/support] ▶ fetchTickets → GET /api/tickets/list");
+      console.log("[admin/support] ▶ fetchTickets → GET /api/tickets/list", silent ? "(silent)" : "(explicit)");
       const res = await fetch("/api/tickets/list");
       const json = await res.json() as { tickets?: ApiTicket[]; _count?: number; error?: string };
       console.log(`[admin/support] API response — HTTP ${res.status}`, json);
@@ -76,11 +85,9 @@ export default function AdminSupportPage() {
       const loaded = json.tickets ?? [];
       const rawCount = json._count ?? loaded.length;
 
-      // ── Step 7: log raw count BEFORE any client-side filtering ────────────
       console.log(`[admin/support] Firestore docs loaded (raw _count): ${rawCount}`);
       console.log(`[admin/support] tickets array length after mapping: ${loaded.length}`);
 
-      // ── Steps 1-3: log each ticket's key fields ───────────────────────────
       if (loaded.length > 0) {
         console.log("[admin/support] Raw Firestore docs (mapped):", loaded);
         console.log("[admin/support] Mapped tickets summary:",
@@ -102,29 +109,34 @@ export default function AdminSupportPage() {
 
       setApiCount(rawCount);
       setTickets(loaded);
+      console.log("State updated");
     } catch (err) {
       const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
       console.error("[admin/support] ✗ fetchTickets failed:", msg);
-      setLoadError(msg);
+      // Silent failures are suppressed from the UI — only logged to console
+      if (!silent) setLoadError(msg);
+      else console.warn("[admin/support] Silent refresh error (not shown to user):", msg);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
-  // Initial load on mount
+  // Initial load on mount — explicit (shows loading spinner once)
   useEffect(() => {
-    fetchTickets();
+    console.log("Component mounted");
+    fetchTickets(false);
   }, [fetchTickets]);
 
-  // Auto-refresh every 30 s so new tickets appear without a manual reload.
-  // (We cannot use onSnapshot here: the Firestore security rules only allow
-  //  authenticated students to read their own ticket via the client SDK.
-  //  The admin is not a Firebase Auth user — reads must go through the
-  //  Admin-SDK API route which bypasses security rules entirely.)
+  // ── ROOT-CAUSE FIX ────────────────────────────────────────────────────────
+  // silent=true → background refresh without touching the loading state, so
+  // the ticket table is NEVER replaced by the loading spinner mid-session.
+  // (We cannot use onSnapshot here: Firestore security rules require auth.
+  //  Admin is not a Firebase Auth user — reads go through Admin-SDK API routes.)
   useEffect(() => {
     const id = setInterval(() => {
-      console.log("[admin/support] ↻ auto-refresh");
-      fetchTickets();
+      console.log("Snapshot triggered");
+      console.log("[admin/support] ↻ silent auto-refresh (30 s) — table stays visible");
+      fetchTickets(true); // silent=true: no setLoading(true), no error banner reset
     }, 30_000);
     return () => clearInterval(id);
   }, [fetchTickets]);
@@ -567,7 +579,7 @@ export default function AdminSupportPage() {
               }}>{loadError}</pre>
             </div>
             <button
-              onClick={fetchTickets}
+              onClick={() => fetchTickets(false)}
               style={{
                 padding: "8px 16px", borderRadius: "8px", flexShrink: 0,
                 background: "rgba(248,113,113,0.15)", border: "1px solid rgba(248,113,113,0.35)",
@@ -730,7 +742,7 @@ export default function AdminSupportPage() {
         </FilterSelect>
 
         <button
-          onClick={fetchTickets}
+          onClick={() => fetchTickets(false)}
           style={{
             background: "rgba(255,133,52,0.1)", border: "1px solid rgba(255,133,52,0.3)",
             borderRadius: "10px", color: "#FF8534", padding: "9px 16px",

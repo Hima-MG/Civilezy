@@ -31,6 +31,13 @@ const STATUS_OPTIONS: TicketStatus[] = [
 export default function AdminTicketDetailPage() {
   const { ticketId } = useParams<{ ticketId: string }>();
   const router = useRouter();
+  // Keep router in a ref so fetchAll doesn't need it as a dep.
+  // ROOT-CAUSE FIX: including `router` in fetchAll's useCallback dep array caused
+  // fetchAll to get a new identity on every render in some Next.js/Strict-Mode
+  // environments → both useEffect([fetchAll]) hooks re-fired continuously →
+  // rapid-fire fetch loop + 15-second interval recreated on every render.
+  const routerRef = useRef(router);
+  useEffect(() => { routerRef.current = router; }, [router]);
 
   const [ticket, setTicket] = useState<ApiTicket | null>(null);
   const [messages, setMessages] = useState<ApiMessage[]>([]);
@@ -56,16 +63,26 @@ export default function AdminTicketDetailPage() {
     setTimeout(() => setFlash(""), 8000);
   };
 
-  const fetchAll = useCallback(async () => {
+  // ── ROOT-CAUSE FIX ────────────────────────────────────────────────────────
+  // 1. `router` removed from deps — replaced with routerRef.current.
+  //    `router` in deps caused fetchAll to get a new identity whenever the router
+  //    object reference changed (React Strict Mode / dev re-renders), re-firing
+  //    both useEffect([fetchAll]) hooks and creating a rapid-fire fetch loop.
+  // 2. `silent=true` → background auto-refresh skips setLoading(true) so the
+  //    ticket detail view is NEVER replaced by a spinner every 15 s.
+  const fetchAll = useCallback(async (silent = false) => {
     if (!ticketId) return;
-    setLoading(true);
+    if (!silent) {
+      console.log("Loading tickets");
+      setLoading(true);
+    }
     try {
       // Step 1: fetch the ticket by its Firestore doc ID (from the URL param)
       const tRes = await fetch(`/api/tickets/detail?id=${ticketId}`);
       const tJson = await tRes.json() as { ticket?: ApiTicket; error?: string };
 
       if (!tRes.ok) {
-        if (tRes.status === 404) { router.push("/admin/support"); return; }
+        if (tRes.status === 404) { routerRef.current.push("/admin/support"); return; }
         throw new Error(tJson.error ?? `HTTP ${tRes.status}`);
       }
 
@@ -88,32 +105,37 @@ export default function AdminTicketDetailPage() {
       setNewPriority(t.priority);
       setAssignedTo(t.assignedTo ?? "");
       setAdminNotes(t.adminNotes ?? "");
+      console.log("State updated");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error("[admin-detail] fetchAll failed:", msg);
-      showFlash(msg, "err");
+      if (!silent) showFlash(msg, "err");
+      else console.warn("[admin-detail] Silent refresh error (not shown to user):", msg);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
-  }, [ticketId, router]);
+  }, [ticketId]); // router intentionally excluded — use routerRef.current instead
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  // Initial load — explicit (shows loading spinner once on mount)
+  useEffect(() => {
+    console.log("Component mounted");
+    fetchAll(false);
+  }, [fetchAll]);
 
-  // ── Auto-refresh every 15 s ───────────────────────────────────────────────
-  // WHY: The admin panel has no Firebase Auth user (auth is a sessionStorage
-  // passphrase).  Firestore security rules require request.auth != null, so
-  // ALL client-SDK onSnapshot listeners return permission-denied immediately
-  // and can never push updates to this page.
+  // ── ROOT-CAUSE FIX: silent auto-refresh every 15 s ────────────────────────
+  // silent=true → does NOT call setLoading(true), so the entire ticket detail
+  // view is NEVER replaced by a loading spinner every 15 s.
   //
-  // This polling approach uses the Admin-SDK API routes (which bypass rules)
-  // and therefore always succeeds.  It picks up:
-  //   • Attachment URLs after the student's background upload completes
-  //   • New student replies
-  //   • Status / priority changes made by another admin session
+  // WHY polling instead of onSnapshot: The admin panel has no Firebase Auth user
+  // (auth is sessionStorage passphrase).  Firestore security rules require
+  // request.auth != null, so ALL client-SDK onSnapshot listeners return
+  // permission-denied.  Admin-SDK API routes bypass rules and always succeed.
+  // Picks up: attachment URLs, new student replies, status/priority changes.
   useEffect(() => {
     const id = setInterval(() => {
-      console.log("[admin-detail] ↻ auto-refresh (15 s)");
-      fetchAll();
+      console.log("Snapshot triggered");
+      console.log("[admin-detail] ↻ silent auto-refresh (15 s) — detail view stays visible");
+      fetchAll(true); // silent=true: no setLoading(true), no flash on error
     }, 15_000);
     return () => clearInterval(id);
   }, [fetchAll]);
@@ -362,7 +384,7 @@ export default function AdminTicketDetailPage() {
         </div>
         {/* Manual refresh — catches attachments even if onSnapshot is blocked by security rules */}
         <button
-          onClick={fetchAll}
+          onClick={() => fetchAll(false)}
           title="Refresh ticket data (useful if attachments were uploaded after this page opened)"
           style={{
             padding: "7px 14px", borderRadius: "10px",
