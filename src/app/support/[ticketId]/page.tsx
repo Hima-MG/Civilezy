@@ -189,10 +189,19 @@ export default function StudentTicketDetailPage() {
       // Upload attachment if present
       let attachmentUrl: string | null = null;
       if (attachment) {
-        const path = `support_screenshots/${Date.now()}_${attachment.name}`;
+        // Use the canonical support-attachments path (matches Firebase Storage security rules)
+        const path = `support-attachments/${ticket.ticketId}/messages/${Date.now()}_${attachment.name}`;
+        console.log(`UPLOAD_STARTED: ${path}`);
         const sRef = storageRef(storage, path);
-        await uploadBytes(sRef, attachment);
-        attachmentUrl = await getDownloadURL(sRef);
+        try {
+          await uploadBytes(sRef, attachment);
+          attachmentUrl = await getDownloadURL(sRef);
+          console.log(`UPLOAD_SUCCESS: ${path}`);
+        } catch (err) {
+          const code = (err as { code?: string }).code ?? "unknown";
+          console.error(`UPLOAD_FAILED: ${path} — [${code}]`, err);
+          // Continue sending the reply without the attachment rather than blocking the user
+        }
       }
 
       // Use the messages API (Admin SDK — bypasses Firestore rules)
@@ -784,16 +793,17 @@ function AttachmentsBlock({
   ticket: ApiTicket;
   onLightbox: (url: string) => void;
 }) {
-  // Merge new attachments array with old screenshotUrl (backward compat)
-  const images = [
-    ...(ticket.attachments ?? []),
-    ...(!ticket.attachments?.length && ticket.screenshotUrl ? [ticket.screenshotUrl] : []),
-  ];
+  // Build image list: prefer attachments[] array; fall back to flat screenshotUrl
+  const images = (ticket.attachments?.length ?? 0) > 0
+    ? (ticket.attachments ?? [])
+    : ticket.screenshotUrl
+      ? [ticket.screenshotUrl]
+      : [];
 
-  // Support both new schema (voiceNotes[], screenRecordings[]) and legacy flat fields
-  const voiceUrl = ticket.voiceNotes?.[0]?.url ?? ticket.voiceNoteUrl ?? null;
-  const voiceDuration = ticket.voiceNotes?.[0]?.duration ?? ticket.voiceDuration ?? null;
-  const videoUrl = ticket.screenRecordings?.[0] ?? ticket.screenRecordingUrl ?? null;
+  // Check flat fields first (primary write path), then array fields (backward compat)
+  const voiceUrl       = ticket.voiceNoteUrl      ?? ticket.voiceNotes?.[0]?.url      ?? null;
+  const voiceDuration  = ticket.voiceDuration      ?? ticket.voiceNotes?.[0]?.duration ?? null;
+  const videoUrl       = ticket.screenRecordingUrl ?? ticket.screenRecordings?.[0]     ?? null;
   const hasAudio = !!voiceUrl;
   const hasVideo = !!videoUrl;
 

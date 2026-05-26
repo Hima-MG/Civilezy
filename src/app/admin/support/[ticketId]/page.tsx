@@ -659,15 +659,17 @@ function AdminMediaCard({
   ticket: ApiTicket;
   onLightbox: (url: string) => void;
 }) {
-  // Merge new attachments with legacy screenshotUrl
-  const images = [
-    ...(ticket.attachments ?? []),
-    ...(!ticket.attachments?.length && ticket.screenshotUrl ? [ticket.screenshotUrl] : []),
-  ];
-  // Support both new schema (voiceNotes[], screenRecordings[]) and legacy flat fields
-  const voiceUrl = ticket.voiceNotes?.[0]?.url ?? ticket.voiceNoteUrl ?? null;
-  const voiceDuration = ticket.voiceNotes?.[0]?.duration ?? ticket.voiceDuration ?? null;
-  const videoUrl = ticket.screenRecordings?.[0] ?? ticket.screenRecordingUrl ?? null;
+  // Build image list: prefer attachments[] array; fall back to flat screenshotUrl
+  const images = (ticket.attachments?.length ?? 0) > 0
+    ? (ticket.attachments ?? [])
+    : ticket.screenshotUrl
+      ? [ticket.screenshotUrl]
+      : [];
+
+  // Check flat fields first (primary write path), then array fields (backward compat)
+  const voiceUrl       = ticket.voiceNoteUrl       ?? ticket.voiceNotes?.[0]?.url      ?? null;
+  const voiceDuration  = ticket.voiceDuration       ?? ticket.voiceNotes?.[0]?.duration ?? null;
+  const videoUrl       = ticket.screenRecordingUrl  ?? ticket.screenRecordings?.[0]     ?? null;
   const hasAudio = !!voiceUrl;
   const hasVideo = !!videoUrl;
 

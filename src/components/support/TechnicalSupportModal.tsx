@@ -124,6 +124,7 @@ async function uploadWithProgress(
   path: string,
   onProgress?: (pct: number) => void
 ): Promise<string | null> {
+  console.log(`UPLOAD_STARTED: ${path} (${(fileOrBlob.size / 1024).toFixed(1)} KB)`);
   try {
     const sRef = storageRef(storage, path);
     const task = uploadBytesResumable(sRef, fileOrBlob);
@@ -136,17 +137,26 @@ async function uploadWithProgress(
           onProgress?.(pct);
         },
         (err) => {
-          console.warn(`[upload] ${path} failed:`, err);
+          // err.code is e.g. "storage/unauthorized" — critical for diagnosing Storage rule failures
+          console.error(`UPLOAD_FAILED: ${path} — [${err.code}] ${err.message}`);
           resolve(null);
         },
         async () => {
-          try { resolve(await getDownloadURL(task.snapshot.ref)); }
-          catch { resolve(null); }
+          try {
+            const url = await getDownloadURL(task.snapshot.ref);
+            console.log(`UPLOAD_SUCCESS: ${path} — URL: ${url.substring(0, 80)}...`);
+            resolve(url);
+          } catch (err) {
+            const code = (err as { code?: string }).code ?? "unknown";
+            console.error(`UPLOAD_FAILED (getDownloadURL): ${path} — [${code}]`, err);
+            resolve(null);
+          }
         }
       );
     });
   } catch (err) {
-    console.warn(`[upload] ${path} failed:`, err);
+    const code = (err as { code?: string }).code ?? "unknown";
+    console.error(`UPLOAD_FAILED (init): ${path} — [${code}]`, err);
     return null;
   }
 }
@@ -524,16 +534,36 @@ export default function TechnicalSupportModal() {
     console.log(`[upload] ✅ All uploads finished in ${uploadElapsed}ms`);
 
     // ── PATCH ticket with collected URLs ──────────────────────────────────────
+    // IMPORTANT: write BOTH the flat legacy fields (screenshotUrl, voiceNoteUrl,
+    // voiceDuration, screenRecordingUrl) AND the new array fields (attachments,
+    // voiceNotes, screenRecordings) so every display path — old and new — finds a URL.
     const attachments = screenshotResults.filter((u): u is string => !!u);
     const patch: Record<string, unknown> = {};
-    if (attachments.length) { patch.attachments = attachments; patch.screenshotUrl = attachments[0]; }
-    if (voiceUrl) patch.voiceNotes = [{ url: voiceUrl, duration: voiceDur }];
-    if (videoUrl) patch.screenRecordings = [videoUrl];
+
+    if (attachments.length > 0) {
+      patch.screenshotUrl  = attachments[0];                              // flat — primary display field
+      patch.attachments    = attachments;                                  // array — multi-screenshot support
+    }
+    if (voiceUrl) {
+      patch.voiceNoteUrl   = voiceUrl;                                    // flat — primary display field
+      patch.voiceDuration  = voiceDur;                                    // flat — duration display
+      patch.voiceNotes     = [{ url: voiceUrl, duration: voiceDur }];     // array — backward compat
+    }
+    if (videoUrl) {
+      patch.screenRecordingUrl = videoUrl;                                // flat — primary display field
+      patch.screenRecordings   = [videoUrl];                              // array — backward compat
+    }
 
     if (Object.keys(patch).length > 0) {
       const tPatch = performance.now();
       const patchPayload = { id: docId, ...patch };
-      console.log(`[upload] PATCH payload — docId: ${docId}, ticketId: ${ticketId}, fields:`, Object.keys(patch).join(", "));
+      console.log(`[upload] PATCH payload — docId: ${docId}, ticketId: ${ticketId}`);
+      console.log(`[upload] Fields being saved:`, Object.keys(patch).join(", "));
+      console.log(`[upload] Values:`, {
+        screenshotUrl: patch.screenshotUrl ?? "(none)",
+        voiceNoteUrl: patch.voiceNoteUrl ?? "(none)",
+        screenRecordingUrl: patch.screenRecordingUrl ?? "(none)",
+      });
       fetch("/api/tickets/update", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -546,10 +576,12 @@ export default function TechnicalSupportModal() {
             try { errBody = JSON.stringify(await res.json()); } catch { /* ignore */ }
             console.error(`[upload] ✗ PATCH FAILED — HTTP ${res.status} after ${elapsed}ms`, errBody);
           } else {
-            console.log(`[upload] ✅ Firestore updated — attachment URLs saved to ticket ${ticketId} in ${elapsed}ms`);
+            console.log(`[upload] ✅ Firestore updated in ${elapsed}ms — screenshotUrl=${patch.screenshotUrl ?? "null"} voiceNoteUrl=${patch.voiceNoteUrl ?? "null"} screenRecordingUrl=${patch.screenRecordingUrl ?? "null"}`);
           }
         })
-        .catch(err => console.warn("[upload] PATCH network error:", err));
+        .catch(err => console.error("[upload] PATCH network error:", err));
+    } else {
+      console.warn("[upload] No URLs collected — PATCH skipped. Check UPLOAD_FAILED lines above for the root cause (likely: storage/unauthorized → fix Firebase Storage security rules).");
     }
 
     setUploadState(p => {
