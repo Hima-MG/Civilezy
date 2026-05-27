@@ -55,7 +55,8 @@
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\" -Directory)",
       "Bash(Select-Object Name)",
       "Bash(cat)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('next:', p.dependencies.next, '\\\\nfirebase:', p.dependencies.firebase, '\\\\nfirebase-admin:', p.dependencies['firebase-admin']\\)\")"
     ]
   }
 }

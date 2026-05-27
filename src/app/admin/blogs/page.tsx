@@ -221,10 +221,18 @@ export default function AdminBlogsPage() {
                             style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "7px", padding: "5px 10px", color: "#fff", fontSize: "12px", textDecoration: "none", fontWeight: 600, whiteSpace: "nowrap" }}>
                             ✏️ Edit
                           </Link>
-                          <a href={`/blogs/${blog.slug}`} target="_blank" rel="noopener noreferrer"
-                            style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", borderRadius: "7px", padding: "5px 10px", color: "#60a5fa", fontSize: "12px", textDecoration: "none", fontWeight: 600, whiteSpace: "nowrap" }}>
-                            👁 View
-                          </a>
+                          {blog.status === "published" ? (
+                            <a href={`/blogs/${blog.slug}`} target="_blank" rel="noopener noreferrer"
+                              style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)", borderRadius: "7px", padding: "5px 10px", color: "#60a5fa", fontSize: "12px", textDecoration: "none", fontWeight: 600, whiteSpace: "nowrap" }}>
+                              👁 View
+                            </a>
+                          ) : (
+                            <span
+                              title="Publish the blog first to view it publicly"
+                              style={{ background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.08)", borderRadius: "7px", padding: "5px 10px", color: "rgba(96,165,250,0.35)", fontSize: "12px", fontWeight: 600, whiteSpace: "nowrap", cursor: "not-allowed" }}>
+                              👁 View
+                            </span>
+                          )}
                           {blog.status === "published" ? (
                             <button disabled={busy} onClick={() => doAction(blog.id!, "unpublish")}
                               style={{ background: "rgba(255,184,0,0.1)", border: "1px solid rgba(255,184,0,0.2)", borderRadius: "7px", padding: "5px 10px", color: "#FFB800", fontSize: "12px", cursor: busy ? "default" : "pointer", fontWeight: 600, opacity: busy ? 0.5 : 1, whiteSpace: "nowrap" }}>

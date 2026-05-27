@@ -6,7 +6,7 @@ import { getPublishedBlogsAdmin, getFeaturedBlogsAdmin } from "@/lib/blog-admin"
 import { BLOG_CATEGORIES, getCategoryMeta } from "@/types/blog";
 import type { Blog } from "@/types/blog";
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: { absolute: "Civil Engineering Blog | Civilezy — Exam Prep & PSC Insights" },

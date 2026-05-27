@@ -13,7 +13,7 @@ import { getCategoryMeta } from "@/types/blog";
 import type { Blog } from "@/types/blog";
 import ViewCounter from "./ViewCounter";
 
-export const revalidate = 3600;
+export const revalidate = 60;
 export const dynamicParams = true;
 
 type Props = { params: { slug: string } };
