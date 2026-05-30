@@ -56,7 +56,8 @@
       "Bash(Select-Object Name)",
       "Bash(cat)",
       "Read(//tmp/**)",
-      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('next:', p.dependencies.next, '\\\\nfirebase:', p.dependencies.firebase, '\\\\nfirebase-admin:', p.dependencies['firebase-admin']\\)\")"
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('next:', p.dependencies.next, '\\\\nfirebase:', p.dependencies.firebase, '\\\\nfirebase-admin:', p.dependencies['firebase-admin']\\)\")",
+      "Bash(del \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\\\\components\\\\sections\\\\ResultsSection.tsx\")"
     ]
   }
 }

@@ -102,8 +102,9 @@ export default function AdminAnnouncementsPage() {
       setTab("list");
       await fetchAll();
     } catch (err) {
-      console.error("[AnnouncementAdmin] save failed:", err);
-      flash("❌ Save failed — please try again");
+      const e = err as { code?: string; message?: string };
+      console.error("[AnnouncementAdmin] save failed — code:", e?.code, "| message:", e?.message, "| full:", err);
+      flash(`❌ Save failed${e?.code ? ` (${e.code})` : ""} — check console`);
     } finally {
       setSaving(false);
     }

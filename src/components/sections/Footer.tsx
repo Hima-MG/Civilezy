@@ -79,8 +79,7 @@ export default function Footer() {
             </Link>
 
             <p style={{ fontSize:"14px", color:"rgba(255,255,255,0.55)", lineHeight:1.7 }}>
-              Kerala&apos;s only dedicated Civil Engineering PSC platform. Course category-based mock tests,
-              Malayalam cAudio Lessons,Smart interactive lessond, expert-built questions. From confused to confident rank holder.
+              Kerala&apos;s only dedicated Civil Engineering PSC platform — category-based mock tests, Malayalam audio lessons, smart interactive lessons, and expert-built questions. From confused aspirant to confident rank holder.
             </p>
 
             <div style={{ marginTop:"16px", display:"flex", gap:"8px", flexWrap:"wrap" }} aria-label="Platform categories">

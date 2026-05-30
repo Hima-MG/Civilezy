@@ -8,8 +8,36 @@ import { EXTERNAL_URLS } from "@/lib/constants";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const LMS_FREE_TEST = EXTERNAL_URLS.demo;
-const LMS_LOGIN= EXTERNAL_URLS.login
-const LMS_SEE = EXTERNAL_URLS.see;
+const LMS_LOGIN = EXTERNAL_URLS.login;
+
+const LIVE_SESSIONS = [
+  {
+    id:          "civilwar",
+    icon:        "⚔️",
+    title:       "CivilEzy CivilWar",
+    badge:       "🔴 LIVE DAILY",
+    time:        "Daily at 6:20 PM",
+    description: "Rapid-fire PSC Civil Engineering discussion, strategy, question battles, and exam-oriented learning.",
+    btnLabel:    "Join Zoom Session",
+    link:        "https://us06web.zoom.us/j/84807826367?pwd=9DCTBwpz5f3jLCcP7HEMZTA8hDAuHe.1",
+    accentColor: "#FF6200",
+    accentBg:    "rgba(255,98,0,0.12)",
+    accentBorder:"rgba(255,98,0,0.28)",
+  },
+  {
+    id:          "overseer",
+    icon:        "🔥",
+    title:       "Overseer Grade III Revision",
+    badge:       "🔴 LIVE DAILY",
+    time:        "Daily at 9:30 PM",
+    description: "Live revision sessions focused on upcoming Overseer Grade III (LSGD) examinations.",
+    btnLabel:    "Watch YouTube Live",
+    link:        "https://www.youtube.com/live/bUrgdfzYMeI?si=TFKAVC8bIIiLxSy4",
+    accentColor: "#FF4444",
+    accentBg:    "rgba(255,68,68,0.1)",
+    accentBorder:"rgba(255,68,68,0.28)",
+  },
+] as const;
 
 // ─── Rank System ────────────────────────────────────────────────────────────
 interface RankInfo { label: string; icon: string; color: string; }
@@ -21,11 +49,11 @@ function getRank(score: number): RankInfo {
   return                     { label: "Beginner",       icon: "🟢", color: "#32C864" };
 }
 
-const STATS = [
-  { num: "5,200+",  label: "Active Students" },
-  { num: "2000",     label: "Rank Holders"    },
-  { num: "50,000+", label: "PSC Questions"   },
-  { num: "4.9★",    label: "Student Rating"  },
+const TRUST_METRICS = [
+  { icon: "🏛️", num: "18+",    label: "Years Legacy",     sub: "Backed by Wincentre Since 2008" },
+  { icon: "👨‍🎓", num: "5,200+", label: "Students Trained", sub: "Across Kerala"                 },
+  { icon: "⭐",  num: "4.8",   label: "Student Rating",   sub: "Google Play Store"              },
+  { icon: "🎯", num: "2,000+", label: "Job Achievers",    sub: "In Govt. Sector"               },
 ];
 
 const WEEK_LETTERS = ["M","T","W","T","F","S","S"] as const;
@@ -209,9 +237,18 @@ export default function Hero() {
           {/* ═══ LEFT SIDE ═══ */}
           <div style={{ animation:"heroFadeUp 0.7s ease forwards" }}>
             {/* Live badge */}
-            <div aria-hidden="true" style={{ display:"inline-flex", alignItems:"center", gap:"8px", background:"rgba(255,98,0,0.15)", border:"1px solid rgba(255,98,0,0.4)", borderRadius:"30px", padding:"6px 16px", marginBottom:"20px", fontSize:"13px", fontWeight:600, color:"#FF8534" }}>
+            <div aria-hidden="true" style={{ display:"inline-flex", alignItems:"center", gap:"8px", background:"rgba(255,98,0,0.15)", border:"1px solid rgba(255,98,0,0.4)", borderRadius:"30px", padding:"6px 16px", marginBottom:"10px", fontSize:"13px", fontWeight:600, color:"#FF8534" }}>
               <span style={{ width:"8px", height:"8px", borderRadius:"50%", background:"#FF6200", flexShrink:0, animation:"pulseDot 2s infinite" }} />
               Kerala&apos;s #1 PSC Civil Platform
+            </div>
+
+            {/* Wincentre authority byline */}
+            <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"22px" }}>
+              <div style={{ width:"20px", height:"1px", background:"rgba(255,184,0,0.5)" }} />
+              <p style={{ fontSize:"12px", fontWeight:600, color:"rgba(255,200,120,0.85)", letterSpacing:"0.6px", textTransform:"uppercase", margin:0 }}>
+                Powered by Wincentre &nbsp;·&nbsp; Trusted Since 2008
+              </p>
+              <div style={{ width:"20px", height:"1px", background:"rgba(255,184,0,0.5)" }} />
             </div>
 
             {/* H1 */}
@@ -266,34 +303,197 @@ export default function Hero() {
                 🚀 Start Demo Course
               </a>
               <a
-                href={LMS_SEE}
+                href={LIVE_SESSIONS[0].link}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="See how CivilEzy works — opens in new tab"
+                aria-label="Join CivilWar Live Zoom session — opens in new tab"
                 className="hero-cta-btn hero-cta-secondary"
                 style={{ background:"transparent", color:"#ffffff", border:"2px solid rgba(255,255,255,0.3)", padding:"14px 28px", borderRadius:"50px", fontFamily:"Nunito, sans-serif", fontSize:"16px", fontWeight:600, cursor:"pointer", transition:"border-color 0.2s, background 0.2s", display:"inline-flex", alignItems:"center", gap:"8px", textDecoration:"none" }}
                 onMouseEnter={onSecondaryEnter}
                 onMouseLeave={onSecondaryLeave}
               >
-                ▶ See How It Works
+                ⚔️ Join CivilWar Live
               </a>
             </div>
 
-            <p style={{ fontSize:"12px", color:"rgba(255,255,255,0.38)", marginBottom:"32px" }}>
-              ✓ Demo course access &nbsp;·&nbsp; ✓ Kerala PSC-specific questions
+            {/* CTA microcopy */}
+            <p style={{ fontSize:"12.5px", color:"rgba(255,255,255,0.58)", marginBottom:"24px", letterSpacing:"0.2px" }}>
+              No registration &nbsp;·&nbsp; Free Demo &nbsp;·&nbsp; Real PSC Questions
             </p>
 
-            {/* Stats */}
-            <dl className="hero-stats-row" style={{ display:"flex", gap:"28px", flexWrap:"wrap" }} aria-label="Platform statistics">
-              {STATS.map(({ num, label }) => (
-                <div key={label} style={{ textAlign:"center" }}>
-                  <dt style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"26px", fontWeight:700, background:"linear-gradient(135deg,#FF6200,#FFB800)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>
-                    {num}
-                  </dt>
-                  <dd style={{ fontSize:"11px", color:"rgba(255,255,255,0.5)", marginTop:"-2px" }}>{label}</dd>
+            {/* ── Live Learning Panel ── */}
+            <div
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: "16px",
+                overflow: "hidden",
+                marginBottom: "28px",
+                backdropFilter: "blur(10px)",
+              }}
+            >
+              {/* Header */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "10px 16px",
+                  borderBottom: "1px solid rgba(255,255,255,0.07)",
+                  background: "rgba(255,68,68,0.06)",
+                }}
+              >
+                <span
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background: "#FF4444",
+                    flexShrink: 0,
+                    animation: "pulseDot 2s infinite",
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 800,
+                    color: "#FF8888",
+                    letterSpacing: "0.8px",
+                    textTransform: "uppercase" as const,
+                    fontFamily: "Nunito, sans-serif",
+                  }}
+                >
+                  🔴 LIVE TODAY
+                </span>
+              </div>
+
+              {/* Session rows */}
+              {LIVE_SESSIONS.map((session, idx) => (
+                <div
+                  key={session.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "14px",
+                    padding: "14px 16px",
+                    borderBottom: idx < LIVE_SESSIONS.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                  }}
+                >
+                  {/* Icon bubble */}
+                  <div
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "10px",
+                      background: session.accentBg,
+                      border: `1px solid ${session.accentBorder}`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "18px",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {session.icon}
+                  </div>
+
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        marginBottom: "2px",
+                        flexWrap: "wrap" as const,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color: "#fff",
+                          fontFamily: "Nunito, sans-serif",
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {session.title}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "9px",
+                          fontWeight: 800,
+                          color: "#FF8888",
+                          background: "rgba(255,68,68,0.15)",
+                          border: "1px solid rgba(255,68,68,0.3)",
+                          borderRadius: "20px",
+                          padding: "2px 7px",
+                          letterSpacing: "0.5px",
+                          textTransform: "uppercase" as const,
+                          fontFamily: "Nunito, sans-serif",
+                          whiteSpace: "nowrap" as const,
+                        }}
+                      >
+                        {session.badge}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "11px",
+                        color: session.accentColor,
+                        fontWeight: 600,
+                        fontFamily: "Nunito, sans-serif",
+                      }}
+                    >
+                      {session.time}
+                    </div>
+                  </div>
+
+                  {/* Join button */}
+                  <a
+                    href={session.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      flexShrink: 0,
+                      background: session.accentBg,
+                      border: `1px solid ${session.accentBorder}`,
+                      borderRadius: "8px",
+                      padding: "7px 13px",
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      color: session.accentColor,
+                      fontFamily: "Nunito, sans-serif",
+                      textDecoration: "none",
+                      whiteSpace: "nowrap" as const,
+                      transition: "background 0.2s, border-color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = `${session.accentBg.replace("0.1", "0.22").replace("0.12", "0.22")}`;
+                      e.currentTarget.style.borderColor = session.accentColor;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = session.accentBg;
+                      e.currentTarget.style.borderColor = session.accentBorder;
+                    }}
+                  >
+                    {session.btnLabel}
+                  </a>
                 </div>
               ))}
-            </dl>
+            </div>
+
+            {/* Trust metrics row */}
+            <div className="hero-trust-metrics" aria-label="Platform trust metrics" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"10px" }}>
+              {TRUST_METRICS.map(({ icon, num, label, sub }) => (
+                <div key={label} style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.09)", borderRadius:"12px", padding:"12px 8px", textAlign:"center" }}>
+                  <div style={{ fontSize:"18px", lineHeight:1, marginBottom:"5px" }} aria-hidden="true">{icon}</div>
+                  <div style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"20px", fontWeight:700, background:"linear-gradient(135deg,#FF6200,#FFB800)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", lineHeight:1.1 }}>{num}</div>
+                  <div style={{ fontSize:"10px", color:"rgba(255,255,255,0.75)", marginTop:"3px", lineHeight:1.3, fontWeight:600 }}>{label}</div>
+                  <div style={{ fontSize:"9px", color:"rgba(255,255,255,0.4)", marginTop:"2px", lineHeight:1.3 }}>{sub}</div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* ═══ RIGHT SIDE — PSC Challenge Teaser ═══ */}
@@ -493,6 +693,12 @@ export default function Hero() {
             justify-content: center !important;
             font-size: 15px !important;
             padding: 14px 20px !important;
+          }
+        }
+        /* ── Trust metrics — 2 col on small screens ── */
+        @media (max-width: 520px) {
+          .hero-trust-metrics {
+            grid-template-columns: repeat(2, 1fr) !important;
           }
         }
       `}</style>

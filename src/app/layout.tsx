@@ -1,6 +1,31 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import { Rajdhani, Nunito } from "next/font/google";
 import "./globals.css";
+
+// ─── Font optimisation ──────────────────────────────────────────────────────
+// next/font/google self-hosts fonts at build time — eliminates the
+// render-blocking fonts.googleapis.com / fonts.gstatic.com round-trips.
+// CSS variables match what globals.css already references:
+//   body       → var(--font-nunito)
+//   h1–h5      → var(--font-rajdhani)
+const rajdhani = Rajdhani({
+  subsets:  ["latin"],
+  weight:   ["400", "500", "600", "700"],
+  variable: "--font-rajdhani",
+  display:  "swap",
+  preload:  true,
+});
+
+const nunito = Nunito({
+  subsets:  ["latin"],
+  weight:   ["400", "500", "600", "700", "800"],
+  variable: "--font-nunito",
+  display:  "swap",
+  preload:  true,
+});
+// ───────────────────────────────────────────────────────────────────────────
+
 import Navbar from "@/components/Navbar";
 import StickyCTA from "@/components/sections/StickyCTA";
 import AnnouncementBar from "@/components/AnnouncementBar";
@@ -100,14 +125,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${rajdhani.variable} ${nunito.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(globalSchema) }}
