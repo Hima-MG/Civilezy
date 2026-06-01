@@ -1,5 +1,3 @@
-import { collection, getDocs, query, orderBy, limit, Timestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import type { IssueType } from "@/lib/reportGameArenaIssue";
 
 // ---------------------------------------------------------------------------
@@ -16,19 +14,54 @@ export interface ReportDoc {
   issueType: IssueType;
   description: string;
   userName: string | null;
-  createdAt: Timestamp | null;
+  /**
+   * createdAt is a serialised ISO string when it comes from the API route.
+   * The ReportedIssuesTable.formatDate() handles both Firestore Timestamps
+   * and ISO strings, so existing render code works without changes.
+   *
+   * We use `any` here intentionally to stay compatible with both shapes.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  createdAt: any;
   status: ReportStatus;
 }
 
 // ---------------------------------------------------------------------------
-// Fetch all reports, newest first
+// Fetch all reports via Admin-SDK API route
+//
+// WHY: The Firestore rule `allow read: if isAdmin()` requires a Firebase Auth
+// user with the custom claim admin==true.  The admin panel uses a passphrase,
+// so request.auth is null → every direct client-SDK read returns
+// PERMISSION_DENIED.  The /api/admin/reports route uses the Admin SDK which
+// bypasses Firestore rules entirely.
 // ---------------------------------------------------------------------------
-export async function getReportedIssues(max: number = 100): Promise<ReportDoc[]> {
-  const q = query(
-    collection(db, "game_arena_reports"),
-    orderBy("createdAt", "desc"),
-    limit(max),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as ReportDoc);
+export async function getReportedIssues(_max?: number): Promise<ReportDoc[]> {
+  console.log("[getReportedIssues] fetching via /api/admin/reports");
+
+  const res = await fetch("/api/admin/reports", { cache: "no-store" });
+
+  if (!res.ok) {
+    let errMsg = `HTTP ${res.status}`;
+    try {
+      const json = await res.json() as { error?: string };
+      if (json.error) errMsg = json.error;
+    } catch { /* ignore parse errors */ }
+
+    console.error("[getReportedIssues] ✗ API error:", errMsg);
+    throw new Error(errMsg);
+  }
+
+  const json = await res.json() as { reports: ReportDoc[]; _count: number };
+  console.log(`[getReportedIssues] ✅ ${json._count} report(s) loaded`);
+
+  if (json._count > 0) {
+    console.log("[getReportedIssues] Sample report:", {
+      id:         json.reports[0]?.id,
+      issueType:  json.reports[0]?.issueType,
+      status:     json.reports[0]?.status,
+      questionId: json.reports[0]?.questionId,
+    });
+  }
+
+  return json.reports ?? [];
 }

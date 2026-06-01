@@ -104,9 +104,25 @@ export default function ReportedIssuesTable() {
   const fetchReports = useCallback(async () => {
     setLoading(true);
     try {
-      setReports(await getReportedIssues());
-    } catch {
-      flash("Failed to load reports");
+      const data = await getReportedIssues();
+      console.log(`[ReportedIssuesTable] Firestore docs loaded: ${data.length}`);
+      if (data.length > 0) {
+        console.log("[ReportedIssuesTable] Reports summary:",
+          data.slice(0, 5).map((r) => ({
+            id:        r.id,
+            issueType: r.issueType,
+            status:    r.status,
+            createdAt: r.createdAt,
+          }))
+        );
+      }
+      setReports(data);
+    } catch (err) {
+      // Log the REAL error — not a generic message — so the root cause is
+      // visible in the browser console and server logs.
+      console.error("Reported Questions Error:", err);
+      const msg = err instanceof Error ? err.message : String(err);
+      flash(`Failed to load reports: ${msg}`);
     } finally {
       setLoading(false);
     }
@@ -170,7 +186,10 @@ export default function ReportedIssuesTable() {
 
   const formatDate = (ts: ReportDoc["createdAt"]) => {
     if (!ts) return "—";
-    return ts.toDate().toLocaleDateString("en-IN", {
+    // `ts` is either a Firestore Timestamp (has .toDate()) or an ISO string
+    // returned by the Admin SDK API route.
+    const date = typeof ts === "string" ? new Date(ts) : ts.toDate?.() ?? new Date(ts);
+    return date.toLocaleDateString("en-IN", {
       day: "2-digit", month: "short", year: "numeric",
       hour: "2-digit", minute: "2-digit",
     });
