@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 
+// Force dynamic rendering — this route reads live Firestore data.
+// Without this, Next.js App Router statically caches the GET response at build
+// time (when the collection is empty) and serves the stale cache forever.
+// Confirmed by the presence of .next/server/app/api/tickets/list.body/.meta.
+export const dynamic = "force-dynamic";
+
 const STATUS_NORM: Record<string, string> = {
   open: "OPEN", "in progress": "IN_PROGRESS", in_progress: "IN_PROGRESS",
   "waiting for student": "WAITING_FOR_STUDENT", waiting_for_student: "WAITING_FOR_STUDENT",
