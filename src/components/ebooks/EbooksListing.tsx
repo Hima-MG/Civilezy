@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getPublishedEbooks } from "@/lib/ebooks";
 import type { Ebook } from "@/types/ebook";
 import EbookCard from "./EbookCard";
+import EarlyBirdOfferSection from "./EarlyBirdOfferSection";
 
 const FILTERS = ["All", "Diploma", "B.Tech", "AE", "Surveyor", "Instructor"] as const;
 type Filter = (typeof FILTERS)[number];
@@ -52,6 +53,11 @@ export default function EbooksListing() {
         (e) => matchesFilter(e, activeFilter) && matchesSearch(e, search)
       ),
     [ebooks, activeFilter, search]
+  );
+
+  const offerEbooks = useMemo(
+    () => ebooks.filter((e) => e.offerEnabled),
+    [ebooks]
   );
 
   const isFiltering = search.trim() !== "" || activeFilter !== "All";
@@ -187,6 +193,11 @@ export default function EbooksListing() {
             ))}
           </div>
         </div>
+
+        {/* ── Early Bird Offer section (shown when not actively searching/filtering) ── */}
+        {!loading && !isFiltering && (
+          <EarlyBirdOfferSection offerEbooks={offerEbooks} />
+        )}
 
         {/* ── Loading ── */}
         {loading && (

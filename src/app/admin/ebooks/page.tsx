@@ -78,6 +78,14 @@ interface FormState {
   modules: string[];
   featured: boolean;
   published: boolean;
+  // Offer fields
+  offerEnabled: boolean;
+  originalPrice: string;
+  offerPrice: string;
+  couponCode: string;
+  offerLabel: string;
+  offerExpiry: string;
+  featuredOffer: boolean;
 }
 
 const EMPTY_FORM: FormState = {
@@ -87,6 +95,10 @@ const EMPTY_FORM: FormState = {
   featuresInput: "", modulesInput: "",
   features: [], modules: [],
   featured: false, published: true,
+  // Offer defaults
+  offerEnabled: false,
+  originalPrice: "", offerPrice: "", couponCode: "",
+  offerLabel: "", offerExpiry: "", featuredOffer: false,
 };
 
 function slugify(text: string): string {
@@ -170,6 +182,9 @@ export default function AdminEbooksPage() {
 
     setSaving(true);
     try {
+      const originalPrice = form.originalPrice ? parseFloat(form.originalPrice) : undefined;
+      const offerPrice = form.offerPrice ? parseFloat(form.offerPrice) : undefined;
+
       const input: EbookInput = {
         title: form.title.trim(),
         slug: form.slug.trim(),
@@ -185,6 +200,13 @@ export default function AdminEbooksPage() {
         modules: form.modules,
         featured: form.featured,
         published: form.published,
+        offerEnabled: form.offerEnabled,
+        originalPrice: originalPrice && !isNaN(originalPrice) ? originalPrice : undefined,
+        offerPrice: offerPrice && !isNaN(offerPrice) ? offerPrice : undefined,
+        couponCode: form.couponCode.trim() || undefined,
+        offerLabel: form.offerLabel.trim() || undefined,
+        offerExpiry: form.offerExpiry.trim() || undefined,
+        featuredOffer: form.featuredOffer,
       };
 
       if (editingId) {
@@ -224,6 +246,13 @@ export default function AdminEbooksPage() {
       modules: ebook.modules ?? [],
       featured: ebook.featured,
       published: ebook.published,
+      offerEnabled: ebook.offerEnabled ?? false,
+      originalPrice: ebook.originalPrice != null ? String(ebook.originalPrice) : "",
+      offerPrice: ebook.offerPrice != null ? String(ebook.offerPrice) : "",
+      couponCode: ebook.couponCode ?? "",
+      offerLabel: ebook.offerLabel ?? "",
+      offerExpiry: ebook.offerExpiry ?? "",
+      featuredOffer: ebook.featuredOffer ?? false,
     });
     setEditingId(ebook.id);
     setTab("form");
@@ -780,6 +809,108 @@ function EbookForm({
             placeholder="e.g. Surveying I — press Enter or comma to add"
             color="#3b82f6"
           />
+        </div>
+
+        {/* ── Early Bird Offer section ── */}
+        <div style={{
+          background: "rgba(255,98,0,0.06)",
+          border: "1px solid rgba(255,98,0,0.2)",
+          borderRadius: "14px",
+          padding: "20px",
+        }}>
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            marginBottom: form.offerEnabled ? "20px" : 0,
+            flexWrap: "wrap", gap: "12px",
+          }}>
+            <div>
+              <div style={{
+                fontFamily: "Rajdhani, sans-serif",
+                fontSize: "15px", fontWeight: 700, color: "#FF8534",
+                marginBottom: "2px",
+              }}>
+                🔥 Early Bird Offer
+              </div>
+              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>
+                Enable a discounted offer with coupon code
+              </div>
+            </div>
+            <Toggle
+              label="Enable Offer"
+              checked={form.offerEnabled}
+              onChange={() => set("offerEnabled", !form.offerEnabled)}
+              activeColor="#FF6200"
+            />
+          </div>
+
+          {form.offerEnabled && (
+            <div style={{ display: "grid", gap: "16px" }}>
+              {/* Original Price + Offer Price */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                <label style={lbl}>
+                  <span style={lblText}>Original Price (₹)</span>
+                  <input
+                    type="number" min="0"
+                    value={form.originalPrice}
+                    onChange={(e) => set("originalPrice", e.target.value)}
+                    placeholder="e.g. 20000"
+                    style={inputStyle}
+                  />
+                </label>
+                <label style={lbl}>
+                  <span style={lblText}>Offer Price (₹)</span>
+                  <input
+                    type="number" min="0"
+                    value={form.offerPrice}
+                    onChange={(e) => set("offerPrice", e.target.value)}
+                    placeholder="e.g. 10000"
+                    style={inputStyle}
+                  />
+                </label>
+              </div>
+
+              {/* Coupon Code + Offer Label */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                <label style={lbl}>
+                  <span style={lblText}>Coupon Code</span>
+                  <input
+                    value={form.couponCode}
+                    onChange={(e) => set("couponCode", e.target.value.toUpperCase())}
+                    placeholder="e.g. BTECH50"
+                    style={{ ...inputStyle, fontFamily: "monospace", letterSpacing: "0.08em" }}
+                  />
+                </label>
+                <label style={lbl}>
+                  <span style={lblText}>Offer Label</span>
+                  <input
+                    value={form.offerLabel}
+                    onChange={(e) => set("offerLabel", e.target.value)}
+                    placeholder="e.g. 50% OFF"
+                    style={inputStyle}
+                  />
+                </label>
+              </div>
+
+              {/* Expiry Date */}
+              <label style={lbl}>
+                <span style={lblText}>Offer Expiry Date</span>
+                <input
+                  value={form.offerExpiry}
+                  onChange={(e) => set("offerExpiry", e.target.value)}
+                  placeholder="e.g. 30-06-2026"
+                  style={{ ...inputStyle, maxWidth: "260px" }}
+                />
+              </label>
+
+              {/* Featured Offer toggle */}
+              <Toggle
+                label="Mark as Featured Offer (Best Value)"
+                checked={form.featuredOffer}
+                onChange={() => set("featuredOffer", !form.featuredOffer)}
+                activeColor="#FFB800"
+              />
+            </div>
+          )}
         </div>
 
         {/* Toggles */}
