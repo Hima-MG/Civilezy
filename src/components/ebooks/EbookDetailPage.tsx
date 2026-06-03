@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { getEbookBySlug } from "@/lib/ebooks";
 import type { Ebook } from "@/types/ebook";
-import OfferCard from "./OfferCard";
 
 interface Props {
   slug: string;
@@ -487,11 +486,8 @@ function HeroSection({ ebook }: { ebook: Ebook }) {
             )}
           </div>
 
-          {/* Early Bird Offer card */}
-          <OfferCard ebook={ebook} />
-
-          {/* Purchase button (shown only if no offer, or as fallback) */}
-          {ebook.purchaseUrl && !ebook.offerEnabled && (
+          {/* Purchase button */}
+          {ebook.purchaseUrl && (
             <a
               href={ebook.purchaseUrl}
               target="_blank"

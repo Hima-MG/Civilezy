@@ -16,14 +16,6 @@ export interface Ebook {
   modules: string[];
   featured: boolean;
   published: boolean;
-  // Early Bird Offer fields
-  offerEnabled?: boolean;
-  originalPrice?: number;
-  offerPrice?: number;
-  couponCode?: string;
-  offerLabel?: string;
-  offerExpiry?: string;
-  featuredOffer?: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
