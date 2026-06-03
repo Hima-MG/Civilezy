@@ -14,15 +14,7 @@ export interface ReportDoc {
   issueType: IssueType;
   description: string;
   userName: string | null;
-  /**
-   * createdAt is a serialised ISO string when it comes from the API route.
-   * The ReportedIssuesTable.formatDate() handles both Firestore Timestamps
-   * and ISO strings, so existing render code works without changes.
-   *
-   * We use `any` here intentionally to stay compatible with both shapes.
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  createdAt: any;
+  createdAt: { toDate: () => Date } | string | null;
   status: ReportStatus;
 }
 

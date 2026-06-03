@@ -188,7 +188,7 @@ export default function ReportedIssuesTable() {
     if (!ts) return "—";
     // `ts` is either a Firestore Timestamp (has .toDate()) or an ISO string
     // returned by the Admin SDK API route.
-    const date = typeof ts === "string" ? new Date(ts) : ts.toDate?.() ?? new Date(ts);
+    const date = typeof ts === "string" ? new Date(ts) : ts?.toDate() ?? new Date();
     return date.toLocaleDateString("en-IN", {
       day: "2-digit", month: "short", year: "numeric",
       hour: "2-digit", minute: "2-digit",
