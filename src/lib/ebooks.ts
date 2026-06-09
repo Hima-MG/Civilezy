@@ -20,7 +20,6 @@ function toEbook(id: string, data: Record<string, unknown>): Ebook {
 }
 
 // Sorts newest-first using the Firestore Timestamp if present.
-// Client-side sort avoids composite indexes for compound queries.
 function byCreatedAtDesc(a: Ebook, b: Ebook): number {
   const toMs = (t: unknown) =>
     t && typeof (t as Timestamp).toMillis === "function"
@@ -50,7 +49,7 @@ export async function getPublishedEbooks(): Promise<Ebook[]> {
 
 /**
  * Homepage featured section: published + featured.
- * Filters featured client-side to avoid a three-field composite index.
+ * Filters featured client-side to avoid a composite index.
  */
 export async function getFeaturedEbooks(): Promise<Ebook[]> {
   const snap = await getDocs(
@@ -59,6 +58,20 @@ export async function getFeaturedEbooks(): Promise<Ebook[]> {
   return snap.docs
     .map((d) => toEbook(d.id, d.data()))
     .filter((e) => e.featured)
+    .sort(byCreatedAtDesc);
+}
+
+/**
+ * Featured offers section: published ebooks where promotion.featured == true.
+ * Filters client-side to avoid composite indexes.
+ */
+export async function getFeaturedOfferEbooks(): Promise<Ebook[]> {
+  const snap = await getDocs(
+    query(collection(db, COL), where("published", "==", true))
+  );
+  return snap.docs
+    .map((d) => toEbook(d.id, d.data()))
+    .filter((e) => e.promotion?.enabled && e.promotion?.featured)
     .sort(byCreatedAtDesc);
 }
 

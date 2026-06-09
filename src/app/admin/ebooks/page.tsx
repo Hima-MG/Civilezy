@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import { Timestamp } from "firebase/firestore";
 import {
   getAllEbooks,
   addEbook,
   updateEbook,
   deleteEbook,
 } from "@/lib/ebooks";
-import type { Ebook, EbookInput } from "@/types/ebook";
+import type { Ebook, EbookInput, Promotion } from "@/types/ebook";
 import CoverImageUpload from "@/components/admin/CoverImageUpload";
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
@@ -78,6 +79,22 @@ interface FormState {
   modules: string[];
   featured: boolean;
   published: boolean;
+  productCategory: "single" | "bundle" | "ultimate";
+  // promotion
+  promoEnabled: boolean;
+  promoOfferType: "discount" | "launch" | "bundle" | "limited";
+  promoBadgeText: string;
+  promoBannerText: string;
+  promoOriginalPrice: string;
+  promoOfferPrice: string;
+  promoCouponCode: string;
+  promoCouponEnabled: boolean;
+  promoExpiryDate: string;
+  promoFeatured: boolean;
+  promoShowCountdown: boolean;
+  promoShowBanner: boolean;
+  promoBannerColor: "orange" | "red" | "green" | "purple";
+  promoDiscountPercentage: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -87,6 +104,21 @@ const EMPTY_FORM: FormState = {
   featuresInput: "", modulesInput: "",
   features: [], modules: [],
   featured: false, published: true,
+  productCategory: "single",
+  promoEnabled: false,
+  promoOfferType: "discount",
+  promoBadgeText: "",
+  promoBannerText: "",
+  promoOriginalPrice: "",
+  promoOfferPrice: "",
+  promoCouponCode: "",
+  promoCouponEnabled: false,
+  promoExpiryDate: "",
+  promoFeatured: false,
+  promoShowCountdown: false,
+  promoShowBanner: false,
+  promoBannerColor: "orange",
+  promoDiscountPercentage: "",
 };
 
 function slugify(text: string): string {
@@ -96,6 +128,49 @@ function slugify(text: string): string {
     .trim()
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
+}
+
+function promoFromEbook(p: Promotion | undefined): Partial<FormState> {
+  if (!p) return {};
+  return {
+    promoEnabled: p.enabled ?? false,
+    promoOfferType: p.offerType ?? "discount",
+    promoBadgeText: p.badgeText ?? "",
+    promoBannerText: p.bannerText ?? "",
+    promoOriginalPrice: p.originalPrice ? String(p.originalPrice) : "",
+    promoOfferPrice: p.offerPrice ? String(p.offerPrice) : "",
+    promoCouponCode: p.couponCode ?? "",
+    promoCouponEnabled: p.couponEnabled ?? false,
+    promoExpiryDate: p.expiryDate
+      ? new Date(p.expiryDate.toMillis()).toISOString().slice(0, 16)
+      : "",
+    promoFeatured: p.featured ?? false,
+    promoShowCountdown: p.showCountdown ?? false,
+    promoShowBanner: p.showBanner ?? false,
+    promoBannerColor: p.bannerColor ?? "orange",
+    promoDiscountPercentage: p.discountPercentage ? String(p.discountPercentage) : "",
+  };
+}
+
+function buildPromotion(form: FormState): Promotion {
+  return {
+    enabled: form.promoEnabled,
+    offerType: form.promoOfferType,
+    badgeText: form.promoBadgeText.trim(),
+    bannerText: form.promoBannerText.trim(),
+    originalPrice: parseFloat(form.promoOriginalPrice) || 0,
+    offerPrice: parseFloat(form.promoOfferPrice) || 0,
+    couponCode: form.promoCouponCode.trim().toUpperCase(),
+    couponEnabled: form.promoCouponEnabled,
+    expiryDate: form.promoExpiryDate
+      ? Timestamp.fromDate(new Date(form.promoExpiryDate))
+      : null,
+    featured: form.promoFeatured,
+    showCountdown: form.promoShowCountdown,
+    showBanner: form.promoShowBanner,
+    bannerColor: form.promoBannerColor,
+    discountPercentage: parseFloat(form.promoDiscountPercentage) || 0,
+  };
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -130,7 +205,6 @@ export default function AdminEbooksPage() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  // Auto-generate slug from title when not manually edited
   useEffect(() => {
     if (!slugManual && form.title) {
       setForm((f) => ({ ...f, slug: slugify(f.title) }));
@@ -141,7 +215,7 @@ export default function AdminEbooksPage() {
     setForm((f) => ({ ...f, [key]: val }));
   };
 
-  // ── Tag inputs (features & modules) ──
+  // ── Tag inputs ──
 
   const addTag = (field: "features" | "modules", inputField: "featuresInput" | "modulesInput") => {
     const raw = form[inputField].trim().replace(/,+$/, "");
@@ -185,6 +259,8 @@ export default function AdminEbooksPage() {
         modules: form.modules,
         featured: form.featured,
         published: form.published,
+        productCategory: form.productCategory,
+        promotion: buildPromotion(form),
       };
 
       if (editingId) {
@@ -208,6 +284,7 @@ export default function AdminEbooksPage() {
   const startEdit = (ebook: Ebook) => {
     setSlugManual(true);
     setForm({
+      ...EMPTY_FORM,
       title: ebook.title,
       slug: ebook.slug,
       exam: ebook.exam,
@@ -224,6 +301,8 @@ export default function AdminEbooksPage() {
       modules: ebook.modules ?? [],
       featured: ebook.featured,
       published: ebook.published,
+      productCategory: ebook.productCategory ?? "single",
+      ...promoFromEbook(ebook.promotion),
     });
     setEditingId(ebook.id);
     setTab("form");
@@ -251,7 +330,6 @@ export default function AdminEbooksPage() {
     }
   };
 
-  // Called after CoverImageUpload successfully removes the file from Storage
   const handleCoverDeleted = useCallback(async () => {
     if (!editingId) return;
     try {
@@ -270,6 +348,7 @@ export default function AdminEbooksPage() {
 
   const publishedCount = ebooks.filter((e) => e.published).length;
   const featuredCount = ebooks.filter((e) => e.featured).length;
+  const promoCount = ebooks.filter((e) => e.promotion?.enabled).length;
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
@@ -321,6 +400,7 @@ export default function AdminEbooksPage() {
           { label: "Total",     value: ebooks.length,    color: "rgba(255,255,255,0.7)" },
           { label: "Published", value: publishedCount,   color: "#22c55e" },
           { label: "Featured",  value: featuredCount,    color: "#FFB800" },
+          { label: "On Promo",  value: promoCount,       color: "#FF6200" },
           { label: "Drafts",    value: ebooks.length - publishedCount, color: "rgba(255,255,255,0.3)" },
         ].map(({ label, value, color }) => (
           <div key={label} style={{
@@ -466,11 +546,7 @@ export default function AdminEbooksPage() {
 // ── List row ──────────────────────────────────────────────────────────────────
 
 function EbookRow({
-  ebook,
-  onEdit,
-  onDelete,
-  onToggleFeatured,
-  onTogglePublished,
+  ebook, onEdit, onDelete, onToggleFeatured, onTogglePublished,
 }: {
   ebook: Ebook;
   onEdit: () => void;
@@ -479,6 +555,7 @@ function EbookRow({
   onTogglePublished: () => void;
 }) {
   const [thumbErr, setThumbErr] = useState(false);
+  const promo = ebook.promotion;
 
   return (
     <div style={{
@@ -503,17 +580,10 @@ function EbookRow({
             fill
             sizes="42px"
             style={{ objectFit: "cover" }}
-            onError={() => {
-              console.warn(`[AdminEbookRow] Thumbnail failed for "${ebook.title}":`, ebook.coverImage);
-              setThumbErr(true);
-            }}
+            onError={() => setThumbErr(true)}
           />
         ) : (
-          <div style={{
-            width: "100%", height: "100%",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "18px",
-          }}>
+          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>
             📖
           </div>
         )}
@@ -534,19 +604,26 @@ function EbookRow({
 
       {/* Price */}
       <div style={{ textAlign: "right", flexShrink: 0 }}>
-        <div style={{
-          fontSize: "16px", fontWeight: 700,
-          color: "#FF8534", fontFamily: "Rajdhani, sans-serif",
-        }}>
-          ₹{ebook.price.toLocaleString("en-IN")}
-        </div>
+        {promo?.enabled && promo.offerPrice > 0 ? (
+          <>
+            <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", textDecoration: "line-through", fontFamily: "Rajdhani, sans-serif" }}>
+              ₹{(promo.originalPrice || ebook.price).toLocaleString("en-IN")}
+            </div>
+            <div style={{ fontSize: "16px", fontWeight: 700, color: "#FF8534", fontFamily: "Rajdhani, sans-serif" }}>
+              ₹{promo.offerPrice.toLocaleString("en-IN")}
+            </div>
+          </>
+        ) : (
+          <div style={{ fontSize: "16px", fontWeight: 700, color: "#FF8534", fontFamily: "Rajdhani, sans-serif" }}>
+            ₹{ebook.price.toLocaleString("en-IN")}
+          </div>
+        )}
       </div>
 
       {/* Badges */}
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
         <span style={{
-          fontSize: "10px", fontWeight: 700, padding: "3px 8px",
-          borderRadius: "20px",
+          fontSize: "10px", fontWeight: 700, padding: "3px 8px", borderRadius: "20px",
           background: ebook.published ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.06)",
           color: ebook.published ? "#22c55e" : "rgba(255,255,255,0.3)",
           border: `1px solid ${ebook.published ? "rgba(34,197,94,0.25)" : "rgba(255,255,255,0.1)"}`,
@@ -556,14 +633,22 @@ function EbookRow({
         </span>
         {ebook.featured && (
           <span style={{
-            fontSize: "10px", fontWeight: 700, padding: "3px 8px",
-            borderRadius: "20px",
-            background: "rgba(255,184,0,0.12)",
-            color: "#FFB800",
+            fontSize: "10px", fontWeight: 700, padding: "3px 8px", borderRadius: "20px",
+            background: "rgba(255,184,0,0.12)", color: "#FFB800",
             border: "1px solid rgba(255,184,0,0.25)",
             fontFamily: "Rajdhani, sans-serif", letterSpacing: "0.06em",
           }}>
             ⭐ FEATURED
+          </span>
+        )}
+        {promo?.enabled && (
+          <span style={{
+            fontSize: "10px", fontWeight: 700, padding: "3px 8px", borderRadius: "20px",
+            background: "rgba(255,98,0,0.15)", color: "#FF6200",
+            border: "1px solid rgba(255,98,0,0.3)",
+            fontFamily: "Rajdhani, sans-serif", letterSpacing: "0.06em",
+          }}>
+            🏷️ {promo.badgeText || "PROMO"}
           </span>
         )}
       </div>
@@ -621,6 +706,13 @@ function EbookForm({
       e.preventDefault();
       addTag(field, inputField);
     }
+  };
+
+  const bannerColorMap: Record<string, string> = {
+    orange: "#FF6200",
+    red: "#ef4444",
+    green: "#22c55e",
+    purple: "#8b5cf6",
   };
 
   return (
@@ -681,6 +773,20 @@ function EbookForm({
             />
           </label>
         </div>
+
+        {/* Product Category */}
+        <label style={lbl}>
+          <span style={lblText}>Product Category</span>
+          <select
+            value={form.productCategory}
+            onChange={(e) => set("productCategory", e.target.value as "single" | "bundle" | "ultimate")}
+            style={{ ...inputStyle }}
+          >
+            <option value="single">Single E-Book</option>
+            <option value="bundle">Bundle</option>
+            <option value="ultimate">Ultimate Bundle</option>
+          </select>
+        </label>
 
         {/* Description */}
         <label style={lbl}>
@@ -784,18 +890,187 @@ function EbookForm({
 
         {/* Toggles */}
         <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
-          <Toggle
-            label="Featured"
-            checked={form.featured}
-            onChange={() => set("featured", !form.featured)}
-            activeColor="#FFB800"
-          />
-          <Toggle
-            label="Published"
-            checked={form.published}
-            onChange={() => set("published", !form.published)}
-            activeColor="#22c55e"
-          />
+          <Toggle label="Featured" checked={form.featured} onChange={() => set("featured", !form.featured)} activeColor="#FFB800" />
+          <Toggle label="Published" checked={form.published} onChange={() => set("published", !form.published)} activeColor="#22c55e" />
+        </div>
+
+        {/* ═══ PROMOTION SETTINGS ═══ */}
+        <div style={{
+          border: "1px solid rgba(255,98,0,0.25)",
+          borderRadius: "16px",
+          padding: "24px",
+          background: "rgba(255,98,0,0.03)",
+        }}>
+          <div style={{
+            display: "flex", alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: form.promoEnabled ? "24px" : "0",
+            flexWrap: "wrap", gap: "12px",
+          }}>
+            <div>
+              <h3 style={{
+                fontFamily: "Rajdhani, sans-serif",
+                fontSize: "17px", fontWeight: 700, color: "#FF8534", margin: 0,
+              }}>
+                🏷️ Promotion Settings
+              </h3>
+              <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", margin: "4px 0 0" }}>
+                Control pricing, discounts, coupons and banners from here
+              </p>
+            </div>
+            <Toggle
+              label="Enable Promotion"
+              checked={form.promoEnabled}
+              onChange={() => set("promoEnabled", !form.promoEnabled)}
+              activeColor="#FF6200"
+            />
+          </div>
+
+          {form.promoEnabled && (
+            <div style={{ display: "grid", gap: "16px" }}>
+
+              {/* Offer Type + Badge Text */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <label style={lbl}>
+                  <span style={lblText}>Offer Type</span>
+                  <select
+                    value={form.promoOfferType}
+                    onChange={(e) => set("promoOfferType", e.target.value as FormState["promoOfferType"])}
+                    style={{ ...inputStyle }}
+                  >
+                    <option value="discount">Discount</option>
+                    <option value="launch">Launch Offer</option>
+                    <option value="bundle">Bundle Deal</option>
+                    <option value="limited">Limited Offer</option>
+                  </select>
+                </label>
+                <label style={lbl}>
+                  <span style={lblText}>Badge Text</span>
+                  <input
+                    value={form.promoBadgeText}
+                    onChange={(e) => set("promoBadgeText", e.target.value)}
+                    placeholder="e.g. 50% OFF, EARLY BIRD, BEST VALUE"
+                    style={inputStyle}
+                  />
+                </label>
+              </div>
+
+              {/* Banner Text */}
+              <label style={lbl}>
+                <span style={lblText}>Banner Text</span>
+                <input
+                  value={form.promoBannerText}
+                  onChange={(e) => set("promoBannerText", e.target.value)}
+                  placeholder="e.g. 🔥 Early Bird Offer — Limited Time Only!"
+                  style={inputStyle}
+                />
+              </label>
+
+              {/* Original Price + Offer Price + Discount % */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+                <label style={lbl}>
+                  <span style={lblText}>Original Price (₹)</span>
+                  <input
+                    type="number" min="0"
+                    value={form.promoOriginalPrice}
+                    onChange={(e) => set("promoOriginalPrice", e.target.value)}
+                    placeholder="e.g. 20000"
+                    style={inputStyle}
+                  />
+                </label>
+                <label style={lbl}>
+                  <span style={lblText}>Offer Price (₹)</span>
+                  <input
+                    type="number" min="0"
+                    value={form.promoOfferPrice}
+                    onChange={(e) => set("promoOfferPrice", e.target.value)}
+                    placeholder="e.g. 10000"
+                    style={inputStyle}
+                  />
+                </label>
+                <label style={lbl}>
+                  <span style={lblText}>Discount %</span>
+                  <input
+                    type="number" min="0" max="100"
+                    value={form.promoDiscountPercentage}
+                    onChange={(e) => set("promoDiscountPercentage", e.target.value)}
+                    placeholder="e.g. 50"
+                    style={inputStyle}
+                  />
+                </label>
+              </div>
+
+              {/* Coupon Code + Coupon Enabled */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "16px", alignItems: "end" }}>
+                <label style={lbl}>
+                  <span style={lblText}>Coupon Code</span>
+                  <input
+                    value={form.promoCouponCode}
+                    onChange={(e) => set("promoCouponCode", e.target.value.toUpperCase())}
+                    placeholder="e.g. BTECH50"
+                    style={{ ...inputStyle, fontFamily: "monospace", letterSpacing: "0.1em", textTransform: "uppercase" }}
+                  />
+                </label>
+                <div style={{ paddingBottom: "2px" }}>
+                  <Toggle
+                    label="Coupon Enabled"
+                    checked={form.promoCouponEnabled}
+                    onChange={() => set("promoCouponEnabled", !form.promoCouponEnabled)}
+                    activeColor="#22c55e"
+                  />
+                </div>
+              </div>
+
+              {/* Expiry Date */}
+              <label style={lbl}>
+                <span style={lblText}>Promotion Expiry Date & Time</span>
+                <input
+                  type="datetime-local"
+                  value={form.promoExpiryDate}
+                  onChange={(e) => set("promoExpiryDate", e.target.value)}
+                  style={{ ...inputStyle, colorScheme: "dark" }}
+                />
+              </label>
+
+              {/* Banner Color */}
+              <div style={lbl}>
+                <span style={lblText}>Banner Color</span>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  {(["orange", "red", "green", "purple"] as const).map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => set("promoBannerColor", color)}
+                      style={{
+                        padding: "8px 18px",
+                        borderRadius: "20px",
+                        border: `2px solid ${form.promoBannerColor === color ? bannerColorMap[color] : "transparent"}`,
+                        background: form.promoBannerColor === color
+                          ? `${bannerColorMap[color]}22`
+                          : "rgba(255,255,255,0.06)",
+                        color: form.promoBannerColor === color ? bannerColorMap[color] : "rgba(255,255,255,0.5)",
+                        fontSize: "13px", fontWeight: 700,
+                        cursor: "pointer",
+                        fontFamily: "Nunito, sans-serif",
+                        textTransform: "capitalize",
+                        transition: "all 0.2s",
+                      }}
+                    >
+                      {color.charAt(0).toUpperCase() + color.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Promo Toggles */}
+              <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", paddingTop: "4px" }}>
+                <Toggle label="Featured Offer" checked={form.promoFeatured} onChange={() => set("promoFeatured", !form.promoFeatured)} activeColor="#FFB800" />
+                <Toggle label="Show Countdown Timer" checked={form.promoShowCountdown} onChange={() => set("promoShowCountdown", !form.promoShowCountdown)} activeColor="#3b82f6" />
+                <Toggle label="Show Banner" checked={form.promoShowBanner} onChange={() => set("promoShowBanner", !form.promoShowBanner)} activeColor="#FF6200" />
+              </div>
+
+            </div>
+          )}
         </div>
 
         {/* Buttons */}
@@ -835,10 +1110,7 @@ function TagInput({
 }) {
   return (
     <div>
-      <div style={{
-        display: "flex", flexWrap: "wrap", gap: "6px",
-        marginBottom: tags.length ? "8px" : 0,
-      }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: tags.length ? "8px" : 0 }}>
         {tags.map((tag, i) => (
           <span key={i} style={{
             display: "inline-flex", alignItems: "center", gap: "6px",
@@ -852,12 +1124,7 @@ function TagInput({
             {tag}
             <button
               onClick={() => onRemove(i)}
-              style={{
-                background: "none", border: "none",
-                color, cursor: "pointer", padding: 0,
-                fontSize: "12px", lineHeight: 1,
-                opacity: 0.7,
-              }}
+              style={{ background: "none", border: "none", color, cursor: "pointer", padding: 0, fontSize: "12px", lineHeight: 1, opacity: 0.7 }}
             >
               ✕
             </button>
@@ -880,8 +1147,7 @@ function TagInput({
             border: "1px solid rgba(255,255,255,0.15)",
             borderRadius: "10px",
             color: "rgba(255,255,255,0.7)",
-            cursor: "pointer", fontSize: "16px",
-            flexShrink: 0,
+            cursor: "pointer", fontSize: "16px", flexShrink: 0,
           }}
           title="Add"
         >
@@ -903,10 +1169,7 @@ function Toggle({
   activeColor: string;
 }) {
   return (
-    <div
-      onClick={onChange}
-      style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
-    >
+    <div onClick={onChange} style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
       <div style={{
         width: "44px", height: "24px", borderRadius: "12px",
         background: checked ? activeColor : "rgba(255,255,255,0.15)",
@@ -923,8 +1186,7 @@ function Toggle({
       <span style={{
         fontSize: "14px",
         color: checked ? activeColor : "rgba(255,255,255,0.45)",
-        fontWeight: 600,
-        transition: "color 0.2s",
+        fontWeight: 600, transition: "color 0.2s",
       }}>
         {label}
       </span>
