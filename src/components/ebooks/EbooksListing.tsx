@@ -8,13 +8,41 @@ import type { Ebook } from "@/types/ebook";
 import EbookCard from "./EbookCard";
 import EarlyBirdCampaign from "./EarlyBirdCampaign";
 
-const FILTERS = ["All", "Diploma", "B.Tech", "AE", "Surveyor", "Instructor"] as const;
+const FILTERS = ["All", "ITI", "Diploma", "B.Tech", "Surveyor"] as const;
 type Filter = (typeof FILTERS)[number];
+
+/**
+ * Maps any ebook/bundle into one of the five primary categories.
+ * Does NOT rely on slugs — works off level + title text.
+ */
+function getCategory(ebook: Ebook): Filter {
+  const lvl   = (ebook.level ?? "").toLowerCase();
+  const title = (ebook.title ?? "").toLowerCase();
+
+  if (lvl.includes("iti"))
+    return "ITI";
+  if (lvl.includes("diploma") || title.includes("instructor"))
+    return "Diploma";
+  if (
+    lvl.includes("b.tech") ||
+    title.includes("assistant engineer") ||
+    title.includes("ae civil") ||
+    (title.includes(" ae ") && !title.includes("kwa"))
+  )
+    return "B.Tech";
+  if (
+    lvl.includes("surveyor") ||
+    title.includes("kwa") ||
+    title.includes("draftsman")
+  )
+    return "Surveyor";
+
+  return "All";          // uncategorised items appear under "All" only
+}
 
 function matchesFilter(ebook: Ebook, filter: Filter): boolean {
   if (filter === "All") return true;
-  const haystack = `${ebook.level} ${ebook.exam}`.toLowerCase();
-  return haystack.includes(filter.toLowerCase());
+  return getCategory(ebook) === filter;
 }
 
 function matchesSearch(ebook: Ebook, q: string): boolean {
@@ -66,6 +94,69 @@ export default function EbooksListing() {
       paddingBottom: "80px",
       fontFamily: "Nunito, sans-serif",
     }}>
+      {/* ── Shared keyframes + filter chip styles ── */}
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Filter row */
+        .eb-filter-row {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 10px;
+        }
+        @media (max-width: 560px) {
+          .eb-filter-row {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            justify-content: flex-start;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+          }
+          .eb-filter-row::-webkit-scrollbar { display: none; }
+        }
+
+        /* Filter chip — base */
+        .eb-chip {
+          min-width: 84px;
+          padding: 9px 22px;
+          border-radius: 10px;
+          border: 1px solid rgba(255,255,255,0.1);
+          background: rgba(255,255,255,0.04);
+          color: rgba(255,255,255,0.5);
+          font-size: 14px;
+          font-weight: 700;
+          font-family: Rajdhani, sans-serif;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          cursor: pointer;
+          transition: transform 0.2s ease, box-shadow 0.2s ease,
+                      border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+          flex-shrink: 0;
+          text-align: center;
+          white-space: nowrap;
+          line-height: 1;
+          outline: none;
+        }
+        .eb-chip:hover {
+          transform: scale(1.03);
+          border-color: rgba(255,98,0,0.45);
+          background: rgba(255,98,0,0.08);
+          color: rgba(255,255,255,0.85);
+        }
+        /* Active chip */
+        .eb-chip.eb-chip--active {
+          background: linear-gradient(135deg, #FF6200, #FF8534);
+          border-color: transparent;
+          color: #fff;
+          box-shadow: 0 4px 18px rgba(255,98,0,0.38), 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .eb-chip.eb-chip--active:hover {
+          transform: scale(1.03);
+          box-shadow: 0 6px 24px rgba(255,98,0,0.55), 0 2px 8px rgba(0,0,0,0.3);
+        }
+      `}</style>
       <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 20px" }}>
 
         {/* ── Page header ── */}
@@ -162,26 +253,12 @@ export default function EbooksListing() {
             )}
           </div>
 
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center" }}>
+          <div className="eb-filter-row">
             {FILTERS.map((f) => (
               <button
                 key={f}
+                className={`eb-chip${activeFilter === f ? " eb-chip--active" : ""}`}
                 onClick={() => setActiveFilter(f)}
-                style={{
-                  padding: "7px 18px",
-                  borderRadius: "20px",
-                  border: `1px solid ${activeFilter === f ? "rgba(255,98,0,0.5)" : "rgba(255,255,255,0.12)"}`,
-                  background: activeFilter === f
-                    ? "rgba(255,98,0,0.18)"
-                    : "rgba(255,255,255,0.04)",
-                  color: activeFilter === f ? "#FF8534" : "rgba(255,255,255,0.55)",
-                  fontSize: "13px", fontWeight: 700,
-                  fontFamily: "Rajdhani, sans-serif",
-                  letterSpacing: "0.04em",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  boxShadow: activeFilter === f ? "0 2px 12px rgba(255,98,0,0.2)" : "none",
-                }}
               >
                 {f}
               </button>
