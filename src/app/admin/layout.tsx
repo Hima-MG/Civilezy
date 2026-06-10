@@ -6,11 +6,12 @@ import { usePathname } from "next/navigation";
 import { ADMIN_SESSION_KEY, ADMIN_PASSPHRASE } from "@/lib/adminAuth";
 
 const NAV_ITEMS = [
-  { href: "/admin/questions",     label: "Questions",     icon: "📚" },
-  { href: "/admin/announcements", label: "Announcements", icon: "📣" },
-  { href: "/admin/support",       label: "Support",       icon: "🛠️" },
-  { href: "/admin/ebooks",        label: "E-Books",       icon: "📖" },
-  { href: "/admin/blogs",         label: "Blogs",         icon: "📰" },
+  { href: "/admin/questions",        label: "Questions",     icon: "📚" },
+  { href: "/admin/announcements",    label: "Announcements", icon: "📣" },
+  { href: "/admin/support",          label: "Support",       icon: "🛠️" },
+  { href: "/admin/ebooks",           label: "E-Books",       icon: "📖" },
+  { href: "/admin/offer-campaigns",  label: "Campaigns",     icon: "🏷️" },
+  { href: "/admin/blogs",            label: "Blogs",         icon: "📰" },
 ] as const;
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

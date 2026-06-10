@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getEbookBySlug } from "@/lib/ebooks";
 import type { Ebook, Promotion } from "@/types/ebook";
+import OfferCard from "./OfferCard";
 
 interface Props {
   slug: string;
@@ -633,8 +634,11 @@ function HeroSection({ ebook }: { ebook: Ebook }) {
             </div>
           )}
 
+          {/* Campaign offer card — fetches active campaign from Firestore */}
+          <OfferCard />
+
           {/* Purchase button */}
-          {ebook.purchaseUrl && (
+          {ebook.purchaseUrl && !hasPromo && (
             <a
               href={ebook.purchaseUrl}
               target="_blank"

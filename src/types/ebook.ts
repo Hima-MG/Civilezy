@@ -33,7 +33,7 @@ export interface Ebook {
   modules: string[];
   featured: boolean;
   published: boolean;
-  productCategory: "single" | "bundle" | "ultimate";
+  productCategory?: "single" | "bundle" | "ultimate";
   promotion?: Promotion;
   createdAt: Timestamp;
   updatedAt: Timestamp;

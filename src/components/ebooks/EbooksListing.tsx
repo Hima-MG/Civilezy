@@ -6,7 +6,7 @@ import Link from "next/link";
 import { getPublishedEbooks } from "@/lib/ebooks";
 import type { Ebook } from "@/types/ebook";
 import EbookCard from "./EbookCard";
-import PSCMembershipPlans from "./PSCMembershipPlans";
+import EarlyBirdCampaign from "./EarlyBirdCampaign";
 
 const FILTERS = ["All", "Diploma", "B.Tech", "AE", "Surveyor", "Instructor"] as const;
 type Filter = (typeof FILTERS)[number];
@@ -54,7 +54,6 @@ export default function EbooksListing() {
       ),
     [ebooks, activeFilter, search]
   );
-
 
   const isFiltering = search.trim() !== "" || activeFilter !== "All";
   const heroEbook = !isFiltering && featuredEbooks.length > 0 ? featuredEbooks[0] : null;
@@ -190,8 +189,8 @@ export default function EbooksListing() {
           </div>
         </div>
 
-        {/* ── PSC Membership Plans (shown when not actively searching/filtering) ── */}
-        {!loading && !isFiltering && <PSCMembershipPlans />}
+        {/* ── Campaign offer section (dynamic, shown when not filtering) ── */}
+        {!isFiltering && <EarlyBirdCampaign />}
 
         {/* ── Loading ── */}
         {loading && (
