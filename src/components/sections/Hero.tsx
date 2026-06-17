@@ -78,14 +78,14 @@ export default function Hero() {
     <>
       <section
         aria-labelledby="hero-heading"
-        style={{ minHeight: "100vh", padding: "40px 5% 60px", position: "relative", overflow: "hidden", display: "flex", alignItems: "center" }}
+        style={{ padding: "100px 5% 60px", position: "relative", overflow: "hidden" }}
         className="hero-section-pad"
       >
         {/* Decorative backgrounds — clipped by section overflow:hidden */}
         <div aria-hidden="true" style={{ position:"absolute", inset:0, zIndex:0, background:"radial-gradient(ellipse at 70% 50%,rgba(255,98,0,0.12) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(255,184,0,0.06) 0%,transparent 50%),linear-gradient(180deg,#0B1E3D 0%,#0A1B35 100%)" }} />
         <div aria-hidden="true" style={{ position:"absolute", inset:0, opacity:0.04, backgroundImage:"linear-gradient(rgba(255,98,0,0.5) 1px,transparent 1px),linear-gradient(90deg,rgba(255,98,0,0.5) 1px,transparent 1px)", backgroundSize:"60px 60px" }} />
 
-        <div className="hero-content-grid" style={{ position:"relative", zIndex:1, display:"grid", gap:"4rem", alignItems:"center", width:"100%", maxWidth:"1300px", margin:"0 auto" }}>
+        <div className="hero-content-grid" style={{ position:"relative", zIndex:1, display:"grid", columnGap:"4rem", rowGap:"2rem", alignItems:"start", width:"100%", maxWidth:"1300px", margin:"0 auto" }}>
 
           {/* ═══ LEFT SIDE ═══ */}
           <div style={{ animation:"heroFadeUp 0.7s ease forwards" }}>
@@ -96,7 +96,7 @@ export default function Hero() {
             </div>
 
             {/* Wincentre authority byline */}
-            <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"22px" }}>
+            <div className="hero-byline" style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"22px" }}>
               <div style={{ width:"20px", height:"1px", background:"rgba(255,184,0,0.5)" }} />
               <p style={{ fontSize:"12px", fontWeight:600, color:"rgba(255,200,120,0.85)", letterSpacing:"0.6px", textTransform:"uppercase", margin:0 }}>
                 Powered by Wincentre &nbsp;·&nbsp; Trusted Since 2008
@@ -105,17 +105,17 @@ export default function Hero() {
             </div>
 
             {/* H1 */}
-            <h1 id="hero-heading" style={{ fontFamily:"Rajdhani, sans-serif", lineHeight:1.1, marginBottom:"12px", fontWeight:700 }}>
-              <span lang="ml" style={{ display:"block", fontSize:"clamp(28px,4vw,48px)", background:"linear-gradient(135deg,#FF6200,#FFB800)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>
+            <h1 id="hero-heading" style={{ fontFamily:"Rajdhani, sans-serif", lineHeight:1.1, marginBottom:"12px", fontWeight:700, wordBreak:"break-word", overflowWrap:"break-word" }}>
+              <span lang="ml" className="hero-ml-text" style={{ display:"block", fontSize:"clamp(26px,4vw,48px)", background:"linear-gradient(135deg,#FF6200,#FFB800)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>
                 ആശയക്കുഴപ്പം മാറ്റൂ.
               </span>
-              <span style={{ display:"block", color:"#ffffff", fontSize:"clamp(22px,3.5vw,40px)", marginTop:"4px" }}>
+              <span className="hero-en-text" style={{ display:"block", color:"#ffffff", fontSize:"clamp(22px,3.5vw,40px)", marginTop:"4px" }}>
                 Stop Guessing.<br />Start Ranking.
               </span>
             </h1>
 
             {/* Subtext */}
-            <p style={{ fontSize:"17px", color:"rgba(255,255,255,0.85)", marginBottom:"28px", maxWidth:"480px", lineHeight:1.7 }}>
+            <p className="hero-subtext" style={{ fontSize:"clamp(15px,4vw,17px)", color:"rgba(255,255,255,0.85)", marginBottom:"28px", maxWidth:"480px", lineHeight:1.7 }}>
               The{" "}
               <strong style={{ color:"#FF8534", fontWeight:700 }}>only Kerala CIVIL ENGINEERING PSC platform</strong>{" "}
               with Category based content, Malayalam audio lessons, and a Game Arena that makes
@@ -123,7 +123,7 @@ export default function Hero() {
             </p>
 
             {/* Social proof */}
-            <div style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:"28px", flexWrap:"wrap" }}>
+            <div className="hero-social-proof" style={{ display:"flex", alignItems:"center", gap:"12px", marginBottom:"28px", flexWrap:"wrap" }}>
               <div
                 style={{ display:"flex", alignItems:"center" }}
                 role="img"
@@ -170,12 +170,13 @@ export default function Hero() {
             </div>
 
             {/* CTA microcopy */}
-            <p style={{ fontSize:"12.5px", color:"rgba(255,255,255,0.58)", marginBottom:"24px", letterSpacing:"0.2px" }}>
+            <p className="hero-microcopy" style={{ fontSize:"12.5px", color:"rgba(255,255,255,0.58)", marginBottom:"24px", letterSpacing:"0.2px" }}>
               No registration &nbsp;·&nbsp; Free Demo &nbsp;·&nbsp; Real PSC Questions
             </p>
 
             {/* ── Live Learning Panel ── */}
             <div
+              className="live-panel"
               style={{
                 background: "rgba(255,255,255,0.04)",
                 border: "1px solid rgba(255,255,255,0.1)",
@@ -224,6 +225,7 @@ export default function Hero() {
               {LIVE_SESSIONS.map((session, idx) => (
                 <div
                   key={session.id}
+                  className="live-session-row"
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -307,6 +309,7 @@ export default function Hero() {
                     href={session.link}
                     target="_blank"
                     rel="noopener noreferrer"
+                    className="live-session-join-btn"
                     style={{
                       flexShrink: 0,
                       background: session.accentBg,
@@ -336,7 +339,17 @@ export default function Hero() {
               ))}
             </div>
 
-            {/* Trust metrics row */}
+          </div>
+
+          {/* ═══ RIGHT SIDE — Premium Video Showcase ═══ */}
+          <div className="hero-video-col" style={{ position:"relative", animation:"heroFadeUp 0.7s 0.2s ease both" }}>
+            <VideoShowcase />
+          </div>
+
+          {/* ═══ STATS — 3rd grid child so it appears AFTER video on mobile ═══
+              On desktop (2-col grid) auto-places into left col, row 2.
+              On mobile (1-col)  renders below the video naturally.         */}
+          <div className="hero-stats-block" style={{ animation:"heroFadeUp 0.7s 0.3s ease both" }}>
             <div className="hero-trust-metrics" aria-label="Platform trust metrics" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"10px" }}>
               {TRUST_METRICS.map(({ icon, num, label, sub }) => (
                 <div key={label} style={{ background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.09)", borderRadius:"12px", padding:"12px 8px", textAlign:"center" }}>
@@ -348,51 +361,173 @@ export default function Hero() {
               ))}
             </div>
           </div>
-
-          {/* ═══ RIGHT SIDE — Premium Video Showcase ═══ */}
-          <div style={{ position:"relative", animation:"heroFadeUp 0.7s 0.2s ease both" }}>
-            <VideoShowcase />
-          </div>
         </div>
       </section>
 
       <style>{`
-        /* ── Hero CTA buttons — full width on very small screens ── */
-        @media (max-width: 400px) {
-          .hero-ctas { flex-direction: column !important; }
-          .hero-cta-primary, .hero-cta-secondary {
-            width: 100% !important;
+        /* ════════════════════════════════════════════════════════════════
+           HERO — MOBILE-FIRST POLISH  (375 / 480 / 640 / 767 / 899px)
+           Goal: compact, premium, Coursera/Stripe-level mobile experience
+           ════════════════════════════════════════════════════════════════ */
+
+        /* ── Section ── */
+        .hero-section-pad { min-height: auto !important; }
+        @media (max-width: 640px)  { .hero-section-pad { padding: 84px 16px 44px !important; } }
+        @media (min-width: 641px) and (max-width: 899px) {
+          .hero-section-pad { padding: 100px 5% 60px !important; }
+        }
+
+        /* ── Content grid gaps ── */
+        @media (max-width: 899px) { .hero-content-grid { column-gap: 0 !important; row-gap: 1.75rem !important; } }
+        @media (max-width: 480px) { .hero-content-grid { row-gap: 1.5rem !important; } }
+
+        /* ─────────────────────────────────────────────────────────────
+           VERTICAL SPACING — reduce every margin-bottom on mobile
+           ─────────────────────────────────────────────────────────────*/
+        @media (max-width: 640px) {
+          .hero-byline       { margin-bottom: 12px !important; }
+          .hero-subtext      { max-width: 100% !important; margin-bottom: 18px !important; }
+          .hero-social-proof { margin-bottom: 16px !important; }
+          .hero-microcopy    { margin-bottom: 10px !important; text-align: center !important; }
+          .live-panel        { margin-bottom: 0    !important; border-radius: 12px !important; }
+        }
+
+        /* ── Social proof wrapping ── */
+        .hero-social-proof { flex-wrap: wrap !important; }
+        @media (max-width: 480px) { .hero-social-proof { gap: 8px !important; } }
+
+        /* ─────────────────────────────────────────────────────────────
+           CTA BUTTONS — compact pills, never full-width banners
+           ─────────────────────────────────────────────────────────────*/
+        @media (max-width: 767px) {
+          /* Container: column stack, centred */
+          .hero-ctas {
+            flex-direction: column !important;
+            align-items:    center !important;
+            gap:            10px   !important;
+          }
+
+          /* Each button: pill, content-width, never a banner */
+          .hero-cta-primary,
+          .hero-cta-secondary {
+            width:           fit-content  !important;
+            min-width:       200px        !important;
+            max-width:       280px        !important;
+            height:          52px         !important;
+            min-height:      52px         !important;
+            display:         flex         !important;
+            align-items:     center       !important;
+            justify-content: center       !important;
+            text-align:      center       !important;
+            font-size:       15px         !important;
+            padding:         0 28px       !important;
+            box-sizing:      border-box   !important;
+            margin-left:     auto         !important;
+            margin-right:    auto         !important;
+          }
+        }
+        /* Tablet: side-by-side, auto width */
+        @media (min-width: 768px) and (max-width: 899px) {
+          .hero-ctas { display: flex !important; gap: 12px !important; flex-wrap: wrap !important; }
+          .hero-cta-primary,
+          .hero-cta-secondary { width: auto !important; height: 48px !important; min-height: 48px !important; }
+        }
+        /* Tiny 320px phones */
+        @media (max-width: 360px) {
+          .hero-cta-primary,
+          .hero-cta-secondary { font-size: 14px !important; min-width: 180px !important; }
+        }
+
+        /* ─────────────────────────────────────────────────────────────
+           LIVE SESSIONS PANEL — compact rows on mobile
+           ─────────────────────────────────────────────────────────────*/
+        @media (max-width: 640px) {
+          .live-session-row { padding: 10px 12px !important; gap: 10px !important; }
+        }
+        @media (max-width: 479px) {
+          .live-session-row      { flex-wrap: wrap !important; align-items: flex-start !important; }
+          .live-session-join-btn {
+            width:           100%  !important;
             justify-content: center !important;
-            font-size: 15px !important;
-            padding: 14px 20px !important;
+            text-align:      center !important;
+            margin-top:      6px   !important;
+            padding:         8px 14px !important;
           }
         }
-        /* ── Trust metrics — 2 col on small screens ── */
-        @media (max-width: 520px) {
-          .hero-trust-metrics {
-            grid-template-columns: repeat(2, 1fr) !important;
+
+        /* ─────────────────────────────────────────────────────────────
+           TRUST METRICS / STATS — compact cards on mobile
+           ─────────────────────────────────────────────────────────────*/
+        @media (max-width: 639px) {
+          .hero-trust-metrics { grid-template-columns: repeat(2, 1fr) !important; }
+          .hero-trust-metrics > div {
+            padding:       10px 6px !important;
+            border-radius: 10px    !important;
           }
         }
-        /* ── Video Showcase ── */
+        .hero-stats-block { width: 100%; min-width: 0; }
+
+        /* ─────────────────────────────────────────────────────────────
+           VIDEO COLUMN
+           ─────────────────────────────────────────────────────────────*/
+        @media (max-width: 767px) { .hero-video-col { width: 100% !important; } }
+        @media (min-width: 768px) and (max-width: 899px) {
+          .hero-video-col {
+            max-width:    700px !important;
+            margin-left:  auto  !important;
+            margin-right: auto  !important;
+            width:        100%  !important;
+          }
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           VIDEO SHOWCASE COMPONENT
+           ═══════════════════════════════════════════════════════════*/
+        /* Compact gap and rounded corners on mobile */
+        @media (max-width: 640px) {
+          .vs-showcase       { gap: 8px !important; }
+          .vs-featured-player { border-radius: 16px !important; }
+        }
+
+        /* Scrollbar hidden */
         .vs-thumb-strip::-webkit-scrollbar { display: none; }
         .vs-thumb-strip { -ms-overflow-style: none; scrollbar-width: none; }
-        .vs-thumb-btn { transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease; }
-        .vs-thumb-btn:hover:not([aria-pressed="true"]) {
-          transform: scale(1.06) !important;
-          border-color: rgba(255,98,0,0.5) !important;
+
+        /* Thumbnail buttons */
+        .vs-thumb-btn {
+          transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+        }
+        .vs-thumb-btn:hover:not([aria-selected="true"]) {
+          transform:    scale(1.06)            !important;
+          border-color: rgba(255,98,0,0.5)    !important;
         }
         .vs-thumb-btn:focus-visible {
           outline: 2px solid #FF6200;
           outline-offset: 2px;
         }
+
+        /* Fade animations */
         .vs-featured-fade-in  { animation: vsFadeIn  0.25s ease forwards; }
         .vs-featured-fade-out { animation: vsFadeOut 0.18s ease forwards; }
-        @keyframes vsFadeIn  { from { opacity: 0; transform: scale(0.99); } to { opacity: 1; transform: scale(1); } }
-        @keyframes vsFadeOut { from { opacity: 1; } to { opacity: 0; } }
-        /* ── Mobile: thumbnails scroll horizontally ── */
-        @media (max-width: 640px) {
+        @keyframes vsFadeIn  { from { opacity:0; transform:scale(0.99); } to { opacity:1; transform:scale(1); } }
+        @keyframes vsFadeOut { from { opacity:1; } to { opacity:0; } }
+
+        /* Thumbnail sizes by viewport — smaller = more compact showcase */
+        @media (max-width: 360px) {
+          .vs-thumb-strip { gap: 5px !important; }
+          .vs-thumb-btn   { min-width: 58px !important; width: 58px !important; }
+        }
+        @media (min-width: 361px) and (max-width: 480px) {
+          .vs-thumb-strip { gap: 6px !important; }
+          .vs-thumb-btn   { min-width: 68px !important; width: 68px !important; }
+        }
+        @media (min-width: 481px) and (max-width: 640px) {
           .vs-thumb-strip { gap: 8px !important; }
-          .vs-thumb-btn   { min-width: 100px !important; width: 100px !important; }
+          .vs-thumb-btn   { min-width: 80px !important; width: 80px !important; }
+        }
+        /* Tablet: fill naturally */
+        @media (min-width: 641px) and (max-width: 899px) {
+          .vs-thumb-btn { min-width: 110px !important; }
         }
       `}</style>
 
@@ -446,11 +581,11 @@ function VideoShowcase() {
   const active = HERO_VIDEOS[activeIdx];
 
   return (
-    <div style={{ display:"flex", flexDirection:"column", gap:"14px" }} onKeyDown={handleKeyDown}>
+    <div className="vs-showcase" style={{ display:"flex", flexDirection:"column", gap:"14px" }} onKeyDown={handleKeyDown}>
 
       {/* ── Meta row: badge + counter ── */}
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-        <div style={{
+      <div className="vs-meta-row" style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div className="vs-meta-badge" style={{
           display:"inline-flex", alignItems:"center", gap:"7px",
           background:"rgba(255,98,0,0.12)", border:"1px solid rgba(255,98,0,0.3)",
           borderRadius:"20px", padding:"5px 13px",
@@ -474,6 +609,7 @@ function VideoShowcase() {
       <div
         role="region"
         aria-label={`Featured video: ${active.title}`}
+        className="vs-featured-player"
         style={{
           borderRadius:"20px", overflow:"hidden",
           border:"1px solid rgba(255,98,0,0.28)",

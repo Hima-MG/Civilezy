@@ -57,6 +57,7 @@ export default function Footer() {
     <>
       <footer
         aria-label="Site footer"
+        className="footer-outer"
         style={{ background:"#040C18", borderTop:"1px solid rgba(255,255,255,0.06)", padding:"50px 5% 30px" }}
       >
         <div className="footer-layout">
@@ -129,7 +130,7 @@ export default function Footer() {
         </div>
 
         {/* ── Bottom bar ── */}
-        <div style={{ borderTop:"1px solid rgba(255,255,255,0.06)", paddingTop:"24px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"12px", marginTop:"40px" }}>
+        <div className="footer-bottom-bar" style={{ borderTop:"1px solid rgba(255,255,255,0.06)", paddingTop:"24px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"12px", marginTop:"40px" }}>
           <p style={{ fontSize:"13px", color:"rgba(255,255,255,0.55)" }}>
             © {year} CivilEzy. All rights reserved. Made with ❤️ for Kerala PSC aspirants.
           </p>

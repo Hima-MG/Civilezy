@@ -250,9 +250,14 @@ export default function WhatsAppWidget() {
           0%, 100% { opacity: 1; transform: scale(1); }
           50%      { opacity: 0.4; transform: scale(0.8); }
         }
-        @media (max-width: 640px) {
-          /* Shift up on mobile so it sits above the sticky CTA bar (~70px) */
-          .wa-widget-root { bottom: 80px !important; right: 16px !important; }
+        @media (max-width: 767px) {
+          /* Raise above sticky CTA bar; shrink FAB for smaller thumbs */
+          .wa-widget-root { bottom: 90px !important; right: 16px !important; }
+          /* Shrink FAB to 56×56 px so it doesn't crowd CTA buttons */
+          .wa-widget-root > button:last-child {
+            width:  56px !important;
+            height: 56px !important;
+          }
         }
       `}</style>
     </>

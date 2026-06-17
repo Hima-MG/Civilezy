@@ -225,9 +225,9 @@ select {
   cursor: text;
 }
 
-/* ─── Hero section mobile padding ───────────────────────────────────── */
+/* ─── Hero section mobile padding (88px top clears 70px fixed navbar) ── */
 @media (max-width: 640px) {
-  .hero-section-pad { padding: 90px 16px 40px !important; }
+  .hero-section-pad { padding: 88px 16px 48px !important; }
 }
 
 /* ─── Navbar CTA text — hide label on very small screens ─────────────── */
@@ -272,4 +272,117 @@ select {
   .bonus-grid          { grid-template-columns: repeat(2,1fr) !important; }
   .explore-grid        { grid-template-columns: repeat(2,1fr) !important; }
   .wincentre-grid      { grid-template-columns: 1fr !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE AUDIT — Mobile & Tablet Fixes  (320 → 1024 px)
+   Targets: 320 / 360 / 375 / 390 / 414 / 480 / 520 / 640 / 768 / 820 / 1024
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Navbar: shrink logo on mobile/tablet ── */
+@media (max-width: 899px) { .nav-logo-img { width: 110px !important; height: auto !important; } }
+@media (max-width: 400px) { .nav-logo-img { width: 90px  !important; } }
+
+/* ── Navbar: 44 px minimum touch target for hamburger ── */
+@media (max-width: 900px) {
+  .hamburger-btn {
+    min-width:  44px !important;
+    min-height: 44px !important;
+    display:        flex !important;
+    align-items:    center !important;
+    justify-content:center !important;
+    padding:    10px 8px  !important;
+  }
+}
+
+/* ── Navbar: tighter horizontal padding on tiny screens ── */
+@media (max-width: 360px) { .navbar-inner { padding: 0 12px !important; } }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   HERO SECTION
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Vertical alignment: flex-start on single-column view so content
+   sits at the top rather than being vertically centred */
+@media (max-width: 899px) {
+  .hero-section-pad {
+    align-items: flex-start !important;
+    min-height:  auto        !important;
+  }
+}
+
+/* Tablet padding (641–899 px) — taller top clearance for fixed navbar */
+@media (min-width: 641px) and (max-width: 899px) {
+  .hero-section-pad { padding: 100px 5% 64px !important; }
+}
+
+/* Hero grid: only set row-gap (column-gap is 0 on mobile via Hero style block) */
+@media (max-width: 899px) { .hero-content-grid { row-gap: 2rem    !important; } }
+@media (max-width: 480px) { .hero-content-grid { row-gap: 1.75rem !important; } }
+
+/* ── CTA buttons: stacking handled in Hero.tsx <style> block ── */
+/* (Kept here only for column direction at narrow widths)        */
+@media (max-width: 520px) {
+  .hero-ctas { flex-direction: column !important; align-items: center !important; gap: 10px !important; }
+}
+
+/* ── Trust metrics: 2-col from 639 px down ── */
+@media (max-width: 639px) {
+  .hero-trust-metrics { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* ── Social proof row: stack on 360 px ── */
+@media (max-width: 360px) {
+  .hero-social-proof {
+    flex-direction:  column !important;
+    align-items:     flex-start !important;
+    gap:             8px !important;
+  }
+}
+
+/* ── Live session rows: wrap join-btn below on narrow screens ── */
+@media (max-width: 479px) {
+  .live-session-row      { flex-wrap: wrap    !important; }
+  .live-session-join-btn {
+    width:           100%   !important;
+    justify-content: center !important;
+    text-align:      center !important;
+    margin-top:      6px    !important;
+  }
+}
+
+/* ── Hero Malayalam headline: font-size floor ── */
+@media (max-width: 360px) {
+  .hero-ml-text { font-size: 26px !important; }
+  .hero-en-text { font-size: 22px !important; }
+}
+
+/* ── Video showcase thumbnails: slightly smaller on very narrow screens ── */
+@media (max-width: 380px) {
+  .vs-thumb-btn { min-width: 76px !important; width: 76px !important; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   GLOBAL SECTION / LAYOUT
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Slightly tighter section padding on very small screens */
+@media (max-width: 360px) { .section-pad { padding: 48px 12px !important; } }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   FOOTER
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Tighter footer padding on narrow mobile */
+@media (max-width: 600px) {
+  .footer-outer { padding: 40px 16px 24px !important; }
+}
+
+/* Bottom bar: stack vertically on very narrow screens */
+@media (max-width: 480px) {
+  .footer-bottom-bar {
+    flex-direction: column    !important;
+    align-items:    flex-start!important;
+    gap:            14px      !important;
+  }
 }

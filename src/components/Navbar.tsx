@@ -81,6 +81,7 @@ export default function Navbar() {
   return (
     <>
       <nav
+        className="navbar-inner"
         style={{
           position:             "fixed",
           top:                  barHeight,
@@ -108,7 +109,7 @@ export default function Navbar() {
             width={140}
             height={40}
             priority
-            className="h-10 w-auto"
+            className="h-10 w-auto nav-logo-img"
             style={{ objectFit: "contain" }}
           />
         </Link>
@@ -348,7 +349,7 @@ export default function Navbar() {
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             onClick={() => setMenuOpen((v) => !v)}
             className="hamburger-btn"
-            style={{ background: "none", border: "none", cursor: "pointer", flexDirection: "column", gap: "5px", padding: "4px" }}
+            style={{ background: "none", border: "none", cursor: "pointer", flexDirection: "column", gap: "5px", padding: "10px 8px" }}
           >
             <span style={bar(menuOpen, 0)} />
             <span style={bar(menuOpen, 1)} />
