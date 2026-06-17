@@ -401,53 +401,7 @@ function PerformanceSection({ data }: { data: CourseData }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// 8 — LIVE CLASSES (ITI only)
-// ══════════════════════════════════════════════════════════════════════════════
-function LiveClassesSection({ liveClasses, checkoutUrl }: { liveClasses: NonNullable<CourseData["liveClasses"]>; checkoutUrl: string }) {
-  return (
-    <section style={{ background: "linear-gradient(135deg,#120800,#1A0E00)", padding: "80px 0", borderTop: "1px solid rgba(255,98,0,0.2)", borderBottom: "1px solid rgba(255,98,0,0.2)" }}>
-      <div style={S.container}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "60px", alignItems: "center" }} className="live-grid">
-          <div>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,98,0,0.12)", border: "1px solid rgba(255,98,0,0.3)", borderRadius: "20px", padding: "5px 16px", fontSize: "12px", fontWeight: 700, color: "#FF8534", marginBottom: "20px" }}>
-              <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: "50%", background: "#FF6200", animation: "pulseDot 2s infinite", display: "inline-block" }} />
-              LIVE CLASSES INCLUDED
-            </div>
-            <h2 style={{ ...S.h2, marginTop: 0 }}>
-              Learn Live.{" "}
-              <span style={S.gradText}>Ask. Clarify. Rank.</span>
-            </h2>
-            <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.6)", lineHeight: 1.7, marginBottom: "20px" }}>
-              Weekly live sessions with expert instructors. Ask your doubts in real time. Recordings available for every session.
-            </p>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "10px 16px", marginBottom: "24px" }}>
-              <span aria-hidden="true" style={{ fontSize: "20px" }}>📅</span>
-              <span style={{ fontSize: "14px", fontWeight: 700, color: "rgba(255,255,255,0.9)" }}>{liveClasses.schedule}</span>
-            </div>
-            <div>
-              <a href={checkoutUrl} target="_blank" rel="noopener noreferrer" style={{ ...S.ctaOrange, fontSize: "15px", padding: "13px 28px" }} onMouseEnter={onOrangeEnter} onMouseLeave={onOrangeLeave}>
-                🚀 Join Live Classes
-              </a>
-            </div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {liveClasses.topics.map((t, i) => (
-              <div key={t} style={{ display: "flex", alignItems: "center", gap: "14px", background: "rgba(255,98,0,0.06)", border: "1px solid rgba(255,98,0,0.15)", borderRadius: "12px", padding: "14px 18px" }}>
-                <span style={{ fontFamily: "Rajdhani, sans-serif", fontSize: "20px", fontWeight: 700, color: "#FF6200", flexShrink: 0 }} aria-hidden="true">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span style={{ fontSize: "14px", color: "rgba(255,255,255,0.85)", fontWeight: 600, lineHeight: 1.4 }}>{t}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// 9 — WINCENTRE TRUST
+// 8 — WINCENTRE TRUST
 // ══════════════════════════════════════════════════════════════════════════════
 const WINCENTRE_STATS = [
   { value: "15+",    label: "Years of PSC Coaching" },
@@ -877,7 +831,6 @@ export default function CoursePage({ data, courseKey }: { data: CourseData; cour
       <SubjectsSection data={data} />
       <StudySystemSection data={data} />
       <PerformanceSection data={data} />
-      {data.liveClasses && <LiveClassesSection liveClasses={data.liveClasses} checkoutUrl={data.pricing.checkoutUrl} />}
       <WincentreTrustSection />
       <TestimonialsSection data={data} />
       <BonusSection data={data} />
