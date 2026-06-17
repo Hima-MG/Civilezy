@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useState, useCallback } from "react";
 import Link from "next/link";
-import { HERO_DOMAINS, type HeroDomain } from "@/data/heroQuestions";
+import { HERO_DOMAINS } from "@/data/heroQuestions";
 import { EXTERNAL_URLS } from "@/lib/constants";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -39,16 +38,6 @@ const LIVE_SESSIONS = [
   },
 ] as const;
 
-// ─── Rank System ────────────────────────────────────────────────────────────
-interface RankInfo { label: string; icon: string; color: string; }
-
-function getRank(score: number): RankInfo {
-  if (score >= 5000) return { label: "Top Performer", icon: "🏆", color: "#FFB800" };
-  if (score >= 2000) return { label: "Advanced",      icon: "🟣", color: "#C864FF" };
-  if (score >= 500)  return { label: "Intermediate",   icon: "🔵", color: "#64C8FF" };
-  return                     { label: "Beginner",       icon: "🟢", color: "#32C864" };
-}
-
 const TRUST_METRICS = [
   { icon: "🏛️", num: "18+",    label: "Years Legacy",     sub: "Backed by Wincentre Since 2008" },
   { icon: "👨‍🎓", num: "5,200+", label: "Students Trained", sub: "Across Kerala"                 },
@@ -56,7 +45,14 @@ const TRUST_METRICS = [
   { icon: "🎯", num: "2,000+", label: "Job Achievers",    sub: "In Govt. Sector"               },
 ];
 
-const WEEK_LETTERS = ["M","T","W","T","F","S","S"] as const;
+// ─── Hero Videos ─────────────────────────────────────────────────────────────
+const HERO_VIDEOS = [
+  { id: "38tjn1OC1t0", title: "CivilEzy Overview"          },
+  { id: "-xF_UOSZ-f4", title: "CivilEzy Student Experience" },
+  { id: "mgDZhTjrVkU", title: "Course Walkthrough"          },
+  { id: "aoCRr7ki3v4", title: "Success Stories"             },
+  { id: "qIvQjVdvjWM", title: "CivilEzy Highlights"         },
+] as const;
 
 // ─── Stable CTA hover handlers ───────────────────────────────────────────────
 const onPrimaryEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -76,151 +72,8 @@ const onSecondaryLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
   e.currentTarget.style.background  = "transparent";
 };
 
-// ─── Hoisted style maps ─────────────────────────────────────────────────────
-const LEVEL_SCHEMES = {
-  orange: { background:"rgba(255,98,0,0.15)",   color:"#FF8534", border:"1px solid rgba(255,98,0,0.3)",    activeBox:"0 4px 15px rgba(255,98,0,0.35)"    },
-  gold:   { background:"rgba(255,184,0,0.15)",  color:"#FFB800", border:"1px solid rgba(255,184,0,0.3)",   activeBox:"0 4px 15px rgba(255,184,0,0.35)"   },
-  blue:   { background:"rgba(100,200,255,0.1)", color:"#64C8FF", border:"1px solid rgba(100,200,255,0.3)", activeBox:"0 4px 15px rgba(100,200,255,0.3)"  },
-  green:  { background:"rgba(50,200,100,0.1)",  color:"#32C864", border:"1px solid rgba(50,200,100,0.3)",  activeBox:"0 4px 15px rgba(50,200,100,0.3)"  },
-} as const;
-
-const DOMAIN_COLOR: Record<HeroDomain, keyof typeof LEVEL_SCHEMES> = {
-  iti: "orange", diploma: "gold", btech: "blue", surveyor: "green",
-};
-
-const STREAK_STYLES: Record<"done"|"today"|"miss", React.CSSProperties> = {
-  done:  { background:"#FF6200",                color:"white" },
-  today: { background:"rgba(255,98,0,0.3)",     border:"1px solid #FF6200", color:"#FF6200" },
-  miss:  { background:"rgba(255,255,255,0.05)", color:"rgba(255,255,255,0.55)" },
-};
-
 // ─── Hero Component ──────────────────────────────────────────────────────────
 export default function Hero() {
-  const { profile } = useAuth();
-
-  const [activeDomain, setActiveDomain] = useState<HeroDomain>("iti");
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [quizScore, setQuizScore] = useState(0);
-  const [wrongCount, setWrongCount] = useState(0);
-  const [showConversion, setShowConversion] = useState(false);
-  const [quizDone, setQuizDone] = useState(false);
-
-  const [mounted, setMounted] = useState(false);
-  const [totalScore, setTotalScore] = useState(0);
-  const [streak, setStreak] = useState(0);
-  const [onlineUsers, setOnlineUsers] = useState(0);
-  const [xpWidth, setXpWidth] = useState("0%");
-
-  // ── Hydration guard ──
-  useEffect(() => {
-    setMounted(true);
-    if (profile) {
-      setTotalScore(profile.totalScore ?? 0);
-      setStreak(profile.streak ?? 0);
-    } else {
-      setTotalScore(Math.floor(Math.random() * (1500 - 100) + 100));
-      setStreak(0);
-    }
-  }, [profile]);
-
-  const rank = useMemo(() => getRank(totalScore), [totalScore]);
-
-  const xpTarget = useMemo(() => {
-    const thresholds = [0, 500, 2000, 5000, 10000];
-    let currentTierStart = 0;
-    let nextTierEnd = 500;
-    for (let i = thresholds.length - 1; i >= 0; i--) {
-      if (totalScore >= thresholds[i]) {
-        currentTierStart = thresholds[i];
-        nextTierEnd = thresholds[i + 1] ?? thresholds[i] + 5000;
-        break;
-      }
-    }
-    const range = nextTierEnd - currentTierStart;
-    const progress = totalScore - currentTierStart;
-    const pct = Math.min((progress / range) * 100, 100);
-    return { current: totalScore, max: nextTierEnd, pct: `${pct.toFixed(1)}%` };
-  }, [totalScore]);
-
-  useEffect(() => {
-    if (!mounted) return;
-    const t = setTimeout(() => setXpWidth(xpTarget.pct), 500);
-    return () => clearTimeout(t);
-  }, [mounted, xpTarget.pct]);
-
-  const streakDays = useMemo(() => {
-    if (!mounted) return WEEK_LETTERS.map((letter, i) => ({ id: `${letter}${i}`, letter, state: "miss" as const }));
-    const today = new Date().getDay();
-    const dayIndex = today === 0 ? 6 : today - 1;
-    return WEEK_LETTERS.map((letter, i) => {
-      let state: "done" | "today" | "miss";
-      if (i < dayIndex && i >= dayIndex - streak) state = "done";
-      else if (i === dayIndex) state = streak > 0 ? "done" : "today";
-      else state = "miss";
-      return { id: `${letter}${i}`, letter, state };
-    });
-  }, [streak, mounted]);
-
-  useEffect(() => {
-    const updateUsers = () => setOnlineUsers(Math.floor(Math.random() * (300 - 100) + 100));
-    updateUsers();
-    const interval = setInterval(updateUsers, 6000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // ── Reset quiz when domain changes ──
-  useEffect(() => {
-    setCurrentIndex(0);
-    setSelectedOption(null);
-    setQuizScore(0);
-    setWrongCount(0);
-    setShowConversion(false);
-    setQuizDone(false);
-  }, [activeDomain]);
-
-  const domainConfig = HERO_DOMAINS.find(d => d.id === activeDomain)!;
-  const questions = domainConfig.questions;
-  const currentQ = questions[currentIndex];
-  const TOTAL = questions.length;
-
-  // ── Handle answer ──
-  const handleAnswer = useCallback((optIndex: number) => {
-    if (selectedOption !== null) return;
-    setSelectedOption(optIndex);
-
-    const isCorrect = optIndex === currentQ.correct;
-    if (isCorrect) {
-      setQuizScore(s => s + 1);
-    } else {
-      setWrongCount(w => w + 1);
-      // Show conversion card on first wrong answer
-      if (wrongCount === 0) {
-        setShowConversion(true);
-      }
-    }
-
-    // Auto advance after delay
-    setTimeout(() => {
-      if (currentIndex + 1 >= TOTAL) {
-        setQuizDone(true);
-      } else {
-        setCurrentIndex(i => i + 1);
-        setSelectedOption(null);
-        setShowConversion(false);
-      }
-    }, 1200);
-  }, [selectedOption, currentQ, currentIndex, TOTAL, wrongCount]);
-
-  const handleRetry = () => {
-    setCurrentIndex(0);
-    setSelectedOption(null);
-    setQuizScore(0);
-    setWrongCount(0);
-    setShowConversion(false);
-    setQuizDone(false);
-  };
-
   return (
     <>
       <section
@@ -496,190 +349,9 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* ═══ RIGHT SIDE — PSC Challenge Teaser ═══ */}
-          <div style={{ position:"relative", animation:"heroFadeUp 0.7s 0.2s ease both", paddingTop:"24px", paddingBottom:"24px" }}>
-
-            {/* Floating rank badge */}
-            <div aria-hidden="true" className="hero-rank-badge" style={{ position:"absolute", top:"-16px", right:"-16px", background:"rgba(11,30,61,0.9)", border:"1px solid rgba(255,98,0,0.4)", borderRadius:"12px", padding:"8px 14px", fontSize:"13px", fontWeight:700, backdropFilter:"blur(8px)", boxShadow:"0 8px 24px rgba(0,0,0,0.4)", color:mounted ? rank.color : "#FFB800", zIndex:2, whiteSpace:"nowrap" }}>
-              {mounted ? `${rank.icon} Your Rank: ${rank.label}` : "🏆 Your Rank: —"}
-            </div>
-
-            {/* Glass card */}
-            <div style={{ background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.12)", borderRadius:"20px", padding:"24px", backdropFilter:"blur(10px)" }}>
-
-              {/* SEO heading — visible, keyword-rich */}
-              <h2 id="psc-challenge-heading" style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"18px", fontWeight:700, color:"#fff", margin:"0 0 4px", lineHeight:1.3 }}>
-                Evaluate YourSelf!
-              </h2>
-              <p style={{ fontSize:"13px", color:"rgba(255,255,255,0.55)", marginBottom:"14px", lineHeight:1.5 }}>
-                {domainConfig.seoSubtitle}
-              </p>
-
-              {/* Domain selector */}
-              <div role="group" aria-label="Select exam category" className="hero-domain-selector" style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:"8px", marginBottom:"16px" }}>
-                {HERO_DOMAINS.map(d => (
-                  <DomainBtn
-                    key={d.id}
-                    label={`${d.icon} ${d.label}`}
-                    isActive={activeDomain === d.id}
-                    colorScheme={DOMAIN_COLOR[d.id]}
-                    onClick={() => setActiveDomain(d.id)}
-                  />
-                ))}
-              </div>
-
-              {/* ── Quiz / Result / Conversion ── */}
-              {quizDone ? (
-                /* ── Completion CTA ── */
-                <div style={{ background:"rgba(0,0,0,0.3)", borderRadius:"14px", padding:"20px", textAlign:"center" }}>
-                  <div style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", width:"52px", height:"52px", borderRadius:"50%", background: quizScore >= 4 ? "rgba(50,200,100,0.2)" : quizScore >= 2 ? "rgba(255,184,0,0.2)" : "rgba(255,100,100,0.15)", border: `2px solid ${quizScore >= 4 ? "#32C864" : quizScore >= 2 ? "#FFB800" : "#FF6464"}`, fontSize:"18px", fontWeight:800, color: quizScore >= 4 ? "#32C864" : quizScore >= 2 ? "#FFB800" : "#FF6464", fontFamily:"Rajdhani, sans-serif", marginBottom:"12px" }}>
-                    {quizScore}/{TOTAL}
-                  </div>
-
-                  <h3 style={{ fontFamily:"Rajdhani, sans-serif", fontSize:"17px", fontWeight:700, color:"#fff", marginBottom:"6px" }}>
-                    Ready for Real PSC Preparation?
-                  </h3>
-                  <p style={{ fontSize:"13px", color:"rgba(255,255,255,0.6)", marginBottom:"16px", lineHeight:1.5 }}>
-                    {quizScore >= 4
-                      ? "Great job! You have strong fundamentals. Take it further with structured exam prep."
-                      : quizScore >= 2
-                      ? "Good attempt! Structured practice will help you crack the real exam."
-                      : "PSC questions are tougher than they look. Prepare smarter with CivilEzy."}
-                  </p>
-
-                  <div style={{ display:"flex", gap:"8px", justifyContent:"center", flexWrap:"wrap" }}>
-                    <a
-                      href={LMS_LOGIN}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ background:"linear-gradient(135deg,#FF6200,#FF4500)", color:"white", border:"none", padding:"10px 22px", borderRadius:"10px", fontFamily:"Nunito, sans-serif", fontSize:"13px", fontWeight:800, cursor:"pointer", textDecoration:"none", display:"inline-flex", alignItems:"center", gap:"6px", boxShadow:"0 4px 16px rgba(255,98,0,0.4)" }}
-                    >
-                      🚀 Enroll Now
-                    </a>
-                    <Link
-                      href="/game-arena"
-                      style={{ background:"rgba(255,98,0,0.15)", border:"1px solid rgba(255,98,0,0.4)", color:"#FF8534", borderRadius:"10px", padding:"10px 22px", fontSize:"13px", fontWeight:700, cursor:"pointer", fontFamily:"Nunito, sans-serif", textDecoration:"none", display:"inline-flex", alignItems:"center", gap:"6px" }}
-                    >
-                      🎮 Go to Game Arena
-                    </Link>
-                  </div>
-
-                  <button
-                    onClick={handleRetry}
-                    style={{ marginTop:"12px", background:"none", border:"none", color:"rgba(255,255,255,0.45)", fontSize:"12px", fontWeight:600, cursor:"pointer", fontFamily:"Nunito, sans-serif", textDecoration:"underline", textUnderlineOffset:"3px" }}
-                  >
-                    Try Again
-                  </button>
-                </div>
-              ) : showConversion && selectedOption !== null ? (
-                /* ── Wrong answer conversion card (shown briefly) ── */
-                <div style={{ background:"rgba(0,0,0,0.3)", borderRadius:"14px", padding:"16px" }}>
-                  {/* Still show question result */}
-                  <p style={{ fontSize:"14px", fontWeight:600, marginBottom:"10px", lineHeight:1.5, color:"#fff" }}>
-                    {currentQ.question}
-                  </p>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"8px", marginBottom:"14px" }}>
-                    {currentQ.options.map((opt, i) => {
-                      const isCorrect = i === currentQ.correct;
-                      const isWrong = i === selectedOption && !isCorrect;
-                      let bg = "rgba(255,255,255,0.06)"; let bdr = "1px solid rgba(255,255,255,0.1)"; let clr = "rgba(255,255,255,0.85)";
-                      if (isCorrect) { bg = "rgba(50,200,100,0.2)"; bdr = "1px solid #32C864"; clr = "#32C864"; }
-                      else if (isWrong) { bg = "rgba(255,50,50,0.2)"; bdr = "1px solid #FF3232"; clr = "#FF6464"; }
-                      else if (selectedOption !== null) { clr = "rgba(255,255,255,0.4)"; }
-                      return (
-                        <div key={i} style={{ background:bg, border:bdr, color:clr, borderRadius:"8px", padding:"8px 12px", fontSize:"12px", textAlign:"center", fontFamily:"Nunito, sans-serif", fontWeight:500, lineHeight:1.4 }}>
-                          {isCorrect ? `✓ ${opt}` : opt}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {/* Conversion nudge */}
-                  <div style={{ background:"rgba(255,98,0,0.08)", border:"1px solid rgba(255,98,0,0.25)", borderRadius:"10px", padding:"12px", textAlign:"center" }}>
-                    <p style={{ fontSize:"13px", fontWeight:700, color:"#FF8534", marginBottom:"4px" }}>
-                      PSC questions are tougher than they look.
-                    </p>
-                    <p style={{ fontSize:"12px", color:"rgba(255,255,255,0.5)", marginBottom:"0" }}>
-                      Prepare smarter with CivilEzy.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                /* ── Active quiz ── */
-                <div role="region" aria-labelledby="psc-challenge-heading" style={{ background:"rgba(0,0,0,0.3)", borderRadius:"14px", padding:"16px" }}>
-                  {/* Progress */}
-                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"10px" }}>
-                    <span style={{ fontSize:"11px", fontWeight:700, color:"rgba(255,255,255,0.45)", letterSpacing:"0.5px" }}>
-                      QUESTION {currentIndex + 1}/{TOTAL}
-                    </span>
-                    <div style={{ display:"flex", gap:"4px" }}>
-                      {Array.from({ length: TOTAL }).map((_, i) => (
-                        <div key={i} style={{ width:"6px", height:"6px", borderRadius:"50%", background: i < currentIndex ? "#FF6200" : i === currentIndex ? "#FFB800" : "rgba(255,255,255,0.15)", transition:"background 0.3s" }} />
-                      ))}
-                    </div>
-                  </div>
-
-                  <p style={{ fontSize:"14px", fontWeight:600, marginBottom:"12px", lineHeight:1.5, color:"#fff" }}>
-                    {currentQ.question}
-                  </p>
-
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"8px" }} role="group" aria-label="Answer options">
-                    {currentQ.options.map((opt, i) => {
-                      const revealed = selectedOption !== null;
-                      const isCorrect = revealed && i === currentQ.correct;
-                      const isWrong = revealed && i === selectedOption && i !== currentQ.correct;
-
-                      let bg = "rgba(255,255,255,0.06)"; let bdr = "1px solid rgba(255,255,255,0.1)"; let clr = "rgba(255,255,255,0.85)"; let cursor = "pointer";
-                      if (isCorrect) { bg = "rgba(50,200,100,0.2)"; bdr = "1px solid #32C864"; clr = "#32C864"; cursor = "default"; }
-                      else if (isWrong) { bg = "rgba(255,50,50,0.2)"; bdr = "1px solid #FF3232"; clr = "#FF6464"; cursor = "default"; }
-                      else if (revealed) { clr = "rgba(255,255,255,0.4)"; cursor = "default"; }
-
-                      return (
-                        <button
-                          key={`${activeDomain}-${currentIndex}-${i}`}
-                          onClick={() => handleAnswer(i)}
-                          disabled={revealed}
-                          style={{ background:bg, border:bdr, color:clr, borderRadius:"8px", padding:"8px 12px", fontSize:"12px", cursor, transition:"all 0.18s", textAlign:"center", fontFamily:"Nunito, sans-serif", fontWeight:500, lineHeight:1.4 }}
-                          onMouseEnter={(e) => { if (!revealed) { e.currentTarget.style.background = "rgba(255,98,0,0.2)"; e.currentTarget.style.borderColor = "#FF6200"; }}}
-                          onMouseLeave={(e) => { if (!revealed) { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}}
-                        >
-                          {isCorrect ? `✓ ${opt}` : opt}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* XP bar */}
-              <div style={{ display:"flex", alignItems:"center", gap:"10px", marginTop:"12px" }}>
-                <span style={{ fontSize:"12px", color:"#FF8534", fontWeight:700, whiteSpace:"nowrap" }}>
-                  ⚡ XP {mounted ? totalScore.toLocaleString() : "—"} / {mounted ? xpTarget.max.toLocaleString() : "—"}
-                </span>
-                <div role="progressbar" aria-valuenow={mounted ? totalScore : 0} aria-valuemin={0} aria-valuemax={mounted ? xpTarget.max : 500} aria-label={mounted ? `XP progress: ${totalScore.toLocaleString()} of ${xpTarget.max.toLocaleString()}` : "XP progress loading"} style={{ flex:1, height:"8px", background:"rgba(255,255,255,0.1)", borderRadius:"10px", overflow:"hidden" }}>
-                  <div style={{ height:"100%", background:"linear-gradient(90deg,#FF6200,#FFB800)", borderRadius:"10px", width:xpWidth, transition:"width 1.5s ease" }} />
-                </div>
-                <span style={{ fontSize:"12px", color:"rgba(255,255,255,0.55)" }}>{mounted ? rank.label : "—"}</span>
-              </div>
-
-              {/* Streak row */}
-              <div role="region" aria-label={`${streak}-day study streak`} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", background:"rgba(255,98,0,0.1)", border:"1px solid rgba(255,98,0,0.2)", borderRadius:"10px", padding:"10px 14px", marginTop:"12px" }}>
-                <div style={{ display:"flex", alignItems:"center", gap:"8px", fontSize:"14px", fontWeight:700 }}>
-                  <span aria-hidden="true">🔥</span>
-                  <strong>{!mounted ? "Daily Streak" : streak > 0 ? `${streak}-Day Streak` : "Start Your Streak!"}</strong>
-                </div>
-                <div style={{ display:"flex", gap:"4px" }} aria-hidden="true">
-                  {streakDays.map(({ id, letter, state }) => (
-                    <StreakDay key={id} letter={letter} state={state} />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Floating online badge */}
-            <div aria-hidden="true" className="hero-online-badge" style={{ position:"absolute", bottom:"-16px", left:"-16px", background:"rgba(11,30,61,0.9)", border:"1px solid rgba(255,98,0,0.4)", borderRadius:"12px", padding:"8px 14px", fontSize:"13px", fontWeight:700, backdropFilter:"blur(8px)", boxShadow:"0 8px 24px rgba(0,0,0,0.4)", color:"#64C8FF", zIndex:2, display:"flex", alignItems:"center", gap:"6px", whiteSpace:"nowrap" }}>
-              <span style={{ width:"8px", height:"8px", borderRadius:"50%", background:"#32C864", flexShrink:0, animation:"pulseDot 1.5s infinite" }} />
-              👥 {mounted ? onlineUsers : 200} students learning now
-            </div>
+          {/* ═══ RIGHT SIDE — Premium Video Showcase ═══ */}
+          <div style={{ position:"relative", animation:"heroFadeUp 0.7s 0.2s ease both" }}>
+            <VideoShowcase />
           </div>
         </div>
       </section>
@@ -700,6 +372,27 @@ export default function Hero() {
           .hero-trust-metrics {
             grid-template-columns: repeat(2, 1fr) !important;
           }
+        }
+        /* ── Video Showcase ── */
+        .vs-thumb-strip::-webkit-scrollbar { display: none; }
+        .vs-thumb-strip { -ms-overflow-style: none; scrollbar-width: none; }
+        .vs-thumb-btn { transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease; }
+        .vs-thumb-btn:hover:not([aria-pressed="true"]) {
+          transform: scale(1.06) !important;
+          border-color: rgba(255,98,0,0.5) !important;
+        }
+        .vs-thumb-btn:focus-visible {
+          outline: 2px solid #FF6200;
+          outline-offset: 2px;
+        }
+        .vs-featured-fade-in  { animation: vsFadeIn  0.25s ease forwards; }
+        .vs-featured-fade-out { animation: vsFadeOut 0.18s ease forwards; }
+        @keyframes vsFadeIn  { from { opacity: 0; transform: scale(0.99); } to { opacity: 1; transform: scale(1); } }
+        @keyframes vsFadeOut { from { opacity: 1; } to { opacity: 0; } }
+        /* ── Mobile: thumbnails scroll horizontally ── */
+        @media (max-width: 640px) {
+          .vs-thumb-strip { gap: 8px !important; }
+          .vs-thumb-btn   { min-width: 100px !important; width: 100px !important; }
         }
       `}</style>
 
@@ -731,25 +424,198 @@ export default function Hero() {
   );
 }
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// ─── VideoShowcase ────────────────────────────────────────────────────────────
+function VideoShowcase() {
+  const [activeIdx, setActiveIdx]   = useState(0);
+  const [fading,    setFading]      = useState(false);
 
-function DomainBtn({ label, isActive, colorScheme, onClick }: { label:string; isActive:boolean; colorScheme:keyof typeof LEVEL_SCHEMES; onClick:()=>void }) {
-  const s = LEVEL_SCHEMES[colorScheme];
-  return (
-    <button
-      onClick={onClick}
-      aria-pressed={isActive}
-      style={{ padding:"9px 4px", borderRadius:"10px", border:s.border, cursor:"pointer", fontFamily:"Nunito, sans-serif", fontSize:"12px", fontWeight:700, transition:"all 0.2s", background:s.background, color:s.color, transform:isActive?"scale(1.05)":"scale(1)", boxShadow:isActive?s.activeBox:"none", whiteSpace:"nowrap" }}
-    >
-      {label}
-    </button>
-  );
-}
+  const selectVideo = useCallback((idx: number) => {
+    if (idx === activeIdx) return;
+    setFading(true);
+    setTimeout(() => {
+      setActiveIdx(idx);
+      setFading(false);
+    }, 180);
+  }, [activeIdx]);
 
-function StreakDay({ letter, state }: { letter:string; state:"done"|"today"|"miss" }) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowRight") selectVideo(Math.min(activeIdx + 1, HERO_VIDEOS.length - 1));
+    if (e.key === "ArrowLeft")  selectVideo(Math.max(activeIdx - 1, 0));
+  };
+
+  const active = HERO_VIDEOS[activeIdx];
+
   return (
-    <div style={{ width:"24px", height:"24px", borderRadius:"6px", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"10px", fontWeight:700, ...STREAK_STYLES[state] }}>
-      {letter}
+    <div style={{ display:"flex", flexDirection:"column", gap:"14px" }} onKeyDown={handleKeyDown}>
+
+      {/* ── Meta row: badge + counter ── */}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div style={{
+          display:"inline-flex", alignItems:"center", gap:"7px",
+          background:"rgba(255,98,0,0.12)", border:"1px solid rgba(255,98,0,0.3)",
+          borderRadius:"20px", padding:"5px 13px",
+          fontSize:"11px", fontWeight:700, color:"#FF8534", letterSpacing:"0.3px",
+        }}>
+          <span aria-hidden="true" style={{ fontSize:"13px" }}>🎬</span>
+          5 Featured Videos
+        </div>
+        <div style={{
+          fontSize:"12px", fontWeight:700, color:"rgba(255,255,255,0.5)",
+          fontFamily:"Rajdhani, sans-serif", letterSpacing:"1px",
+        }}
+          aria-live="polite" aria-atomic="true"
+        >
+          <span style={{ color:"#FF8534" }}>{activeIdx + 1}</span>
+          <span style={{ color:"rgba(255,255,255,0.3)" }}> / {HERO_VIDEOS.length}</span>
+        </div>
+      </div>
+
+      {/* ── Featured player ── */}
+      <div
+        role="region"
+        aria-label={`Featured video: ${active.title}`}
+        style={{
+          borderRadius:"20px", overflow:"hidden",
+          border:"1px solid rgba(255,98,0,0.28)",
+          boxShadow:"0 24px 64px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,98,0,0.08)",
+          background:"#080D1A",
+          backdropFilter:"blur(20px)",
+          position:"relative",
+        }}
+      >
+        {/* 16:9 aspect-ratio wrapper */}
+        <div style={{ position:"relative", paddingBottom:"56.25%", height:0 }}>
+          <iframe
+            key={active.id}
+            src={`https://www.youtube.com/embed/${active.id}?rel=0&modestbranding=1`}
+            title={active.title}
+            className={fading ? "vs-featured-fade-out" : "vs-featured-fade-in"}
+            style={{
+              position:"absolute", top:0, left:0,
+              width:"100%", height:"100%", border:"none",
+            }}
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+          />
+
+          {/* Title overlay (bottom gradient) */}
+          <div
+            aria-hidden="true"
+            style={{
+              position:"absolute", bottom:0, left:0, right:0,
+              background:"linear-gradient(to top, rgba(8,13,26,0.92) 0%, transparent 100%)",
+              padding:"28px 16px 12px",
+              pointerEvents:"none",
+              transition:"opacity 0.2s",
+              opacity: fading ? 0 : 1,
+            }}
+          >
+            <span style={{
+              fontSize:"13px", fontWeight:700, color:"#fff",
+              fontFamily:"Nunito, sans-serif", letterSpacing:"0.2px",
+            }}>
+              {active.title}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Thumbnail strip ── */}
+      <div
+        role="listbox"
+        aria-label="Video playlist"
+        className="vs-thumb-strip"
+        style={{
+          display:"flex", gap:"10px",
+          overflowX:"auto", scrollSnapType:"x mandatory",
+          paddingBottom:"2px",
+        }}
+      >
+        {HERO_VIDEOS.map((v, i) => {
+          const isActive = i === activeIdx;
+          return (
+            <button
+              key={v.id}
+              role="option"
+              aria-selected={isActive}
+              aria-label={`Play ${v.title} (video ${i + 1} of ${HERO_VIDEOS.length})`}
+              onClick={() => selectVideo(i)}
+              className="vs-thumb-btn"
+              style={{
+                flexShrink:0,
+                width:"calc(20% - 8px)",
+                minWidth:"82px",
+                scrollSnapAlign:"start",
+                position:"relative",
+                borderRadius:"10px",
+                overflow:"hidden",
+                border: isActive
+                  ? "2px solid #FF6200"
+                  : "2px solid rgba(255,255,255,0.09)",
+                boxShadow: isActive
+                  ? "0 0 0 3px rgba(255,98,0,0.22), 0 8px 24px rgba(0,0,0,0.5)"
+                  : "0 4px 12px rgba(0,0,0,0.35)",
+                transform: isActive ? "scale(1.06)" : "scale(1)",
+                cursor:"pointer",
+                padding:0,
+                background:"#080D1A",
+              }}
+            >
+              {/* YouTube thumbnail */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`}
+                alt={v.title}
+                style={{ width:"100%", display:"block", aspectRatio:"16/9", objectFit:"cover" }}
+                loading="lazy"
+              />
+
+              {/* Inactive overlay: darken slightly */}
+              {!isActive && (
+                <div aria-hidden="true" style={{
+                  position:"absolute", inset:0,
+                  background:"rgba(8,13,26,0.35)",
+                  transition:"background 0.2s",
+                }} />
+              )}
+
+              {/* Active overlay: orange tint + play icon */}
+              {isActive && (
+                <div aria-hidden="true" style={{
+                  position:"absolute", inset:0,
+                  background:"rgba(255,98,0,0.18)",
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                }}>
+                  <div style={{
+                    width:"22px", height:"22px", borderRadius:"50%",
+                    background:"rgba(255,98,0,0.9)",
+                    boxShadow:"0 2px 12px rgba(255,98,0,0.6)",
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    fontSize:"9px", color:"#fff", paddingLeft:"2px",
+                  }}>
+                    ▶
+                  </div>
+                </div>
+              )}
+
+              {/* Number label */}
+              <div aria-hidden="true" style={{
+                position:"absolute", top:"5px", left:"6px",
+                fontSize:"9px", fontWeight:800, color:"#fff",
+                fontFamily:"Rajdhani, sans-serif",
+                background:"rgba(0,0,0,0.55)",
+                borderRadius:"4px", padding:"1px 5px",
+                lineHeight:1.5, letterSpacing:"0.3px",
+              }}>
+                {i + 1}/{HERO_VIDEOS.length}
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
+
