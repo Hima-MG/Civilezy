@@ -153,10 +153,6 @@ export const COURSES: Record<string, CourseData> = {
         a: "Yes. The course starts from fundamentals and builds up progressively. No prior coaching experience is needed.",
       },
       {
-        q: "Are LIVE classes included?",
-        a: "Yes. LIVE classes run Monday–Friday at 7:30 PM – 8:30 PM. All sessions are recorded so you never miss a class.",
-      },
-      {
         q: "How does the quiz system work?",
         a: "Every lesson ends with a graded quiz. You can attempt it unlimited times. There is also a live leaderboard to track your rank among all students.",
       },
