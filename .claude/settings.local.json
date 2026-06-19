@@ -61,7 +61,8 @@
       "Bash(Get-ChildItem -Path src/app/ebooks -Recurse -File)",
       "Bash(firebase projects:list)",
       "Bash(firebase use *)",
-      "Bash(del \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\\\\components\\\\ebooks\\\\EarlyBirdOfferSection.tsx\")"
+      "Bash(del \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\\\\components\\\\ebooks\\\\EarlyBirdOfferSection.tsx\")",
+      "Bash(Get-ChildItem -Recurse -Depth 3)"
     ]
   }
 }

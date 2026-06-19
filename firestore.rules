@@ -54,18 +54,6 @@ service cloud.firestore {
     }
 
     // ==================================
-    // OFFER CAMPAIGNS
-    // ==================================
-    // Public reads: campaigns are marketing content shown site-wide.
-    // Open writes: the admin panel uses a passphrase (not Firebase Auth),
-    // so isAdmin() cannot be used here. Same pattern as /ebooks and /blogs.
-    // Application-level passphrase guard prevents non-admin access.
-    match /offer_campaigns/{campaignId} {
-      allow read: if true;
-      allow write: if true;
-    }
-
-    // ==================================
     // ANNOUNCEMENTS
     // ==================================
     // Public reads: announcements are shown site-wide to all visitors.

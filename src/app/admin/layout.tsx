@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { ADMIN_SESSION_KEY, ADMIN_PASSPHRASE } from "@/lib/adminAuth";
 
 const NAV_ITEMS = [
+  { href: "/admin/chatbot",          label: "AI Chatbot",    icon: "🤖" },
   { href: "/admin/questions",        label: "Questions",     icon: "📚" },
   { href: "/admin/announcements",    label: "Announcements", icon: "📣" },
   { href: "/admin/support",          label: "Support",       icon: "🛠️" },

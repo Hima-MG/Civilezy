@@ -34,6 +34,7 @@ import LeadCapturePopup from "@/components/LeadCapturePopup";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
 import TechnicalSupportModal from "@/components/support/TechnicalSupportModal";
 import FloatingSupportButton from "@/components/support/FloatingSupportButton";
+import ChatWidget from "@/components/chatbot/ChatWidget";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AnnouncementProvider } from "@/contexts/AnnouncementContext";
 import { SupportProvider } from "@/contexts/SupportContext";
@@ -144,6 +145,7 @@ export default function RootLayout({
               <LeadCapturePopup />
               <TechnicalSupportModal />
               <FloatingSupportButton />
+              <ChatWidget />
             </SupportProvider>
           </AnnouncementProvider>
         </AuthProvider>

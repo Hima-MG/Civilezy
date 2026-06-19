@@ -20,13 +20,6 @@ const CHAT_OPTIONS = [
     emoji: "💰",
     message: "Hi! I need help choosing the right pricing plan for Civilezy Kerala PSC preparation.",
   },
-  // {
-  //   id: "syllabus",
-  //   label: "Download Syllabus",
-  //   desc: "Get the full course syllabus",
-  //   emoji: "📄",
-  //   message: "Hi! I'd like to receive the Civilezy course syllabus for Kerala PSC Civil Engineering.",
-  // },
   {
     id: "advisor",
     label: "Talk to Advisor",
@@ -58,11 +51,10 @@ function waUrl(message: string) {
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(message)}`;
 }
 
-// Stable hover handlers
 const onOptionEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
   e.currentTarget.style.background = "rgba(37,211,102,0.1)";
   e.currentTarget.style.borderColor = "rgba(37,211,102,0.35)";
-  e.currentTarget.style.transform = "translateX(-3px)";
+  e.currentTarget.style.transform = "translateX(3px)";
 };
 const onOptionLeave = (e: React.MouseEvent<HTMLAnchorElement>) => {
   e.currentTarget.style.background = "rgba(255,255,255,0.05)";
@@ -92,24 +84,32 @@ export default function WhatsAppWidget() {
 
   return (
     <>
-      {/* pointer-events: none on root so the layout box doesn't block page clicks.
-          Children that need interaction set pointer-events: auto explicitly. */}
+      {/*
+       * FAB SYSTEM — LEFT SIDE (WhatsApp)
+       * ─────────────────────────────────
+       * Desktop (≥ 768px) : bottom: 24px, left: 24px
+       * Tablet  (640-767)  : bottom: 24px, left: 20px
+       * Mobile  (< 640px)  : bottom: 78px, left: 16px  (clears StickyCTA bar)
+       *
+       * z-index: 950 — below ChatWidget (965+) since they're on opposite sides.
+       * pointer-events: none on root so layout box doesn't block page clicks.
+       */}
       <div
         ref={containerRef}
         className="wa-widget-root"
         style={{
           position: "fixed",
-          bottom: "28px",
-          right: "28px",
+          bottom: "24px",
+          left: "24px",
           zIndex: 950,
           display: "flex",
           flexDirection: "column",
-          alignItems: "flex-end",
-          gap: "12px",
+          alignItems: "flex-start",   /* popup opens from left edge of FAB */
+          gap: "10px",
           pointerEvents: "none",
         }}
       >
-        {/* ── Popup menu ── */}
+        {/* ── Popup menu (opens upward, left-anchored) ── */}
         <div
           role="dialog"
           aria-label="WhatsApp chat options"
@@ -125,7 +125,7 @@ export default function WhatsAppWidget() {
             border: "1px solid rgba(255,255,255,0.1)",
             borderRadius: "20px",
             padding: "16px",
-            width: "min(290px, calc(100vw - 40px))",
+            width: "min(290px, calc(100vw - 48px))",
             boxShadow: "0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(37,211,102,0.08)",
           }}
         >
@@ -202,8 +202,8 @@ export default function WhatsAppWidget() {
           aria-label={open ? "Close WhatsApp chat menu" : "Chat with CivilEzy on WhatsApp"}
           aria-expanded={open}
           style={{
-            width: "58px",
-            height: "58px",
+            width: "56px",
+            height: "56px",
             borderRadius: "50%",
             background: open ? "#075E54" : "#25D366",
             border: "none",
@@ -215,10 +215,21 @@ export default function WhatsAppWidget() {
               ? "0 6px 25px rgba(7,94,84,0.55)"
               : "0 6px 28px rgba(37,211,102,0.55)",
             transition: "background 0.2s, transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s",
-            transform: open ? "rotate(0deg) scale(1.06)" : "rotate(0deg) scale(1)",
+            transform: open ? "scale(1.06)" : "scale(1)",
             position: "relative",
             pointerEvents: "auto",
             touchAction: "manipulation",
+            flexShrink: 0,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "scale(1.1)";
+            e.currentTarget.style.boxShadow = "0 10px 36px rgba(37,211,102,0.65)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = open ? "scale(1.06)" : "scale(1)";
+            e.currentTarget.style.boxShadow = open
+              ? "0 6px 25px rgba(7,94,84,0.55)"
+              : "0 6px 28px rgba(37,211,102,0.55)";
           }}
         >
           {/* Ping ring — only when closed */}
@@ -231,6 +242,7 @@ export default function WhatsAppWidget() {
                 borderRadius: "50%",
                 border: "2px solid rgba(37,211,102,0.45)",
                 animation: "waPing 2.4s ease-out infinite",
+                pointerEvents: "none",
               }}
             />
           )}
@@ -250,13 +262,26 @@ export default function WhatsAppWidget() {
           0%, 100% { opacity: 1; transform: scale(1); }
           50%      { opacity: 0.4; transform: scale(0.8); }
         }
-        @media (max-width: 767px) {
-          /* Raise above sticky CTA bar; shrink FAB for smaller thumbs */
-          .wa-widget-root { bottom: 90px !important; right: 16px !important; }
-          /* Shrink FAB to 56×56 px so it doesn't crowd CTA buttons */
-          .wa-widget-root > button:last-child {
-            width:  56px !important;
-            height: 56px !important;
+
+        /* ── Responsive FAB positions ── */
+
+        /* Tablet (640px – 767px): tighten margins slightly */
+        @media (min-width: 640px) and (max-width: 767px) {
+          .wa-widget-root {
+            bottom: 24px !important;
+            left: 20px !important;
+          }
+        }
+
+        /* Mobile (< 640px): raise above the StickyCTA bar (~54px) + margin */
+        @media (max-width: 639px) {
+          .wa-widget-root {
+            bottom: 78px !important;
+            left: 16px !important;
+          }
+          .wa-widget-root button {
+            width:  52px !important;
+            height: 52px !important;
           }
         }
       `}</style>

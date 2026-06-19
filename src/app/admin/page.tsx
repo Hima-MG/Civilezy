@@ -6,6 +6,17 @@ import { useEffect, useState } from "react";
 // ── Card definitions ───────────────────────────────────────────────────────────
 const CARDS = [
   {
+    href:    "/admin/chatbot",
+    icon:    "🤖",
+    title:   "AI Chatbot",
+    desc:    "Manage the CivilEzy AI Assistant. Add FAQs, review unanswered questions, and track chatbot analytics.",
+    accent:  "#FF8534",
+    accentBg:"rgba(255,133,52,0.10)",
+    border:  "rgba(255,133,52,0.22)",
+    hoverBorder: "rgba(255,133,52,0.45)",
+    action:  "Manage Chatbot →",
+  },
+  {
     href:    "/admin/support",
     icon:    "🛠️",
     title:   "Technical Support",

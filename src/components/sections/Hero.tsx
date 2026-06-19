@@ -364,7 +364,9 @@ export default function Hero() {
         </div>
       </section>
 
-      <style>{`
+      {/* dangerouslySetInnerHTML prevents React from escaping > and " inside CSS selectors,
+          which would otherwise cause a server/client hydration mismatch. */}
+      <style dangerouslySetInnerHTML={{ __html: `
         /* ════════════════════════════════════════════════════════════════
            HERO — MOBILE-FIRST POLISH  (375 / 480 / 640 / 767 / 899px)
            Goal: compact, premium, Coursera/Stripe-level mobile experience
@@ -529,7 +531,7 @@ export default function Hero() {
         @media (min-width: 641px) and (max-width: 899px) {
           .vs-thumb-btn { min-width: 110px !important; }
         }
-      `}</style>
+      ` }} />
 
       {/* ── SEO: Structured crawlable question content ──
           Hidden visually but present in HTML for search engine indexing.
