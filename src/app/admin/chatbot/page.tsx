@@ -19,10 +19,21 @@ interface Stats {
 
 const CARDS = [
   {
+    href: "/admin/chatbot/knowledge",
+    icon: "🧠",
+    title: "Knowledge Base",
+    desc: "Sync course data, e-books, announcements, and blog content so the AI can answer any website question automatically.",
+    accent: "#FF8534",
+    accentBg: "rgba(255,133,52,0.10)",
+    border: "rgba(255,133,52,0.22)",
+    hoverBorder: "rgba(255,133,52,0.45)",
+    action: "Manage Knowledge →",
+  },
+  {
     href: "/admin/chatbot/faqs",
     icon: "📋",
     title: "FAQ Manager",
-    desc: "Add, edit, and manage the chatbot's knowledge base. The more FAQs you add, the better the bot answers.",
+    desc: "Add, edit, and manage hand-crafted Q&A pairs for precise, instant answers to common questions.",
     accent: "#34d399",
     accentBg: "rgba(52,211,153,0.10)",
     border: "rgba(52,211,153,0.22)",

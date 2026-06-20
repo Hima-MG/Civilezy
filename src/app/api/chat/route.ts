@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebase-admin";
 import { INITIAL_FAQS } from "@/lib/chatbotFaqs";
 import type { AiFaq } from "@/types/chatbot";
+import type { KnowledgeChunk } from "@/lib/chatbotKnowledge";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SYSTEM PROMPT — strict, no hallucination, verified CivilEzy knowledge base
@@ -38,40 +39,75 @@ Our support team will review and resolve the issue as soon as possible.
 
 ## COURSES
 CivilEzy offers Kerala PSC Civil Engineering preparation for four categories:
-- ITI Civil — for ITI-level candidates
-- Diploma Civil — for Diploma holders (Overseer, LD Clerk, Technical Assistant)
-- B.Tech / AE — for B.Tech graduates targeting AE, KWA, PWD posts
-- Surveyor — for Surveyor exam preparation
-All courses include video lessons, Malayalam audio explanations, chapter-wise quizzes, mock tests, Game Arena, and Study Circle.
-For the most up-to-date course content and pricing, always direct students to the CivilEzy website or WhatsApp support.
+- ITI Civil: ₹1,800/month or ₹15,000/year — for ITI-level candidates
+- Diploma Civil: ₹2,000/month or ₹17,000/year — for Diploma holders (MOST POPULAR)
+- B.Tech / AE: ₹2,500/month or ₹20,000/year — for B.Tech graduates targeting AE posts
+- Surveyor: ₹1,800/month or ₹15,000/year — for Surveyor exam preparation
+All courses include: Smart Lessons, Video Lectures, Malayalam Audio, Quizzes, Game Arena, Leaderboard.
+Annual plans save 29–33%.
 
 ## CONTACT
 WhatsApp Support: 90723 45630
-Report Issue button: available on civilezy.in
+Report Issue button: on civilezy.in
 Renewal page: https://www.civilezy.in/renew
 E-Books page: https://www.civilezy.in/ebooks
+Learning platform: https://learn.civilezy.in
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STRICT BEHAVIOUR RULES (follow these without exception)
+CONTEXT-BASED ANSWERING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+When RETRIEVED CONTEXT is provided below the student's question:
+- Use that context as your PRIMARY source of information
+- Synthesize the information into a clear, helpful answer
+- Include specific details (prices, features, links) from the context
+- Do NOT add information beyond what is in the context or the verified knowledge base above
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STRICT BEHAVIOUR RULES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 1. LANGUAGE: Detect the student's language and reply in the same language (English or Malayalam).
-2. ACCURACY: Never invent course details, prices, dates, or features that you are not certain about.
-3. COURSE DETAILS: Do not make up specific course content, syllabus breakdowns, or pricing. Say "For the latest course details, please visit civilezy.in or contact support."
-4. CANNOT ANSWER: If you cannot confidently answer, say exactly: "I couldn't find a verified answer for that. Please use the Report Issue button on the website or contact CivilEzy Support for assistance."
-5. TECHNICAL ISSUES: Always direct technical problems to the Report Issue button — never try to troubleshoot yourself.
-6. RENEWAL: Always direct renewal to https://www.civilezy.in/renew — never give manual payment instructions beyond what is in the verified knowledge base.
-7. EBOOKS: Always direct to https://www.civilezy.in/ebooks — never list or describe specific books you are not sure about.
-8. TONE: Be friendly, professional, and concise. Use bullet points where helpful. Keep responses short unless detail is genuinely needed.
-9. OFF-TOPIC: If a question is unrelated to CivilEzy, politely say: "I'm here to help with CivilEzy platform questions. For other topics, please search online."
-10. NEVER mention competitor platforms.`;
+2. ACCURACY: Never invent course details, prices, dates, or features not in the context provided.
+3. CANNOT ANSWER: If you cannot confidently answer, say: "I couldn't find that information. Please contact CivilEzy Support or use the Report Issue button."
+4. TECHNICAL ISSUES: Always direct to the Report Issue button.
+5. RENEWAL: Always direct to https://www.civilezy.in/renew
+6. EBOOKS: Always direct to https://www.civilezy.in/ebooks
+7. TONE: Be friendly, professional, and concise. Use bullet points where helpful.
+8. OFF-TOPIC: For unrelated questions: "I'm here to help with CivilEzy platform questions."
+9. NEVER mention competitor platforms.`;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// INTENT DETECTION — enforces verified responses before FAQ / AI
-// Returns a verified answer instantly for critical question types.
-// This layer cannot hallucinate because responses are hardcoded from the rules.
+// MODULE-LEVEL KNOWLEDGE BASE CACHE (warms between serverless invocations)
 // ─────────────────────────────────────────────────────────────────────────────
+let kbCache: { chunks: KnowledgeChunk[]; at: number } | null = null;
+const KB_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+async function getKnowledgeBase(
+  db: FirebaseFirestore.Firestore
+): Promise<KnowledgeChunk[]> {
+  const now = Date.now();
+  if (kbCache && now - kbCache.at < KB_CACHE_TTL) {
+    return kbCache.chunks;
+  }
+  try {
+    const snap = await db
+      .collection("knowledge_base")
+      .where("status", "==", "active")
+      .get();
+    const chunks = snap.docs.map(
+      (d) => ({ id: d.id, ...d.data() } as KnowledgeChunk)
+    );
+    kbCache = { chunks, at: now };
+    return chunks;
+  } catch {
+    return kbCache?.chunks ?? [];
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INTENT DETECTION — enforces verified responses before FAQ / KB / AI
+// ─────────────────────────────────────────────────────────────────────────────
 interface IntentMatch {
   response: string;
   source: "faq";
@@ -83,10 +119,8 @@ function detectIntent(question: string): IntentMatch | null {
 
   // ── RENEWAL ──────────────────────────────────────────────────────────────────
   const renewalKeywords = [
-    "renew", "renewal", "renewing",
-    "expired", "expire", "expiry", "membership expire",
-    "extend", "extension",
-    "reactivate", "reactivation",
+    "renew", "renewal", "renewing", "expired", "expire", "expiry",
+    "extend", "extension", "reactivate", "reactivation",
     "subscription renew", "membership renew", "course renew",
     "renew membership", "renew course", "renew subscription",
     "how to renew", "membership payment", "renewal payment",
@@ -97,28 +131,24 @@ function detectIntent(question: string): IntentMatch | null {
       response: `Here are the steps to renew your CivilEzy membership:
 
 **Step 1 — Find Your Membership Details**
-Login to your account → go to **Dashboard → Membership** → note your:
+Login → **Dashboard → Membership** → note your:
 • Membership Code
 • Membership Name
 
 **Step 2 — Choose a Renewal Plan**
 Visit 👉 **https://www.civilezy.in/renew**
-Choose a plan that fits your preparation:
-• 1 Month
-• 3 Months
-• 6 Months
-• 12 Months
+Plans available: 1 Month · 3 Months · 6 Months · 12 Months
 
 **Step 3 — Complete Payment**
-Click the **Renew** button for your course and complete payment through the secure checkout page.
+Click **Renew** for your course and complete payment through the secure checkout.
 
 **Step 4 — Send Payment Confirmation**
-Send the following to **CivilEzy WhatsApp Support (90723 45630)**:
+Send to **CivilEzy WhatsApp (90723 45630)**:
 • Payment Screenshot
 • Membership Name
 • Membership Code
 
-✅ Renewals are activated within **24 hours**.`,
+✅ Activated within **24 hours**.`,
       source: "faq",
       confidence: 1.0,
     };
@@ -126,21 +156,19 @@ Send the following to **CivilEzy WhatsApp Support (90723 45630)**:
 
   // ── E-BOOKS ───────────────────────────────────────────────────────────────────
   const ebookKeywords = [
-    "ebook", "e-book", "e book",
-    "quick revision", "study material", "study materials",
+    "ebook", "e-book", "e book", "quick revision", "study material",
     "buy book", "purchase book", "buy ebook", "purchase ebook",
-    "pdf book", "revision book", "notes", "book available",
-    "what books", "which books", "books for",
+    "pdf book", "revision book",
   ];
   if (ebookKeywords.some((kw) => q.includes(kw))) {
     return {
       response: `📚 **CivilEzy E-Books**
 
-You can browse and purchase all available CivilEzy e-books directly from:
+Browse and purchase all available e-books directly from:
 
 👉 **https://www.civilezy.in/ebooks**
 
-The e-books page shows all available titles with pricing and purchase links. You can buy directly from the website — no need to contact support for purchases.`,
+All titles, pricing, and purchase links are on the e-books page.`,
       source: "faq",
       confidence: 1.0,
     };
@@ -150,66 +178,56 @@ The e-books page shows all available titles with pricing and purchase links. You
   const technicalKeywords = [
     "login problem", "login issue", "can't login", "cannot login",
     "not able to login", "unable to login", "login not working",
-    "forgot password", "password reset",
-    "video not loading", "video not playing", "video problem", "video issue",
-    "audio not working", "audio problem", "audio issue", "sound not",
+    "video not loading", "video not playing", "video problem",
+    "audio not working", "audio problem", "sound not",
     "membership not activated", "membership not active", "access not given",
-    "payment failed", "payment issue", "payment problem", "payment not",
-    "website not working", "website bug", "website error", "site down",
-    "app not working", "app issue", "app problem", "app error",
-    "course not opening", "course access", "cannot access course",
-    "not working", "not loading", "error in", "bug in",
-    "screen recording", "report issue", "report problem",
+    "payment failed", "payment issue", "payment problem",
+    "website not working", "website bug", "website error",
+    "app not working", "app issue", "app problem",
+    "course not opening", "cannot access course",
   ];
   if (technicalKeywords.some((kw) => q.includes(kw))) {
     return {
       response: `🛠️ **Technical Issue?**
 
-Please use the **"Report Issue"** button available on the CivilEzy website.
+Please use the **"Report Issue"** button on the CivilEzy website.
 
-When reporting, please include:
+Include:
 • **Description** of the issue
 • **Screenshot** (if available)
-• **Screen recording** (if available — shows the exact problem)
+• **Screen recording** (helps us diagnose faster)
 
-Our support team will review and resolve your issue as soon as possible.
-
-For urgent help, you can also contact us on **WhatsApp: 90723 45630**.`,
+For urgent help: **WhatsApp 90723 45630**`,
       source: "faq",
       confidence: 1.0,
     };
   }
 
-  // ── CONTACT / SUPPORT ─────────────────────────────────────────────────────────
+  // ── CONTACT ───────────────────────────────────────────────────────────────────
   const contactKeywords = [
-    "contact", "how to contact", "reach support", "customer support",
-    "support number", "phone number", "whatsapp number", "helpline",
-    "reach you", "reach civilezy", "get help",
+    "contact", "how to contact", "reach support", "support number",
+    "phone number", "whatsapp number", "helpline", "reach civilezy",
   ];
   if (contactKeywords.some((kw) => q.includes(kw))) {
     return {
       response: `📞 **CivilEzy Support**
 
-You can reach us through:
-
-• **WhatsApp:** 90723 45630 *(fastest response — typically replies in minutes)*
-• **Report Issue button** on civilezy.in — for technical problems, login issues, or payment queries
+• **WhatsApp:** 90723 45630 *(fastest — replies in minutes)*
+• **Report Issue:** on civilezy.in — for technical problems
 • **Renewal:** https://www.civilezy.in/renew
-• **E-Books:** https://www.civilezy.in/ebooks
-
-Our team is available to help you!`,
+• **E-Books:** https://www.civilezy.in/ebooks`,
       source: "faq",
       confidence: 1.0,
     };
   }
 
-  return null; // No intent matched — proceed to FAQ search
+  return null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FAQ SEARCH — keyword + partial match scoring against Firestore ai_faqs
+// FAQ SEARCH
 // ─────────────────────────────────────────────────────────────────────────────
-function scoreMatch(question: string, faq: AiFaq): number {
+function scoreFaq(question: string, faq: AiFaq): number {
   const q = question.toLowerCase().trim();
   const faqQ = faq.question.toLowerCase();
   const keywords = faq.keywords.map((k) => k.toLowerCase());
@@ -223,7 +241,6 @@ function scoreMatch(question: string, faq: AiFaq): number {
     if (faqQ.includes(word)) hits += 2;
     if (keywords.some((k) => k.includes(word) || word.includes(k))) hits += 1.5;
   }
-
   return Math.min(hits / Math.max(queryWords.length * 2.5, 1), 0.82);
 }
 
@@ -237,62 +254,88 @@ async function searchFaqs(
     .get();
 
   const faqs = snap.docs.map((d) => ({ id: d.id, ...d.data() } as AiFaq));
-
   let best: { faq: AiFaq; score: number } | null = null;
   for (const faq of faqs) {
-    const score = scoreMatch(question, faq);
-    if (!best || score > best.score) {
-      best = { faq, score };
-    }
+    const score = scoreFaq(question, faq);
+    if (!best || score > best.score) best = { faq, score };
   }
-
   return best && best.score >= 0.4 ? best : null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SEED FAQs — runs once when ai_faqs collection is empty
+// KNOWLEDGE BASE SEARCH
+// ─────────────────────────────────────────────────────────────────────────────
+function scoreKnowledgeChunk(question: string, chunk: KnowledgeChunk): number {
+  const q = question.toLowerCase().trim();
+  const title = chunk.title.toLowerCase();
+  // Only match against first 600 chars of content for speed
+  const content = chunk.content.toLowerCase().slice(0, 600);
+  const keywords = chunk.keywords.map((k) => k.toLowerCase());
+
+  // Direct title match
+  if (title === q || title.includes(q) || q.includes(title)) return 0.80;
+
+  const queryWords = q.split(/\s+/).filter((w) => w.length > 2);
+  let hits = 0;
+  for (const word of queryWords) {
+    if (title.includes(word)) hits += 3;
+    if (keywords.some((k) => k.includes(word) || word.includes(k))) hits += 2;
+    if (content.includes(word)) hits += 0.5;
+  }
+  return Math.min(hits / Math.max(queryWords.length * 3.5, 1), 0.74);
+}
+
+async function searchKnowledgeBase(
+  db: FirebaseFirestore.Firestore,
+  question: string
+): Promise<{ chunk: KnowledgeChunk; score: number }[]> {
+  const chunks = await getKnowledgeBase(db);
+  if (chunks.length === 0) return [];
+
+  const scored = chunks
+    .map((chunk) => ({ chunk, score: scoreKnowledgeChunk(question, chunk) }))
+    .filter(({ score }) => score >= 0.28)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4); // top 4 most relevant
+
+  return scored;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SEED FAQs on first run
 // ─────────────────────────────────────────────────────────────────────────────
 async function seedFaqsIfEmpty(db: FirebaseFirestore.Firestore) {
   const snap = await db.collection("ai_faqs").limit(1).get();
   if (!snap.empty) return;
-
   const batch = db.batch();
   for (const faq of INITIAL_FAQS) {
-    const ref = db.collection("ai_faqs").doc();
-    batch.set(ref, faq);
+    batch.set(db.collection("ai_faqs").doc(), faq);
   }
   await batch.commit();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// OPENAI FALLBACK — only called when intent detection + FAQ search both miss
+// OPENAI CALL — with combined context from FAQ + Knowledge Base
 // ─────────────────────────────────────────────────────────────────────────────
 async function callOpenAI(
   question: string,
-  context?: string
+  retrievedContext: string
 ): Promise<{ content: string; confidence: number }> {
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
     return {
       content:
-        "I couldn't find a verified answer for that. Please use the **Report Issue** button on the website or contact CivilEzy Support on WhatsApp at 90723 45630 for assistance.",
+        "I couldn't find that information. Please contact CivilEzy Support or use the Report Issue button on the website.",
       confidence: 0.1,
     };
   }
 
-  const messages: { role: string; content: string }[] = [
-    { role: "system", content: SYSTEM_PROMPT },
-  ];
+  const contextSection = retrievedContext
+    ? `\n\n━━━━━━━━━━━━━━━━━━━━\nRETRIEVED CONTEXT (use this to answer the question):\n${retrievedContext}\n━━━━━━━━━━━━━━━━━━━━`
+    : "";
 
-  if (context) {
-    messages.push({
-      role: "system",
-      content: `The following verified FAQ may be relevant — use it if applicable:\n${context}`,
-    });
-  }
-
-  messages.push({ role: "user", content: question });
+  const userMessage = `${question}${contextSection}`;
 
   try {
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -303,51 +346,44 @@ async function callOpenAI(
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages,
-        max_tokens: 500,
-        temperature: 0.4, // lower temperature = more conservative, less hallucination
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userMessage },
+        ],
+        max_tokens: 550,
+        temperature: 0.35,
       }),
     });
 
-    if (!res.ok) {
-      throw new Error(`OpenAI API error: ${res.status}`);
-    }
+    if (!res.ok) throw new Error(`OpenAI ${res.status}`);
 
     const data = await res.json();
     const content: string = data.choices?.[0]?.message?.content?.trim() ?? "";
+    if (!content) throw new Error("Empty OpenAI response");
 
-    if (!content) {
-      throw new Error("Empty response from OpenAI");
-    }
-
-    // Detect uncertainty signals — mark as low confidence so it gets logged
-    const uncertaintyPhrases = [
+    const uncertain = [
+      "i couldn't find",
       "i'm not sure",
       "i don't know",
-      "i cannot confirm",
-      "i'm unable to",
       "not certain",
       "don't have information",
-      "i couldn't find",
-      "verified answer",
-    ];
-    const isUncertain = uncertaintyPhrases.some((p) =>
-      content.toLowerCase().includes(p)
-    );
+    ].some((p) => content.toLowerCase().includes(p));
 
-    return { content, confidence: isUncertain ? 0.3 : 0.75 };
+    // Higher confidence when we had context to work from
+    const baseConfidence = retrievedContext ? 0.78 : 0.65;
+    return { content, confidence: uncertain ? 0.3 : baseConfidence };
   } catch (err) {
     console.error("[chat/route] OpenAI error:", err);
     return {
       content:
-        "I couldn't find a verified answer for that. Please use the **Report Issue** button on the website or contact CivilEzy Support on WhatsApp at 90723 45630 for assistance.",
+        "I couldn't find that information. Please contact CivilEzy Support or use the Report Issue button.",
       confidence: 0.1,
     };
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ANALYTICS — fire-and-forget daily aggregate update
+// ANALYTICS
 // ─────────────────────────────────────────────────────────────────────────────
 async function updateAnalytics(
   db: FirebaseFirestore.Firestore,
@@ -358,23 +394,23 @@ async function updateAnalytics(
     const today = new Date().toISOString().split("T")[0];
     const ref = db.collection("chatbot_analytics").doc(today);
     const snap = await ref.get();
-    const isLowConfidence = confidence < 0.5;
+    const low = confidence < 0.5;
 
     if (snap.exists) {
       const d = snap.data()!;
       await ref.update({
-        totalQuestions:       (d.totalQuestions       ?? 0) + 1,
-        answeredQuestions:    isLowConfidence ? (d.answeredQuestions    ?? 0) : (d.answeredQuestions    ?? 0) + 1,
-        unansweredQuestions:  isLowConfidence ? (d.unansweredQuestions  ?? 0) + 1 : (d.unansweredQuestions ?? 0),
-        faqHits:              source === "faq" ? (d.faqHits             ?? 0) + 1 : (d.faqHits            ?? 0),
-        aiGeneratedAnswers:   source === "ai"  ? (d.aiGeneratedAnswers  ?? 0) + 1 : (d.aiGeneratedAnswers ?? 0),
+        totalQuestions:      (d.totalQuestions      ?? 0) + 1,
+        answeredQuestions:   low ? (d.answeredQuestions   ?? 0) : (d.answeredQuestions   ?? 0) + 1,
+        unansweredQuestions: low ? (d.unansweredQuestions ?? 0) + 1 : (d.unansweredQuestions ?? 0),
+        faqHits:             source === "faq" ? (d.faqHits            ?? 0) + 1 : (d.faqHits ?? 0),
+        aiGeneratedAnswers:  source === "ai"  ? (d.aiGeneratedAnswers ?? 0) + 1 : (d.aiGeneratedAnswers ?? 0),
       });
     } else {
       await ref.set({
         date: today,
         totalQuestions:      1,
-        answeredQuestions:   isLowConfidence ? 0 : 1,
-        unansweredQuestions: isLowConfidence ? 1 : 0,
+        answeredQuestions:   low ? 0 : 1,
+        unansweredQuestions: low ? 1 : 0,
         faqHits:             source === "faq" ? 1 : 0,
         aiGeneratedAnswers:  source === "ai"  ? 1 : 0,
       });
@@ -387,11 +423,11 @@ async function updateAnalytics(
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/chat
 //
-// Pipeline:
-//   1. Intent detection  →  verified hardcoded response (fastest, no hallucination)
-//   2. FAQ search        →  Firestore ai_faqs (admin-managed knowledge base)
-//   3. OpenAI fallback   →  gpt-4o-mini with strict system prompt
-//   4. Save to history + analytics
+// Pipeline (in order):
+//   1. Intent detection   → hardcoded verified response (instant, zero hallucination)
+//   2. FAQ search         → ai_faqs Firestore collection
+//   3. Knowledge Base     → knowledge_base Firestore collection (cached in-memory)
+//   4. OpenAI             → with context assembled from steps 2+3
 // ─────────────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
@@ -405,8 +441,6 @@ export async function POST(req: NextRequest) {
     }
 
     const db = getAdminDb();
-
-    // Seed FAQs on first-ever request (fresh install)
     await seedFaqsIfEmpty(db);
 
     let response: string;
@@ -414,35 +448,53 @@ export async function POST(req: NextRequest) {
     let confidence: number;
     let faqId: string | undefined;
 
-    // ── Layer 1: Intent detection (verified, instant, zero hallucination) ──────
+    // ── Layer 1: Intent detection ─────────────────────────────────────────────
     const intent = detectIntent(question);
-
     if (intent) {
       response   = intent.response;
       source     = "faq";
       confidence = 1.0;
     } else {
-      // ── Layer 2: FAQ search (admin-managed knowledge base) ──────────────────
+      // ── Layer 2: FAQ search ───────────────────────────────────────────────────
       const faqMatch = await searchFaqs(db, question);
 
       if (faqMatch && faqMatch.score >= 0.65) {
+        // High-confidence direct FAQ hit
         response   = faqMatch.faq.answer;
         source     = "faq";
         confidence = faqMatch.score;
         faqId      = faqMatch.faq.id;
       } else {
-        // ── Layer 3: OpenAI fallback (strict system prompt) ───────────────────
-        const context = faqMatch
-          ? `Q: ${faqMatch.faq.question}\nA: ${faqMatch.faq.answer}`
-          : undefined;
+        // ── Layer 3: Knowledge base search ────────────────────────────────────
+        const [kbResults] = await Promise.all([
+          searchKnowledgeBase(db, question),
+        ]);
 
-        const aiResult = await callOpenAI(question, context);
+        // Build combined context from KB hits + any partial FAQ match
+        const contextParts: string[] = [];
+
+        if (faqMatch && faqMatch.score >= 0.35) {
+          contextParts.push(
+            `[FAQ] Q: ${faqMatch.faq.question}\nA: ${faqMatch.faq.answer}`
+          );
+        }
+
+        for (const { chunk, score } of kbResults) {
+          if (score >= 0.28) {
+            contextParts.push(`[${chunk.source.toUpperCase()}] ${chunk.title}:\n${chunk.content}`);
+          }
+        }
+
+        const retrievedContext = contextParts.slice(0, 4).join("\n\n---\n\n");
+
+        // ── Layer 4: OpenAI with context ─────────────────────────────────────
+        const aiResult = await callOpenAI(question, retrievedContext);
         response   = aiResult.content;
         source     = "ai";
         confidence = aiResult.confidence;
 
-        // Log low-confidence responses for admin review
-        if (confidence < 0.5) {
+        // Log truly uncertain responses for admin review
+        if (confidence < 0.4) {
           await db.collection("unanswered_queries").add({
             question,
             userId,
@@ -469,7 +521,6 @@ export async function POST(req: NextRequest) {
     updateAnalytics(db, source, confidence);
 
     return NextResponse.json({ response, source, confidence, faqId });
-
   } catch (err) {
     console.error("[chat/route] unhandled error:", err);
     return NextResponse.json(
