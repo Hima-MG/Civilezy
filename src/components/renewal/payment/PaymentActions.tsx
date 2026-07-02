@@ -1,32 +1,21 @@
 "use client";
 
-import {
-  buildRenewalPortalUrl,
-  type NewRenewalPlan,
-  type RenewalDurationOption,
-} from "@/lib/renewal";
+import type { PaymentDetails } from "@/lib/renewal";
 import PaymentStep from "./PaymentStep";
 
-// The three guided steps of the checkout assistant. Step 1 opens the
-// EXISTING Razorpay payment page in a new tab (unchanged link, unchanged
-// flow); step 3 hands the student off to the Renewal Portal with prefill
-// params generated from the central configuration — never from the URL.
+// The three guided steps of the checkout assistant (shared by new and
+// legacy plans). Step 1 opens the EXISTING payment page in a new tab
+// (unchanged link, unchanged flow); step 3 hands the student off to the
+// Renewal Portal with prefill params generated from the central
+// configuration — never from the URL.
 
-export default function PaymentActions({
-  plan,
-  option,
-}: {
-  plan: NewRenewalPlan;
-  option: RenewalDurationOption;
-}) {
-  const portalUrl = buildRenewalPortalUrl(plan, option);
-
+export default function PaymentActions({ details }: { details: PaymentDetails }) {
   return (
     <ol className="flex flex-col gap-7" style={{ margin: 0, padding: 0 }}>
       {/* STEP 1 — Pay Now */}
       <PaymentStep number="01" title="Pay Now">
         <a
-          href={option.renewLink}
+          href={details.renewLink}
           target="_blank"
           rel="noopener noreferrer"
           className="renewal-focus block w-full text-center"
@@ -83,7 +72,7 @@ export default function PaymentActions({
       {/* STEP 3 — Continue Renewal */}
       <PaymentStep number="03" title="Continue Renewal">
         <a
-          href={portalUrl}
+          href={details.portalUrl}
           className="renewal-focus block w-full text-center"
           style={{
             padding: "15px 20px",

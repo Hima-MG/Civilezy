@@ -155,12 +155,13 @@ export default function RenewalTable({ courses }: RenewalTableProps) {
                   </td>
                 )}
 
-                {/* Renew */}
+                {/* Renew — external URLs open in a new tab; internal routes
+                    (e.g. /renew/payment?planCode=…) navigate in-tab. */}
                 <td style={{ padding: "10px 14px", textAlign: "center" }}>
                   <a
                     href={course.renewLink || "#"}
-                    target={course.renewLink && course.renewLink !== "#" ? "_blank" : undefined}
-                    rel="noopener noreferrer"
+                    target={course.renewLink?.startsWith("http") ? "_blank" : undefined}
+                    rel={course.renewLink?.startsWith("http") ? "noopener noreferrer" : undefined}
                     style={{
                       display: "inline-block",
                       padding: "6px 16px",

@@ -2,22 +2,24 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { resolveRenewalSelection } from "@/lib/renewal";
+import { resolvePaymentDetails } from "@/lib/renewal";
 import RenewalSupportCard from "@/components/renewal/RenewalSupportCard";
 import PaymentSummary from "./PaymentSummary";
 import PaymentActions from "./PaymentActions";
 import PaymentInvalidState from "./PaymentInvalidState";
 
-// Client shell of /renew/payment. Reads ONLY courseId + duration from the
-// URL and resolves everything else (name, price, links) from lib/renewal —
-// long values never travel through the query string.
+// Client shell of /renew/payment. Reads ONLY short identifiers from the URL
+// (courseId + duration for new plans, planCode for legacy plans) and
+// resolves everything else (name, price, links) from lib/renewal — long
+// values never travel through the query string.
 
 export default function PaymentPageContent() {
   const searchParams = useSearchParams();
-  const selection = resolveRenewalSelection(
-    searchParams.get("courseId"),
-    searchParams.get("duration"),
-  );
+  const details = resolvePaymentDetails({
+    courseId: searchParams.get("courseId"),
+    duration: searchParams.get("duration"),
+    planCode: searchParams.get("planCode"),
+  });
 
   return (
     <main
@@ -54,10 +56,10 @@ export default function PaymentPageContent() {
             boxShadow: "0 16px 48px rgba(0,0,0,0.35)",
           }}
         >
-          {selection ? (
+          {details ? (
             <>
-              <PaymentSummary plan={selection.plan} option={selection.option} />
-              <PaymentActions plan={selection.plan} option={selection.option} />
+              <PaymentSummary details={details} />
+              <PaymentActions details={details} />
             </>
           ) : (
             <PaymentInvalidState />

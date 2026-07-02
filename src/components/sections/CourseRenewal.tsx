@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { WHATSAPP_DISPLAY, getWhatsAppUrl } from "@/lib/constants";
 import { ENABLED_NEW_PLANS, type NewRenewalPlan } from "@/lib/renewal";
 import SectionHeader from "@/components/renewal/SectionHeader";
@@ -445,10 +445,9 @@ export default function CourseRenewal() {
               { label: "Membership", href: null },
               { label: "Select Membership", href: null },
             ].map((step, i, arr) => (
-              <>
+              <Fragment key={step.label}>
                 {step.href ? (
                   <a
-                    key={step.label}
                     href={step.href}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -487,7 +486,6 @@ export default function CourseRenewal() {
                   </a>
                 ) : (
                   <span
-                    key={step.label}
                     style={{
                       padding: "8px 20px",
                       borderRadius: "8px",
@@ -504,9 +502,9 @@ export default function CourseRenewal() {
                   </span>
                 )}
                 {i < arr.length - 1 && (
-                  <span key={`arrow-${i}`} style={{ color: "rgba(255,255,255,0.3)", fontSize: "1.1rem" }}>→</span>
+                  <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "1.1rem" }}>→</span>
                 )}
-              </>
+              </Fragment>
             ))}
           </div>
 

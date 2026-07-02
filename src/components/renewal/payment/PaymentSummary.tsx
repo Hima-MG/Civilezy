@@ -1,7 +1,8 @@
-import type { NewRenewalPlan, RenewalDurationOption } from "@/lib/renewal";
+import type { PaymentDetails } from "@/lib/renewal";
 
 // Order summary shown at the top of the /renew/payment card. Pure display —
-// every value comes from the central renewal configuration.
+// every value comes from the central renewal configuration (works for both
+// new and legacy plans via the normalised PaymentDetails shape).
 
 function SummaryRow({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
@@ -22,13 +23,7 @@ function SummaryRow({ label, value, strong }: { label: string; value: string; st
   );
 }
 
-export default function PaymentSummary({
-  plan,
-  option,
-}: {
-  plan: NewRenewalPlan;
-  option: RenewalDurationOption;
-}) {
+export default function PaymentSummary({ details }: { details: PaymentDetails }) {
   return (
     <div>
       <h1
@@ -43,15 +38,15 @@ export default function PaymentSummary({
         Complete Your Renewal
       </h1>
       <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.85rem", marginBottom: "24px" }}>
-        {plan.description}
+        {details.description}
       </p>
 
       <dl className="flex flex-col gap-3" style={{ margin: 0 }}>
-        <SummaryRow label="Course" value={plan.name} />
-        <SummaryRow label="Duration" value={option.duration} />
+        <SummaryRow label="Course" value={details.courseName} />
+        <SummaryRow label="Duration" value={details.duration} />
         <SummaryRow
           label="Price"
-          value={option.amount ?? "Shown on the secure payment page"}
+          value={details.amount ?? "Shown on the secure payment page"}
           strong
         />
       </dl>
