@@ -415,3 +415,10 @@ select {
   .renewal-dialog-overlay,
   .renewal-dialog-panel { animation: none; }
 }
+
+/* Visible keyboard-focus ring for renewal actions (cards, dialog, payment page) */
+.renewal-focus:focus-visible {
+  outline: 2px solid #FF8534;
+  outline-offset: 3px;
+  border-radius: 10px;
+}

@@ -3,6 +3,7 @@
 // define their own plan data, Razorpay links, or duration/course lists.
 
 export * from "./types";
+export * from "./lookup";
 export { NEW_PLANS } from "./new-plans";
 export { LEGACY_PLANS } from "./legacy-plans";
 

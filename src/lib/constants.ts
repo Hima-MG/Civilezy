@@ -10,6 +10,8 @@ export function getWhatsAppUrl(message: string) {
 // All links that leave civilezy.in point here. Never hardcode these in
 // individual components — always import from this file.
 export const EXTERNAL_URLS = {
+  /** Renewal Portal — receives students after payment for request submission. */
+  renewalPortal: "https://renew.civilezy.in",
   login:     "https://learn.civilezy.in/en/signup",
   signup:    "https://learn.civilezy.in/register",
   dashboard: "https://learn.civilezy.in/dashboard",

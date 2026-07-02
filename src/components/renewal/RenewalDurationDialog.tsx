@@ -1,12 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { NewRenewalPlan, RenewalDurationOption } from "@/lib/renewal";
+import Link from "next/link";
+import {
+  buildPaymentPageUrl,
+  type NewRenewalPlan,
+  type RenewalDurationOption,
+} from "@/lib/renewal";
 
 // Accessible duration-selection dialog. Renders as a centred modal on ≥sm
 // screens and a bottom sheet on mobile (see .renewal-dialog-* in globals.css).
-// "Proceed to Payment" opens the Razorpay link already configured for the
-// selected option — no new links, no new payment flow.
+// "Continue" navigates to the /renew/payment checkout assistant with only
+// courseId + duration in the URL — that page opens the Razorpay link
+// already configured for the selected option.
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -243,12 +249,10 @@ export default function RenewalDurationDialog({
             )}
 
             {selected ? (
-              <a
-                href={selected.renewLink}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href={buildPaymentPageUrl(plan, selected)}
                 onClick={onClose}
-                className="block w-full text-center"
+                className="renewal-focus block w-full text-center"
                 style={{
                   padding: "14px 20px",
                   borderRadius: "12px",
@@ -263,8 +267,8 @@ export default function RenewalDurationDialog({
                   boxShadow: "0 6px 20px rgba(255,98,0,0.35)",
                 }}
               >
-                Proceed to Payment →
-              </a>
+                Continue →
+              </Link>
             ) : (
               <button
                 type="button"
