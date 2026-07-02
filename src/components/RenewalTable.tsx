@@ -1,14 +1,10 @@
 "use client";
 
-export interface RenewalCourse {
-  code:      string;
-  name:      string;
-  tier?:     string;
-  validity?: string;
-  amount?:   string;
-  renewLink: string;
-  category?: string;
-}
+import type { RenewalCourse } from "@/lib/renewal";
+
+// Re-exported for backward compatibility — the type now lives in
+// @/lib/renewal, which is the single source of truth for renewal shapes.
+export type { RenewalCourse } from "@/lib/renewal";
 
 interface RenewalTableProps {
   courses: RenewalCourse[];

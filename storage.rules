@@ -18,6 +18,14 @@ service firebase.storage {
       allow write: if true;
     }
 
+    // ── Technical support ticket attachments ─────────────────────────────────
+    // Public read so admin panel and students can view images/voice/screen
+    // recordings. Open write: ticket submission uses no Firebase Auth.
+    match /support-attachments/{ticketId}/{path=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
     // ── Default: deny everything else ────────────────────────────────────────
     match /{allPaths=**} {
       allow read, write: if false;
