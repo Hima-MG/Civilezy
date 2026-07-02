@@ -81,7 +81,7 @@ export default function FloatingSupportButton() {
           }
         }
 
-        /* Mobile (< 640px): above ChatWidget FAB (78px) + FAB height (52px) + gap (8px) = 138px */
+        /* Mobile (under 640px): above ChatWidget FAB (78px) + FAB height (52px) + gap (8px) = 138px */
         @media (max-width: 639px) {
           #floating-report-issue-btn {
             bottom: 148px !important;

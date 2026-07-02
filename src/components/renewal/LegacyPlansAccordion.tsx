@@ -15,31 +15,8 @@ export default function LegacyPlansAccordion() {
 
   return (
     <div>
-      {/* Prompt card */}
-      <div
-        className="mx-auto max-w-2xl text-center"
-        style={{
-          background: "var(--card-bg)",
-          border: "1px solid var(--card-border)",
-          borderRadius: "18px",
-          padding: "34px 28px",
-        }}
-      >
-        <p
-          style={{
-            color: "#fff",
-            fontFamily: "var(--font-rajdhani), Rajdhani, sans-serif",
-            fontSize: "1.25rem",
-            fontWeight: 700,
-            marginBottom: "8px",
-          }}
-        >
-          Need to renew an older membership?
-        </p>
-        <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.88rem", marginBottom: "22px" }}>
-          Courses launched up to <strong style={{ color: "#38bdf8" }}>31 March 2026</strong> use
-          the legacy renewal plans below.
-        </p>
+      {/* Toggle — the section header above already explains who these plans are for */}
+      <div className="mx-auto max-w-2xl text-center">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
@@ -104,28 +81,6 @@ export default function LegacyPlansAccordion() {
           }}
         >
           <div style={{ paddingTop: "36px" }}>
-            {/* Notice banner — unchanged from the previous layout */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                background: "rgba(56,189,248,0.07)",
-                border: "1px solid rgba(56,189,248,0.22)",
-                borderRadius: "10px",
-                padding: "14px 20px",
-                marginBottom: "28px",
-                flexWrap: "wrap",
-              }}
-            >
-              <span style={{ fontSize: "1.1rem" }}>📁</span>
-              <p style={{ color: "rgba(255,255,255,0.72)", fontSize: "0.84rem", margin: 0 }}>
-                These are courses launched{" "}
-                <strong style={{ color: "#38bdf8" }}>up to 31 March 2026</strong>. If your
-                membership started before this date, use the plans in this table.
-              </p>
-            </div>
-
             <RenewalTable courses={LEGACY_RENEWAL_COURSES} />
           </div>
         </div>

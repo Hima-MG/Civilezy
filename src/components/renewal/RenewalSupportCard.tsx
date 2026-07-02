@@ -34,30 +34,17 @@ export default function RenewalSupportCard() {
           marginBottom: "12px",
         }}
       >
-        Need Help with Renewal?
+        Need help renewing?
       </h2>
       <p
         style={{
           color: "rgba(255,255,255,0.58)",
           fontSize: "0.9rem",
           lineHeight: 1.7,
-          marginBottom: "10px",
-        }}
-      >
-        Our support team is available{" "}
-        <strong style={{ color: "rgba(255,255,255,0.8)" }}>
-          Monday – Saturday, 10 AM – 5 PM
-        </strong>
-        . Reach us on WhatsApp for the fastest response.
-      </p>
-      <p
-        style={{
-          color: "rgba(255,255,255,0.4)",
-          fontSize: "0.78rem",
           marginBottom: "28px",
         }}
       >
-        Queries outside office hours will be addressed the next business day.
+        We&apos;re here to help.
       </p>
 
       <a
@@ -103,7 +90,7 @@ export default function RenewalSupportCard() {
           fontSize: "0.8rem",
         }}
       >
-        {WHATSAPP_DISPLAY}
+        {WHATSAPP_DISPLAY} · Mon – Sat, 10 AM – 5 PM
       </p>
     </div>
   );
