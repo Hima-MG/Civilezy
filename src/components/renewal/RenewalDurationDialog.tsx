@@ -224,15 +224,10 @@ export default function RenewalDurationDialog({
               );
             })}
           </div>
-          </div>
 
-          {/* Fixed footer — selection summary + proceed. Never scrolls out of
-              view; bottom padding respects the iOS home-indicator safe area */}
-          <div
-            aria-live="polite"
-            className="shrink-0"
-            style={{ padding: "20px 22px calc(26px + env(safe-area-inset-bottom))" }}
-          >
+          {/* Selection summary — scrolls with the body so the footer stays
+              slim; announced politely when the selection changes */}
+          <div aria-live="polite">
             {selected && (
               <div
                 style={{
@@ -240,7 +235,7 @@ export default function RenewalDurationDialog({
                   borderRadius: "12px",
                   background: "rgba(255,133,52,0.07)",
                   border: "1px solid rgba(255,133,52,0.22)",
-                  marginBottom: "14px",
+                  marginTop: "20px",
                 }}
               >
                 <div className="flex items-center justify-between gap-3">
@@ -261,7 +256,19 @@ export default function RenewalDurationDialog({
                 </div>
               </div>
             )}
+          </div>
+          </div>
 
+          {/* Sticky footer — CTA only. Never scrolls out of view; bottom
+              padding respects the iOS home-indicator safe area */}
+          <div
+            className="shrink-0"
+            style={{
+              background: "inherit",
+              padding: "16px 22px",
+              paddingBottom: "max(16px, env(safe-area-inset-bottom))",
+            }}
+          >
             {selected ? (
               <Link
                 href={buildPaymentPageUrl(plan, selected)}

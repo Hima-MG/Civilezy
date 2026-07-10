@@ -36,6 +36,12 @@ export default function StickyCTA() {
   const isGameArena   = pathname === "/game-arena";
   const isCoursePage  = pathname?.startsWith("/courses/") ?? false;
 
+  // On mobile (≤640px) the bar shows on the Home page only — everywhere else
+  // it eats vertical space and overlaps page CTAs. Hidden via CSS media query
+  // (globals.css) so tablet/desktop behaviour is untouched and SSR markup is
+  // identical on server and client.
+  const isHome = pathname === "/";
+
   // Delay initial appearance
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 600);
@@ -59,7 +65,7 @@ export default function StickyCTA() {
       <div
         role="region"
         aria-label="Start your free Kerala PSC preparation"
-        className="sticky-cta"
+        className={isHome ? "sticky-cta" : "sticky-cta sticky-cta-mobile-hidden"}
         style={{
           position:             "fixed",
           bottom:               0,
