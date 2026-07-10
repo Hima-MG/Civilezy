@@ -48,6 +48,30 @@ const SURVEYOR_ONE_YEAR_LINK =
   "https://learn.civilezy.in/en/checkout/?product_id=4733&price_id=271684&product_type=membership";
 
 export const NEW_PLANS: NewRenewalPlan[] = [
+   {
+    id: "btech",
+    code: "1039",
+    name: "Civil PSC – B.Tech / AE",
+    description: "Kerala PSC Civil Engineering course renewal — B.Tech / AE level.",
+durationOptions: buildDurations(
+  BTECH_LINK,
+  BTECH_ONE_YEAR_LINK,
+),    renewLink: BTECH_LINK,
+    displayOrder: 3,
+    enabled: true,
+  },
+   {
+    id: "diploma",
+    code: "1040",
+    name: "Civil PSC – Diploma",
+    description: "Kerala PSC Civil Engineering course renewal — Diploma level.",
+durationOptions: buildDurations(
+  DIPLOMA_LINK,
+  DIPLOMA_ONE_YEAR_LINK,
+),    renewLink: DIPLOMA_LINK,
+    displayOrder: 2,
+    enabled: true,
+  },
   {
     id: "iti",
     code: "1041",
@@ -61,30 +85,8 @@ export const NEW_PLANS: NewRenewalPlan[] = [
     displayOrder: 1,
     enabled: true,
   },
-  {
-    id: "diploma",
-    code: "1040",
-    name: "Civil PSC – Diploma",
-    description: "Kerala PSC Civil Engineering course renewal — Diploma level.",
-durationOptions: buildDurations(
-  DIPLOMA_LINK,
-  DIPLOMA_ONE_YEAR_LINK,
-),    renewLink: DIPLOMA_LINK,
-    displayOrder: 2,
-    enabled: true,
-  },
-  {
-    id: "btech",
-    code: "1039",
-    name: "Civil PSC – B.Tech / AE",
-    description: "Kerala PSC Civil Engineering course renewal — B.Tech / AE level.",
-durationOptions: buildDurations(
-  BTECH_LINK,
-  BTECH_ONE_YEAR_LINK,
-),    renewLink: BTECH_LINK,
-    displayOrder: 3,
-    enabled: true,
-  },
+ 
+ 
   {
     id: "surveyor",
     code: "1042",
