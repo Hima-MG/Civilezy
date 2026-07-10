@@ -97,23 +97,24 @@ export default function RenewalDurationDialog({
           role="dialog"
           aria-modal="true"
           aria-labelledby="renewal-dialog-title"
-          className="renewal-dialog-panel pointer-events-auto max-h-[88vh] w-full overflow-y-auto rounded-t-3xl sm:max-w-md sm:rounded-3xl"
+          className="renewal-dialog-panel pointer-events-auto flex w-full flex-col rounded-t-3xl sm:max-w-md sm:rounded-3xl"
           style={{
             background: "var(--navy2)",
             border: "1px solid rgba(255,133,52,0.25)",
             boxShadow: "0 -12px 48px rgba(0,0,0,0.45)",
-            padding: "20px 22px 26px",
           }}
         >
-          {/* Drag handle (visual only, mobile) */}
-          <div
-            aria-hidden="true"
-            className="mx-auto mb-4 h-1 w-10 rounded-full sm:hidden"
-            style={{ background: "rgba(255,255,255,0.18)" }}
-          />
+          {/* Fixed header area — stays visible while the options scroll */}
+          <div className="shrink-0" style={{ padding: "20px 22px 0" }}>
+            {/* Drag handle (visual only, mobile) */}
+            <div
+              aria-hidden="true"
+              className="mx-auto mb-4 h-1 w-10 rounded-full sm:hidden"
+              style={{ background: "rgba(255,255,255,0.18)" }}
+            />
 
-          {/* Header */}
-          <div className="mb-5 flex items-start justify-between gap-4">
+            {/* Header */}
+            <div className="mb-5 flex items-start justify-between gap-4">
             <div>
               <h2
                 id="renewal-dialog-title"
@@ -152,7 +153,14 @@ export default function RenewalDurationDialog({
               ✕
             </button>
           </div>
+          </div>
 
+          {/* Scrollable body — only the duration options scroll when the
+              viewport is short; header and CTA footer stay visible */}
+          <div
+            className="min-h-0 flex-1 overflow-y-auto"
+            style={{ padding: "0 22px", overscrollBehavior: "contain" }}
+          >
           {/* Duration options */}
           <div role="radiogroup" aria-label="Renewal duration" className="flex flex-col gap-2.5">
             {plan.durationOptions.map((option) => {
@@ -216,9 +224,15 @@ export default function RenewalDurationDialog({
               );
             })}
           </div>
+          </div>
 
-          {/* Selection summary + proceed */}
-          <div aria-live="polite" className="mt-5">
+          {/* Fixed footer — selection summary + proceed. Never scrolls out of
+              view; bottom padding respects the iOS home-indicator safe area */}
+          <div
+            aria-live="polite"
+            className="shrink-0"
+            style={{ padding: "20px 22px calc(26px + env(safe-area-inset-bottom))" }}
+          >
             {selected && (
               <div
                 style={{

@@ -50,7 +50,7 @@ const SURVEYOR_ONE_YEAR_LINK =
 export const NEW_PLANS: NewRenewalPlan[] = [
   {
     id: "iti",
-    code: "1039",
+    code: "1041",
     name: "Civil PSC – ITI",
     description: "Kerala PSC Civil Engineering course renewal — ITI level.",
    durationOptions: buildDurations(
@@ -75,7 +75,7 @@ durationOptions: buildDurations(
   },
   {
     id: "btech",
-    code: "1041",
+    code: "1039",
     name: "Civil PSC – B.Tech / AE",
     description: "Kerala PSC Civil Engineering course renewal — B.Tech / AE level.",
 durationOptions: buildDurations(

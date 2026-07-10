@@ -64,7 +64,10 @@
       "Bash(del \"C:\\\\Users\\\\Hima Girish\\\\Desktop\\\\civilezy\\\\Civilezy website\\\\civilezy\\\\src\\\\components\\\\ebooks\\\\EarlyBirdOfferSection.tsx\")",
       "Bash(Get-ChildItem -Recurse -Depth 3)",
       "Bash(cd /c/Users/\"Hima Girish\"/Desktop/civilezy/\"Civilezy website\"/civilezy && find . -type f -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.js\" -o -name \"*.jsx\" | head -50)",
-      "Bash(npx firebase *)"
+      "Bash(npx firebase *)",
+      "PowerShell(npx tsc --noEmit)",
+      "PowerShell(npm run lint)",
+      "PowerShell(npm run build)"
     ]
   }
 }

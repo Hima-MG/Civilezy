@@ -405,7 +405,13 @@ select {
 }
 
 .renewal-dialog-overlay { animation: renewalOverlayIn 0.2s ease-out; }
-.renewal-dialog-panel   { animation: renewalSheetIn 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+.renewal-dialog-panel {
+  animation: renewalSheetIn 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  /* Cap to the VISIBLE viewport. dvh tracks mobile browser UI (URL bar); the
+     vh line is the fallback for browsers without dvh support. */
+  max-height: 88vh;
+  max-height: 88dvh;
+}
 
 @media (min-width: 640px) {
   .renewal-dialog-panel { animation: renewalDialogIn 0.22s ease-out; }

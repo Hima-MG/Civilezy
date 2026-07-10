@@ -6,10 +6,9 @@ import type { LegacyPlan } from "./types";
 // Every code, name, tier, validity, amount and Razorpay link must remain
 // byte-identical to the Razorpay dashboard configuration.
 //
-// NOTE (known data quirk, do not "fix" without a business decision): codes
-// 1039–1042 also exist in new-plans.ts but map to DIFFERENT courses there
-// (e.g. 1039 is "Civil PSC – ITI" in the new table but "B.Tech Level Course"
-// here). Kept as-is to preserve current behaviour.
+// NOTE: codes 1039–1042 also exist in new-plans.ts and map to the SAME
+// course levels there (1039 B.Tech, 1040 Diploma, 1041 ITI, 1042 Surveyor).
+// The two tables stay independent — lookups never cross between them.
 
 export const LEGACY_PLANS: LegacyPlan[] = [
   // ── B.Tech ──
