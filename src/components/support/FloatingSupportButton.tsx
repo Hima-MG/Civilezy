@@ -7,8 +7,14 @@ export default function FloatingSupportButton() {
   const { openModal } = useSupportModal();
   const pathname = usePathname();
 
-  // Hide on admin pages and support pages
-  if (pathname.startsWith("/admin") || pathname.startsWith("/support")) return null;
+  // Hide on admin and support pages, and on the renewal flow where the
+  // floating button overlaps the payment dialog / CTA.
+  if (
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/support") ||
+    pathname.startsWith("/renew")
+  )
+    return null;
 
   return (
     <>

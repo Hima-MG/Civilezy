@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { WHATSAPP_NUMBER, WHATSAPP_DISPLAY } from "@/lib/constants";
 
 const WA_NUMBER = WHATSAPP_NUMBER;
@@ -66,6 +67,7 @@ export default function WhatsAppWidget() {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -81,6 +83,11 @@ export default function WhatsAppWidget() {
   }, [open]);
 
   if (!mounted) return null;
+
+  // Hide on the renewal flow (/renew, /renew/payment) where the floating
+  // button overlaps the duration dialog and payment CTAs. The dedicated
+  // renewal support card provides WhatsApp contact on those pages.
+  if (pathname.startsWith("/renew")) return null;
 
   return (
     <>

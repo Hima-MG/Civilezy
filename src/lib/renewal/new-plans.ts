@@ -57,7 +57,7 @@ durationOptions: buildDurations(
   BTECH_LINK,
   BTECH_ONE_YEAR_LINK,
 ),    renewLink: BTECH_LINK,
-    displayOrder: 3,
+    displayOrder: 1,
     enabled: true,
   },
    {
@@ -82,7 +82,7 @@ durationOptions: buildDurations(
   ITI_ONE_YEAR_LINK,
 ),
     renewLink: ITI_LINK,
-    displayOrder: 1,
+    displayOrder: 3,
     enabled: true,
   },
  
