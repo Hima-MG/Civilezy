@@ -30,7 +30,6 @@ import Navbar from "@/components/Navbar";
 import StickyCTA from "@/components/sections/StickyCTA";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import LayoutShell from "@/components/LayoutShell";
-import LeadCapturePopup from "@/components/LeadCapturePopup";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
 import TechnicalSupportModal from "@/components/support/TechnicalSupportModal";
 import FloatingSupportButton from "@/components/support/FloatingSupportButton";
@@ -142,7 +141,6 @@ export default function RootLayout({
               <LayoutShell>{children}</LayoutShell>
               <StickyCTA />
               <WhatsAppWidget />
-              <LeadCapturePopup />
               <TechnicalSupportModal />
               <FloatingSupportButton />
               <ChatWidget />
